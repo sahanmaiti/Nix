@@ -2,3 +2,5 @@
 *.xcuserstate
 xcuserdata/
 DerivedData/
+*.xccheckout
+*.moved-aside
