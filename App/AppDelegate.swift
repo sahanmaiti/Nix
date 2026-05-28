@@ -16,4 +16,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         print("Nix is shutting down")
     }
+    
+    func applicationDidBecomeActive(_ notification: Notification) {
+        logger.info("Nix is now active")
+    }
 }

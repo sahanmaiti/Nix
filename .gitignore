@@ -1,6 +1,23 @@
-.DS_Store
+# Xcode
+DerivedData/
+.build/
+
+# User data
 *.xcuserstate
 xcuserdata/
-DerivedData/
-*.xccheckout
-*.moved-aside
+
+# macOS
+.DS_Store
+
+# Swift Package Manager
+.swiftpm/
+
+# Archives
+*.xcarchive
+
+# Temporary files
+*.swp
+*.tmp
+
+# App storage
+*.sqlite

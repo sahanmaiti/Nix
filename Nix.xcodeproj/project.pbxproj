@@ -6,14 +6,21 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		DEB830852FC8A19000F886C2 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB830832FC88F4E00F886C2 /* AppEnvironment.swift */; };
+		DEB830862FC8A19300F886C2 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB830842FC890A300F886C2 /* MenuBarView.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		DEB8306C2FC5774100F886C2 /* Nix.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nix.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DEB830832FC88F4E00F886C2 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		DEB830842FC890A300F886C2 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		DEB8306E2FC5774100F886C2 /* Nix */ = {
+		DEB8306E2FC5774100F886C2 /* App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Nix;
+			path = App;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +39,9 @@
 		DEB830632FC5774100F886C2 = {
 			isa = PBXGroup;
 			children = (
-				DEB8306E2FC5774100F886C2 /* Nix */,
+				DEB8306E2FC5774100F886C2 /* App */,
+				DEB830802FC88F1100F886C2 /* Core */,
+				DEB830822FC88F2100F886C2 /* UI */,
 				DEB8306D2FC5774100F886C2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +52,22 @@
 				DEB8306C2FC5774100F886C2 /* Nix.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		DEB830802FC88F1100F886C2 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				DEB830832FC88F4E00F886C2 /* AppEnvironment.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		DEB830822FC88F2100F886C2 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				DEB830842FC890A300F886C2 /* MenuBarView.swift */,
+			);
+			path = UI;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -61,7 +86,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				DEB8306E2FC5774100F886C2 /* Nix */,
+				DEB8306E2FC5774100F886C2 /* App */,
 			);
 			name = Nix;
 			packageProductDependencies = (
@@ -119,6 +144,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DEB830862FC8A19300F886C2 /* MenuBarView.swift in Sources */,
+				DEB830852FC8A19000F886C2 /* AppEnvironment.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -264,6 +291,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sahan.Nix;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -296,6 +324,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sahan.Nix;
 				PRODUCT_NAME = "$(TARGET_NAME)";
