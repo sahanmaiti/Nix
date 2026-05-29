@@ -18,6 +18,10 @@ struct MenuBarView: View {
 
             Divider()
 
+            appsSection
+
+            Divider()
+
             pauseSection
 
             Divider()
@@ -73,6 +77,82 @@ struct MenuBarView: View {
         .padding(.vertical, 6)
     }
 
+    // MARK: - Running Apps
+
+    private var appsSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+
+            Text("RUNNING APPS (\(env.appTracker.trackedApps.count))")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.tertiary)
+                .padding(.horizontal, 12)
+                .padding(.top, 10)
+                .padding(.bottom, 4)
+
+            if env.appTracker.trackedApps.isEmpty {
+
+                Text("No apps running")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 8)
+
+            } else {
+
+                let appsToShow = Array(
+                    env.appTracker.trackedApps
+                        .sorted { $0.name < $1.name }
+                        .prefix(6)
+                )
+
+                ForEach(appsToShow) { app in
+                    appRow(app: app)
+                }
+
+                let remaining = env.appTracker.trackedApps.count - 6
+
+                if remaining > 0 {
+                    Text("+ \(remaining) more")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.tertiary)
+                        .padding(.horizontal, 12)
+                        .padding(.top, 2)
+                        .padding(.bottom, 6)
+                }
+            }
+        }
+    }
+
+    private func appRow(app: TrackedApp) -> some View {
+        HStack(spacing: 8) {
+
+            if let icon = app.icon {
+                Image(nsImage: icon)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: 16, height: 16)
+            } else {
+                Image(systemName: "app.fill")
+                    .frame(width: 16, height: 16)
+                    .foregroundStyle(.secondary)
+            }
+
+            Text(app.name)
+                .font(.system(size: 12))
+                .lineLimit(1)
+                .truncationMode(.tail)
+
+            Spacer()
+
+            Circle()
+                .fill(app.isHidden ? Color.yellow : Color.green)
+                .frame(width: 6, height: 6)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 3)
+        .contentShape(Rectangle())
+    }
+
     // MARK: - Pause
 
     private var pauseSection: some View {
@@ -116,7 +196,9 @@ struct MenuBarView: View {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .frame(width: 16)
+
                 Text(label)
+
                 Spacer()
             }
             .padding(.horizontal, 12)
@@ -139,5 +221,4 @@ struct MenuBarView: View {
         if env.isEnabled { return "Monitoring active" }
         return "Monitoring disabled"
     }
-
 } // ← This closing brace ends the MenuBarView struct
