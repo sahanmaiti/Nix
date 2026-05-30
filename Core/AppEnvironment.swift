@@ -1,21 +1,54 @@
+
+
 import SwiftUI
 import Combine
 
-@MainActor
+@MainActor  // All updates to @Published properties happen on main thread
 final class AppEnvironment: ObservableObject {
+
+    // ──────────────────────────────────────────────────
+    // PUBLISHED STATE — UI redraws when these change
+    // ──────────────────────────────────────────────────
 
     @Published var isEnabled: Bool = true
     @Published var isPaused: Bool = false
 
-    // AppTracker is owned here — it lives as long as AppEnvironment does,
-    // which is the entire lifetime of the app.
+    // ──────────────────────────────────────────────────
+    // SERVICES — owned and initialized here
+    // ──────────────────────────────────────────────────
+
     let appTracker: AppTracker
+    let accessibilityManager: AccessibilityManager
+
+    private var cancellables = Set<AnyCancellable>()
+    
+    // ──────────────────────────────────────────────────
+    // SINGLETON
+    // ──────────────────────────────────────────────────
 
     static let shared = AppEnvironment()
 
     private init() {
+        
+        self.accessibilityManager = AccessibilityManager()
         self.appTracker = AppTracker()
+        
+        appTracker.objectWillChange
+            .sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
+            .store(in: &cancellables)
+        
+        accessibilityManager.objectWillChange
+            .sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
+        .store(in: &cancellables)
     }
+
+    // ──────────────────────────────────────────────────
+    // ACTIONS
+    // ──────────────────────────────────────────────────
 
     func toggleEnabled() {
         isEnabled.toggle()
