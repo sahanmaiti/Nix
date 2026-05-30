@@ -10,7 +10,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-        logger.info("Nix launched successfully")
+        logger.info("Nix launched. AX permission: \(AXIsProcessTrusted())")
     }
     
     func applicationWillTerminate(_ notification: Notification) {
@@ -19,5 +19,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationDidBecomeActive(_ notification: Notification) {
         logger.info("Nix is now active")
+        
+        AppEnvironment.shared.accessibilityManager.checkOnActivation()
     }
 }
