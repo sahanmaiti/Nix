@@ -7,12 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DEABF11E2FCAB241009A5C40 /* AccessibilityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEABF11D2FCAB235009A5C40 /* AccessibilityManager.swift */; };
 		DEB830862FC8A19300F886C2 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB830842FC890A300F886C2 /* MenuBarView.swift */; };
 		DEB8308A2FC8ABDD00F886C2 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB830882FC8ABDD00F886C2 /* AppEnvironment.swift */; };
 		DEB8308C2FC9D02800F886C2 /* AppTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB8308B2FC9D02000F886C2 /* AppTracker.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		DEABF11D2FCAB235009A5C40 /* AccessibilityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityManager.swift; sourceTree = "<group>"; };
 		DEB8306C2FC5774100F886C2 /* Nix.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nix.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DEB830842FC890A300F886C2 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		DEB830882FC8ABDD00F886C2 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
@@ -67,6 +69,7 @@
 		DEB830892FC8ABDD00F886C2 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				DEABF11D2FCAB235009A5C40 /* AccessibilityManager.swift */,
 				DEB8308B2FC9D02000F886C2 /* AppTracker.swift */,
 				DEB830882FC8ABDD00F886C2 /* AppEnvironment.swift */,
 			);
@@ -150,6 +153,7 @@
 				DEB8308A2FC8ABDD00F886C2 /* AppEnvironment.swift in Sources */,
 				DEB830862FC8A19300F886C2 /* MenuBarView.swift in Sources */,
 				DEB8308C2FC9D02800F886C2 /* AppTracker.swift in Sources */,
+				DEABF11E2FCAB241009A5C40 /* AccessibilityManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -285,10 +289,9 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = X7MF3C43X6;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -318,10 +321,9 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = X7MF3C43X6;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
