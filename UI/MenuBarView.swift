@@ -10,25 +10,70 @@ struct MenuBarView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
 
+            // -- PERMISSION BANNER --
+            if !env.accessibilityManager.isGranted {
+                permissionBanner
+                Divider()
+            }
+            
+            // -- HEADER --
             headerSection
 
             Divider()
-
+            
+            // -- STATUS --
             statusSection
 
             Divider()
-
+            
+            // --  APP SECTION --
             appsSection
 
             Divider()
 
+            // -- PAUSE SECTION --
             pauseSection
 
             Divider()
-
+            
+            // -- FOOTER SECTION --
             footerSection
         }
         .frame(width: 260)
+    }
+    
+    // MARK: - Permission Banner
+    
+    private var permissionBanner: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            
+            // Warming icon + title
+            HStack(spacing: 6) {
+                Image(systemName: "exclamationmark.sheild.fill")
+                    .foregroundStyle(.orange)
+                    .font(.callout)
+                
+                Text("Permission Required")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+            }
+            // Explanation :
+            Text("Nix needs Accessibility access to detect when app windows close.")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            
+            //The button that triggers the system permission prompt
+            Button("Grant Permission") {
+                env.accessibilityManager.requestPermission()
+            }
+            .font(.caption)
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color.orange.opacity(0.08))
     }
 
     // MARK: - Header
@@ -221,4 +266,4 @@ struct MenuBarView: View {
         if env.isEnabled { return "Monitoring active" }
         return "Monitoring disabled"
     }
-} // ← This closing brace ends the MenuBarView struct
+} 
