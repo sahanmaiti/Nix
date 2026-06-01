@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		DEABF11E2FCAB241009A5C40 /* AccessibilityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEABF11D2FCAB235009A5C40 /* AccessibilityManager.swift */; };
 		DEABF1222FCC0192009A5C40 /* AXWindowReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEABF1212FCC0188009A5C40 /* AXWindowReader.swift */; };
+		DEABF1242FCD5231009A5C40 /* CoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEABF1232FCD522C009A5C40 /* CoreTests.swift */; };
 		DEB830862FC8A19300F886C2 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB830842FC890A300F886C2 /* MenuBarView.swift */; };
 		DEB8308A2FC8ABDD00F886C2 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB830882FC8ABDD00F886C2 /* AppEnvironment.swift */; };
 		DEB8308C2FC9D02800F886C2 /* AppTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB8308B2FC9D02000F886C2 /* AppTracker.swift */; };
@@ -17,6 +18,7 @@
 /* Begin PBXFileReference section */
 		DEABF11D2FCAB235009A5C40 /* AccessibilityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityManager.swift; sourceTree = "<group>"; };
 		DEABF1212FCC0188009A5C40 /* AXWindowReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXWindowReader.swift; sourceTree = "<group>"; };
+		DEABF1232FCD522C009A5C40 /* CoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreTests.swift; sourceTree = "<group>"; };
 		DEB8306C2FC5774100F886C2 /* Nix.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nix.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DEB830842FC890A300F886C2 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		DEB830882FC8ABDD00F886C2 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
@@ -71,6 +73,7 @@
 		DEB830892FC8ABDD00F886C2 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				DEABF1232FCD522C009A5C40 /* CoreTests.swift */,
 				DEABF1212FCC0188009A5C40 /* AXWindowReader.swift */,
 				DEABF11D2FCAB235009A5C40 /* AccessibilityManager.swift */,
 				DEB8308B2FC9D02000F886C2 /* AppTracker.swift */,
@@ -158,6 +161,7 @@
 				DEB8308C2FC9D02800F886C2 /* AppTracker.swift in Sources */,
 				DEABF1222FCC0192009A5C40 /* AXWindowReader.swift in Sources */,
 				DEABF11E2FCAB241009A5C40 /* AccessibilityManager.swift in Sources */,
+				DEABF1242FCD5231009A5C40 /* CoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -98,13 +98,13 @@ func isSheetOrDialog(_ window: AXUIElement) -> Bool {
     guard let subrole = subroleRef as? String else {
         return false
     }
-    let nowWindowSubroles: Set<String> = [
+    let nonWindowSubroles: Set<String> = [
         "AXSheet",          // Save/print dialogs attached to windows
         "AXDialog",         // Modal alert dialogs
         "AXFloatingWindow", // Tool palettes in create apps.
         "AXSystemDialog"    // OS-level dialogs
     ]
-    return nowWindowSubroles.contains(subrole)
+    return nonWindowSubroles.contains(subrole)
 }
 
 // --------------------------------------------------

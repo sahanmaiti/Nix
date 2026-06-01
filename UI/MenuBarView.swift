@@ -49,7 +49,7 @@ struct MenuBarView: View {
             
             // Warming icon + title
             HStack(spacing: 6) {
-                Image(systemName: "exclamationmark.sheild.fill")
+                Image(systemName: "exclamationmark.shield.fill")
                     .foregroundStyle(.orange)
                     .font(.callout)
                 

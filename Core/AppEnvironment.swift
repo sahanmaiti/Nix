@@ -1,4 +1,4 @@
-
+// The dependency container for the entire Nix application.
 
 import SwiftUI
 import Combine
@@ -7,47 +7,53 @@ import Combine
 final class AppEnvironment: ObservableObject {
 
     // ──────────────────────────────────────────────────
-    // PUBLISHED STATE — UI redraws when these change
+    // MARK: - PUBLISHED STATE
+    // SwiftUI redraws when these change
     // ──────────────────────────────────────────────────
 
     @Published var isEnabled: Bool = true
     @Published var isPaused: Bool = false
 
     // ──────────────────────────────────────────────────
-    // SERVICES — owned and initialized here
+    // MARK: - SERVICES
+    // AppEnvironment OWNS these. They live as long as the app does.
     // ──────────────────────────────────────────────────
 
     let appTracker: AppTracker
     let accessibilityManager: AccessibilityManager
+    
+    // ──────────────────────────────────────────────────
+    // MARK: - Private
+    // ──────────────────────────────────────────────────
 
     private var cancellables = Set<AnyCancellable>()
     
     // ──────────────────────────────────────────────────
-    // SINGLETON
+    // MARK: - SINGLETON
     // ──────────────────────────────────────────────────
 
     static let shared = AppEnvironment()
 
     private init() {
-        
         self.accessibilityManager = AccessibilityManager()
         self.appTracker = AppTracker()
         
         appTracker.objectWillChange
             .sink { [weak self] _ in
-            self?.objectWillChange.send()
-        }
+                self?.objectWillChange.send()
+            }
             .store(in: &cancellables)
         
         accessibilityManager.objectWillChange
             .sink { [weak self] _ in
-            self?.objectWillChange.send()
-        }
-        .store(in: &cancellables)
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
     }
 
     // ──────────────────────────────────────────────────
-    // ACTIONS
+    // MARK: - ACTIONS
+    // User-facing operations that modify state.
     // ──────────────────────────────────────────────────
 
     func toggleEnabled() {
