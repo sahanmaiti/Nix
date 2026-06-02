@@ -21,7 +21,14 @@ final class AppTracker: ObservableObject {
         "com.apple.NotificationCenter"
     ]
 
-    init() {
+    // -----------------------------------------------
+    // MARK:- WindowMonitor is injected
+    // -----------------------------------------------
+    
+    private let windowMonitor: WindowMonitor
+    
+    init(windowMonitor: WindowMonitor) {
+        self.windowMonitor = windowMonitor
         setupWorkspaceObservers()   // Start listening for future events
         loadCurrentlyRunningApps()  // Handle apps already running
     }
@@ -66,7 +73,7 @@ final class AppTracker: ObservableObject {
     }
 
     // Load apps that were already running before Nix launched.
-    // Without this, Nix would be "blind" to everything open at startup.
+    /// Without this, Nix would be "blind" to everything open at startup.
     private func loadCurrentlyRunningApps() {
         NSWorkspace.shared.runningApplications
             .filter { shouldTrack($0) }
@@ -83,32 +90,40 @@ final class AppTracker: ObservableObject {
 
         let tracked = TrackedApp(runningApp: app)
         trackedApps.append(tracked)
-        print("📱 Now tracking: \(tracked.name) (PID: \(tracked.pid))")
+        
+        // Tell WindowMonitor to start watching this app's windows.
+        // WindowMonitor will create an AXObserver for this PID.
+        windowMonitor.startMonitoring(app: app)
+        
+        print("📱 Now tracking + monitoring: \(tracked.name) (PID: \(tracked.pid))")
     }
 
     private func appDidTerminate(_ app: NSRunningApplication) {
         trackedApps.removeAll { $0.pid == app.processIdentifier }
-        print("💀 Stopped tracking: \(app.localizedName ?? "unknown")")
+        
+        // Tell WindowMonitor to clean up the observer for this PID.
+        // This removes the source from the run loop and releases the observer.
+        windowMonitor.stopMonitoring(app: app)
+        
+        print("💀 Stopped tracking + monitoring: \(app.localizedName ?? "unknown")")
     }
 
     private func appDidHide(_ app: NSRunningApplication) {
-
         if let index = trackedApps.firstIndex(where: { $0.pid == app.processIdentifier }) {
             trackedApps[index].isHidden = true
-            print("👁 Hidden: \(trackedApps[index].name)")
         }
     }
 
     private func appDidUnhide(_ app: NSRunningApplication) {
         if let index = trackedApps.firstIndex(where: { $0.pid == app.processIdentifier }) {
             trackedApps[index].isHidden = false
-            print("👁 Unhidden: \(trackedApps[index].name)")
         }
     }
 
     // MARK: - Filter Logic
 
     private func shouldTrack(_ app: NSRunningApplication) -> Bool {
+        
         // Rule 1: Only track regular apps (those that appear in the Dock)
         guard app.activationPolicy == .regular else { return false }
 
