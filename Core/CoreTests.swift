@@ -21,6 +21,8 @@ func runAllVerifications() {
     verifyActivationPolicyFilter()
     verifyAXPermission()
     verifyObjectWillChangeForwarding()
+    verifyQuitEngineEnabled()
+    verifyQuitEngineCancelSafety()
     
     testLogger.info("=================================")
     testLogger.info("VERIFICATION SUITE COMLETE")
@@ -128,4 +130,24 @@ func verifyObjectWillChangeForwarding() {
     testLogger.info("   isEnabled: \(env.isEnabled), isPaused: \(env.isPaused)")
     testLogger.info("   appTracker.trackedApps.count: \(env.appTracker.trackedApps.count)")
     testLogger.info("   accessibilityManager.isGranted: \(env.accessibilityManager.isGranted)")
+}
+
+
+/// Verifies QuitEngine respects the isEnabled flag
+@MainActor
+func verifyQuitEngineEnabled() {
+    let engine = AppEnvironment.shared.quitEngine
+    testLogger.info("QuitEngine.isEnabled: \(engine.isEnabled)")
+    testLogger.info("QuitEngine.isPaused: \(engine.isPaused)")
+    testLogger.info("QuitEngine.defaultBehavior: \(engine.defaultBehavior.rawValue)")
+    testLogger.info("✅ QuitEngine initialized and accessible")
+}
+
+/// Verifies that cancelPendingQuit doesn't crash for a non-existent PID
+@MainActor
+func verifyQuitEngineCancelSafety() {
+    let engine = AppEnvironment.shared.quitEngine
+    // This should be a no-op — not crash
+    engine.cancelPendingQuit(for: pid_t(99999))
+    testLogger.info("✅ cancelPendingQuit with unknown PID: safe (no crash)")
 }

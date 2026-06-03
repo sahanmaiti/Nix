@@ -2,6 +2,7 @@
 
 import SwiftUI
 import Combine
+import OSLog
 
 @MainActor  // All updates to @Published properties happen on main thread
 final class AppEnvironment: ObservableObject {
@@ -11,8 +12,18 @@ final class AppEnvironment: ObservableObject {
     // SwiftUI redraws when these change
     // ──────────────────────────────────────────────────
 
-    @Published var isEnabled: Bool = true
-    @Published var isPaused: Bool = false
+    @Published var isEnabled: Bool = true {
+            didSet {
+                quitEngine.isEnabled = isEnabled
+                logger.info("isEnabled changed to \(self.isEnabled)")
+            }
+        }
+        @Published var isPaused: Bool = false {
+            didSet {
+                quitEngine.isPaused = isPaused
+                logger.info("isPaused changed to \(self.isPaused)")
+            }
+        }
 
     // ──────────────────────────────────────────────────
     // MARK: - SERVICES
@@ -22,12 +33,15 @@ final class AppEnvironment: ObservableObject {
     let accessibilityManager: AccessibilityManager
     let windowMonitor: WindowMonitor
     let appTracker: AppTracker
+    let quitEngine: QuitEngine
     
     // ──────────────────────────────────────────────────
     // MARK: - Private
     // ──────────────────────────────────────────────────
 
     private var cancellables = Set<AnyCancellable>()
+    private let logger = Logger(subsystem: "com.sahan.Nix", category: "AppEnvironment")
+
     
     // ──────────────────────────────────────────────────
     // MARK: - SINGLETON
@@ -36,36 +50,37 @@ final class AppEnvironment: ObservableObject {
     static let shared = AppEnvironment()
 
     private init() {
-        // 1. Create services in dependenct order.
+        // 1. Create services in dependency order.
         self.accessibilityManager = AccessibilityManager()
+        self.quitEngine = QuitEngine()
         self.windowMonitor = WindowMonitor()
         self.appTracker = AppTracker(windowMonitor: windowMonitor)
         
-        // 2. Wire the WindowMonitor -> QuitEngine pipeline
-        windowMonitor.onZeroWindows = { [weak self] app in
-            guard let self = self else { return }
-            guard self.isEnabled && !self.isPaused else {
-                print("⏸ Engine disabled/paused — would have quit \(app.localizedName ?? "?")")
-                return
-            }
-            print("🔴 WOULD QUIT: \(app.localizedName ?? "?") (PID \(app.processIdentifier))")
+        // 2. Wire the detection → decision pipeline
+
+        windowMonitor.onZeroWindows = { [weak quitEngine] app in
+            quitEngine?.evaluate(app: app)
         }
-        windowMonitor.onWindowAppeared = { pid in
-                    print("✅ Window re-appeared for PID \(pid) — would cancel pending quit")
-                }
-        
-        // 3. Forward child object changes to AppEnviroment's publisher
+        windowMonitor.onWindowAppeared = { [weak quitEngine] pid in
+            quitEngine?.cancelPendingQuit(for: pid)
+        }
+
+        // 3. Sync initial engine state
+                
+        quitEngine.isEnabled = isEnabled
+        quitEngine.isPaused = isPaused
+
+        // 4. Forward child object changes to AppEnvironment
+                
         appTracker.objectWillChange
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-            }
+            .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
-        
+
         accessibilityManager.objectWillChange
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-            }
+            .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
+
+        logger.info("AppEnvironment initialized — all services wired")
     }
 
     // ──────────────────────────────────────────────────
