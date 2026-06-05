@@ -28,15 +28,18 @@ final class QuitEngine {
     var defaultBehavior: AppBehavior = .quit
     var globalGracePeriodSeconds: Int = 0
 
-    // -- Per-app overrides -----------------------------------
-    var appBehaviorOverrides: [String: AppBehavior] = [:]
-    var appGracePeriodOverrides: [String: Int] = [:]
-
-    // --- Pending Quits Storage -------------------------------
+    // MARK: - Dependencies
+    private let ruleStore: RuleStore
+    
+    // MARK: - Internal State
     private var pendingQuits: [pid_t: DispatchWorkItem] = [:]
-
     private let logger = Logger(subsystem: "com.sahan.Nix", category: "QuitEngine")
 
+    // MARK: - Init
+    init(ruleStore: RuleStore) {
+        self.ruleStore = ruleStore
+    }
+    
     // ─────────────────────────────────────────────────────────
     // MARK: - Main Entry Point
     /// Called by AppEnvironment when WindowMonitor fires onZeroWindows.
@@ -67,10 +70,10 @@ final class QuitEngine {
 
         // --- Lookup: What behavior applies to this app? ---------------
         let bundleID = app.bundleIdentifier ?? ""
-        let behavior = appBehaviorOverrides[bundleID] ?? defaultBehavior
+        let behavior = ruleStore.behavior(for: bundleID) ?? defaultBehavior
 
         // --- Lookup: What grace period applies? ---------------------
-        let gracePeriod = appGracePeriodOverrides[bundleID] ?? globalGracePeriodSeconds
+        let gracePeriod = ruleStore.gracePeriod(for: bundleID) ?? globalGracePeriodSeconds
 
         logger.info("Evaluating '\(app.localizedName ?? bundleID)': behavior=\(behavior.rawValue), grace=\(gracePeriod)s")
 
