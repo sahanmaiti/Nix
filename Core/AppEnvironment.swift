@@ -15,13 +15,14 @@ final class AppEnvironment: ObservableObject {
     @Published var isEnabled: Bool = true {
             didSet {
                 quitEngine.isEnabled = isEnabled
-                logger.info("isEnabled changed to \(self.isEnabled)")
+                GlobalSettings.shared.isEnabled = isEnabled
+                logger.info("isEnabled \(self.isEnabled)")
             }
         }
         @Published var isPaused: Bool = false {
             didSet {
                 quitEngine.isPaused = isPaused
-                logger.info("isPaused changed to \(self.isPaused)")
+                logger.info("isPaused \(self.isPaused)")
             }
         }
 
@@ -34,6 +35,7 @@ final class AppEnvironment: ObservableObject {
     let windowMonitor: WindowMonitor
     let appTracker: AppTracker
     let quitEngine: QuitEngine
+    let ruleStore: RuleStore
     
     // ──────────────────────────────────────────────────
     // MARK: - Private
@@ -52,36 +54,46 @@ final class AppEnvironment: ObservableObject {
     private init() {
         // 1. Create services in dependency order.
         self.accessibilityManager = AccessibilityManager()
-        self.quitEngine = QuitEngine()
+        
+        let store = RuleStore()
+        self.ruleStore = store
+        
+        self.quitEngine = QuitEngine(ruleStore: store)
+        
         self.windowMonitor = WindowMonitor()
+        
         self.appTracker = AppTracker(windowMonitor: windowMonitor)
         
-        // 2. Wire the detection → decision pipeline
+        // --- 2. Sync persisted settings into the engine ---------------------
+                let settings = GlobalSettings.shared
+                isEnabled                        = settings.isEnabled
+                quitEngine.isEnabled             = settings.isEnabled
+                quitEngine.isPaused              = false  // always start unpaused
+                quitEngine.defaultBehavior       = settings.defaultBehavior
+                quitEngine.globalGracePeriodSeconds = settings.gracePeriodSeconds
 
-        windowMonitor.onZeroWindows = { [weak quitEngine] app in
-            quitEngine?.evaluate(app: app)
+        // --- 3. Wire the detection → decision pipeline ----------------------
+        /// WindowMonitor fires → QuitEngine decides
+            windowMonitor.onZeroWindows = { [weak quitEngine] app in
+                quitEngine?.evaluate(app: app)
+            }
+
+        /// WindowMonitor sees new window → cancel any pending quit
+            windowMonitor.onWindowAppeared = { [weak quitEngine] pid in
+                quitEngine?.cancelPendingQuit(for: pid)
+            }
+
+        // --- 4. Forward child changes to AppEnvironment ------------------
+            appTracker.objectWillChange
+                .sink { [weak self] _ in self?.objectWillChange.send() }
+                .store(in: &cancellables)
+
+            accessibilityManager.objectWillChange
+                .sink { [weak self] _ in self?.objectWillChange.send() }
+                .store(in: &cancellables)
+
+            logger.info("AppEnvironment initialised — all services wired")
         }
-        windowMonitor.onWindowAppeared = { [weak quitEngine] pid in
-            quitEngine?.cancelPendingQuit(for: pid)
-        }
-
-        // 3. Sync initial engine state
-                
-        quitEngine.isEnabled = isEnabled
-        quitEngine.isPaused = isPaused
-
-        // 4. Forward child object changes to AppEnvironment
-                
-        appTracker.objectWillChange
-            .sink { [weak self] _ in self?.objectWillChange.send() }
-            .store(in: &cancellables)
-
-        accessibilityManager.objectWillChange
-            .sink { [weak self] _ in self?.objectWillChange.send() }
-            .store(in: &cancellables)
-
-        logger.info("AppEnvironment initialized — all services wired")
-    }
 
     // ──────────────────────────────────────────────────
     // MARK: - ACTIONS
