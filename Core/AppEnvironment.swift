@@ -64,13 +64,8 @@ final class AppEnvironment: ObservableObject {
         
         self.appTracker = AppTracker(windowMonitor: windowMonitor)
         
-        // --- 2. Sync persisted settings into the engine ---------------------
-                let settings = GlobalSettings.shared
-                isEnabled                        = settings.isEnabled
-                quitEngine.isEnabled             = settings.isEnabled
-                quitEngine.isPaused              = false  // always start unpaused
-                quitEngine.defaultBehavior       = settings.defaultBehavior
-                quitEngine.globalGracePeriodSeconds = settings.gracePeriodSeconds
+        // --- 2: Load persisted settings into engine (startup sync) ---------------------
+            syncSettingsToEngine()
 
         // --- 3. Wire the detection → decision pipeline ----------------------
         /// WindowMonitor fires → QuitEngine decides
@@ -92,9 +87,31 @@ final class AppEnvironment: ObservableObject {
                 .sink { [weak self] _ in self?.objectWillChange.send() }
                 .store(in: &cancellables)
 
+        // --- 5: Observe GlobalSettings for runtime changes ----------------
+                GlobalSettings.shared.objectWillChange
+                    .sink { [weak self] _ in
+                        DispatchQueue.main.async {
+                            self?.syncSettingsToEngine()
+                        }
+                    }
+                    .store(in: &cancellables)
+        
             logger.info("AppEnvironment initialised — all services wired")
         }
 
+        // ----------------------------------------
+        // MARK: - Settings Sync
+        // ----------------------------------------
+
+        private func syncSettingsToEngine() {
+            let settings = GlobalSettings.shared
+
+            quitEngine.defaultBehavior          = settings.defaultBehavior
+            quitEngine.globalGracePeriodSeconds = settings.gracePeriodSeconds
+
+            logger.debug("Engine synced: behavior=\(settings.defaultBehaviorRaw), grace=\(settings.gracePeriodSeconds)s")
+        }
+    
     // ──────────────────────────────────────────────────
     // MARK: - ACTIONS
     // User-facing operations that modify state.
