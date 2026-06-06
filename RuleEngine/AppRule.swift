@@ -7,11 +7,21 @@ struct AppRule: Codable, Identifiable {
     
     // MARK: - Core Data
     var bundleIdentifier: String
-    var aappName: String
+    var appName: String
     var behavior: AppBehavior
     var gracePeriodSeconds: Int
     var isWhitelisted: Bool
     var lastModified: Date
+    
+    // MARK: - CodingKeys
+    enum CodingKeys: String, CodingKey {
+        case bundleIdentifier
+        case appName
+        case behavior
+        case gracePeriodSeconds
+        case isWhitelisted
+        case lastModified
+        }
     
     // MARK: - Initializer
     init(
@@ -22,7 +32,7 @@ struct AppRule: Codable, Identifiable {
         isWhilisted: Bool = false
     ) {
         self.bundleIdentifier = bundleIdentifier
-        self.aappName = appName
+        self.appName = appName
         self.behavior = behavior
         self.gracePeriodSeconds = gracePeriodSeconds
         self.isWhitelisted = isWhilisted
