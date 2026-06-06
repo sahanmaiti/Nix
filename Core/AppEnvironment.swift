@@ -88,13 +88,12 @@ final class AppEnvironment: ObservableObject {
                 .store(in: &cancellables)
 
         // --- 5: Observe GlobalSettings for runtime changes ----------------
-                GlobalSettings.shared.objectWillChange
-                    .sink { [weak self] _ in
-                        DispatchQueue.main.async {
-                            self?.syncSettingsToEngine()
-                        }
-                    }
-                    .store(in: &cancellables)
+            GlobalSettings.shared.objectWillChange
+                .debounce(for: .milliseconds(150), scheduler: DispatchQueue.main)
+                .sink { [weak self] _ in
+                    self?.syncSettingsToEngine()
+                }
+                .store(in: &cancellables)
         
             logger.info("AppEnvironment initialised — all services wired")
         }
