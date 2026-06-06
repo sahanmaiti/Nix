@@ -124,6 +124,10 @@ final class AppTracker: ObservableObject {
 
     private func shouldTrack(_ app: NSRunningApplication) -> Bool {
         
+        guard app.processIdentifier != ProcessInfo.processInfo.processIdentifier else {
+                return false
+            }
+        
         // Rule 1: Only track regular apps (those that appear in the Dock)
         guard app.activationPolicy == .regular else { return false }
 
