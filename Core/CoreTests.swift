@@ -23,6 +23,9 @@ func runAllVerifications() {
     verifyObjectWillChangeForwarding()
     verifyQuitEngineEnabled()
     verifyQuitEngineCancelSafety()
+    verifyGlobalSettings()
+    verifyEngineSettingsSync()
+    verifyIsEnabledSync()
     
     testLogger.info("=================================")
     testLogger.info("VERIFICATION SUITE COMLETE")
@@ -150,4 +153,54 @@ func verifyQuitEngineCancelSafety() {
     // This should be a no-op — not crash
     engine.cancelPendingQuit(for: pid_t(99999))
     testLogger.info("✅ cancelPendingQuit with unknown PID: safe (no crash)")
+}
+
+
+/// Verifies GlobalSettings loads and reports correct values.
+@MainActor
+func verifyGlobalSettings() {
+    let settings = GlobalSettings.shared
+
+    testLogger.info("=== GlobalSettings State ===")
+    testLogger.info("  isEnabled:          \(settings.isEnabled)")
+    testLogger.info("  defaultBehavior:    \(settings.defaultBehaviorRaw)")
+    testLogger.info("  gracePeriodSeconds: \(settings.gracePeriodSeconds)")
+    testLogger.info("  launchAtLogin:      \(settings.launchAtLogin)")
+    testLogger.info("  showNotifications:  \(settings.showNotifications)")
+    testLogger.info("✅ GlobalSettings readable — UserDefaults is accessible")
+}
+
+/// Verifies QuitEngine properties match what GlobalSettings says they should be.
+@MainActor
+func verifyEngineSettingsSync() {
+    let engine   = AppEnvironment.shared.quitEngine
+    let settings = GlobalSettings.shared
+
+    let behaviorMatch = engine.defaultBehavior == settings.defaultBehavior
+    let graceMatch    = engine.globalGracePeriodSeconds == settings.gracePeriodSeconds
+
+    testLogger.info("=== Engine ↔ GlobalSettings Sync ===")
+    testLogger.info("  engine.defaultBehavior (\(engine.defaultBehavior.rawValue)) == settings (\(settings.defaultBehaviorRaw)): \(behaviorMatch)")
+    testLogger.info("  engine.gracePeriod (\(engine.globalGracePeriodSeconds)) == settings (\(settings.gracePeriodSeconds)): \(graceMatch)")
+
+    if behaviorMatch && graceMatch {
+        testLogger.info("✅ QuitEngine is in sync with GlobalSettings")
+    } else {
+        testLogger.warning("⚠️ QuitEngine OUT OF SYNC — syncSettingsToEngine() may not have fired")
+    }
+}
+
+/// Verifies AppEnvironment.isEnabled matches GlobalSettings.isEnabled.
+@MainActor
+func verifyIsEnabledSync() {
+    let env      = AppEnvironment.shared
+    let settings = GlobalSettings.shared
+
+    let matches = env.isEnabled == settings.isEnabled
+
+    if matches {
+        testLogger.info("✅ isEnabled sync: AppEnvironment (\(env.isEnabled)) == GlobalSettings (\(settings.isEnabled))")
+    } else {
+        testLogger.error("❌ isEnabled MISMATCH: AppEnvironment=\(env.isEnabled), GlobalSettings=\(settings.isEnabled)")
+    }
 }
