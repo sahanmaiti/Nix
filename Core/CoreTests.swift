@@ -13,7 +13,7 @@ private let testLogger = Logger(subsystem: "com.sahan.Nix", category: "Verificat
 @MainActor
 func runAllVerifications() {
     testLogger.info("================================")
-    testLogger.info("VERIFICATION SUITE - Day 7")
+    testLogger.info("VERIFICATION SUITE - Day 11 ")
     testLogger.info("================================")
     
     verifyAppTracker()
@@ -28,7 +28,7 @@ func runAllVerifications() {
     verifyIsEnabledSync()
     
     testLogger.info("=================================")
-    testLogger.info("VERIFICATION SUITE COMLETE")
+    testLogger.info("VERIFICATION SUITE COMPLETE")
     testLogger.info("=================================")
 }
 
