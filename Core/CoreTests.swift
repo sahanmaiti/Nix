@@ -13,7 +13,7 @@ private let testLogger = Logger(subsystem: "com.sahan.Nix", category: "Verificat
 @MainActor
 func runAllVerifications() {
     testLogger.info("================================")
-    testLogger.info("VERIFICATION SUITE - Day 11 ")
+    testLogger.info("VERIFICATION SUITE - Day 12 ")
     testLogger.info("================================")
     
     verifyAppTracker()
@@ -26,6 +26,8 @@ func runAllVerifications() {
     verifyGlobalSettings()
     verifyEngineSettingsSync()
     verifyIsEnabledSync()
+    verifyGracePeriodCancelWiring()
+    verifyAppTrackerCancelCallback()
     
     testLogger.info("=================================")
     testLogger.info("VERIFICATION SUITE COMPLETE")
@@ -202,5 +204,51 @@ func verifyIsEnabledSync() {
         testLogger.info("✅ isEnabled sync: AppEnvironment (\(env.isEnabled)) == GlobalSettings (\(settings.isEnabled))")
     } else {
         testLogger.error("❌ isEnabled MISMATCH: AppEnvironment=\(env.isEnabled), GlobalSettings=\(settings.isEnabled)")
+    }
+}
+
+/// Verifies that AppEnvironment correctly wired the cancel callbacks.
+@MainActor
+func verifyGracePeriodCancelWiring() {
+    let env = AppEnvironment.shared
+
+    // Check Path 1: WindowMonitor.onWindowAppeared → QuitEngine
+    let path1Wired = env.windowMonitor.onWindowAppeared != nil
+    if path1Wired {
+        testLogger.info("✅ Path 1 wired: windowMonitor.onWindowAppeared → QuitEngine")
+    } else {
+        testLogger.error("❌ Path 1 NOT wired: windowMonitor.onWindowAppeared is nil")
+    }
+
+    // Check Path 2: AppTracker.onCancelPendingQuit → QuitEngine
+    let path2Wired = env.appTracker.onCancelPendingQuit != nil
+    if path2Wired {
+        testLogger.info("✅ Path 2 wired: appTracker.onCancelPendingQuit → QuitEngine")
+    } else {
+        testLogger.error("❌ Path 2 NOT wired: appTracker.onCancelPendingQuit is nil")
+    }
+
+    if path1Wired && path2Wired {
+        testLogger.info("✅ Grace period cancellation: both paths wired correctly")
+    }
+}
+
+/// Verifies that the cancel callback fires without crashing for tracked apps.
+/// Also verifies it's a no-op for unknown PIDs.
+@MainActor
+func verifyAppTrackerCancelCallback() {
+    let tracker = AppEnvironment.shared.appTracker
+
+    // Test 1: Firing with an unknown PID should be silent (no crash)
+    // (Already tested in verifyQuitEngineCancelSafety — this tests the AppTracker side)
+    tracker.onCancelPendingQuit?(pid_t(99999))
+    testLogger.info("✅ AppTracker.onCancelPendingQuit with unknown PID: safe")
+
+    // Test 2: If any tracked app exists, verify the callback fires for it
+    if let firstApp = tracker.trackedApps.first {
+        tracker.onCancelPendingQuit?(firstApp.pid)
+        testLogger.info("✅ AppTracker.onCancelPendingQuit fired for '\(firstApp.name)': no crash")
+    } else {
+        testLogger.info("ℹ️  No tracked apps to test cancel callback against (open any app)")
     }
 }
