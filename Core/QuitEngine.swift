@@ -115,17 +115,23 @@ final class QuitEngine {
 
         let item = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
+            
             guard !app.isTerminated else {
                 self.logger.debug("'\(app.localizedName ?? "?")' terminated on its own during grace period")
                 return
             }
+            guard !app.isHidden else {                                         // ← NEW
+                self.logger.debug("'\(app.localizedName ?? "?")' was hidden during grace period — skipping quit")
+                self.pendingQuits.removeValue(forKey: pid)
+                return
+            }
+            
             self.performQuit(app: app)
             self.pendingQuits.removeValue(forKey: pid)
         }
 
         pendingQuits[pid] = item
 
-        // Schedule it — .seconds() produces a DispatchTimeInterval
         DispatchQueue.main.asyncAfter(
             deadline: .now() + .seconds(afterSeconds),
             execute: item
