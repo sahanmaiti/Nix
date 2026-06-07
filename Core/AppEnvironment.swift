@@ -59,9 +59,7 @@ final class AppEnvironment: ObservableObject {
         self.ruleStore = store
         
         self.quitEngine = QuitEngine(ruleStore: store)
-        
         self.windowMonitor = WindowMonitor()
-        
         self.appTracker = AppTracker(windowMonitor: windowMonitor)
         
         // --- 2: Load persisted settings into engine (startup sync) ---------------------
@@ -77,6 +75,10 @@ final class AppEnvironment: ObservableObject {
             windowMonitor.onWindowAppeared = { [weak quitEngine] pid in
                 quitEngine?.cancelPendingQuit(for: pid)
             }
+        
+        appTracker.onCancelPendingQuit = { [weak quitEngine] pid in
+            quitEngine?.cancelPendingQuit(for: pid)
+        }
 
         // --- 4. Forward child changes to AppEnvironment ------------------
             appTracker.objectWillChange
