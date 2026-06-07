@@ -1,9 +1,7 @@
 import AppKit
 import Combine
-
+import os.log
 // MARK: - AppTracker
-// AppTracker is a SERVICE — it runs continuously in the background,
-// maintaining a live picture of what apps are running.
 
 @MainActor
 final class AppTracker: ObservableObject {
@@ -12,25 +10,27 @@ final class AppTracker: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 
-    // Apps we will NEVER track or quit.
-    
     private let permanentWhitelist: Set<String> = [
-        "com.apple.finder",          // Finder must never be quit
-        "com.apple.dock",            // The Dock process
-        "com.apple.SystemUIServer",  // Menu bar system processes
+        "com.apple.finder",
+        "com.apple.dock",
+        "com.apple.SystemUIServer",
         "com.apple.NotificationCenter"
     ]
 
-    // -----------------------------------------------
-    // MARK:- WindowMonitor is injected
-    // -----------------------------------------------
-    
+    // MARK: - NEW: Cancel Callback (Day 12)
+    var onCancelPendingQuit: ((pid_t) -> Void)?
+
+    // MARK: - Dependencies
+
     private let windowMonitor: WindowMonitor
-    
+    private let logger = Logger(subsystem: "com.sahan.Nix", category: "AppTracker")  // ← NEW
+
+    // MARK: - Init
+
     init(windowMonitor: WindowMonitor) {
         self.windowMonitor = windowMonitor
-        setupWorkspaceObservers()   // Start listening for future events
-        loadCurrentlyRunningApps()  // Handle apps already running
+        setupWorkspaceObservers()
+        loadCurrentlyRunningApps()
     }
 
     // MARK: - Setup
@@ -39,7 +39,6 @@ final class AppTracker: ObservableObject {
         let nc = NSWorkspace.shared.notificationCenter
 
         // --- App Launched ---
-        
         nc.publisher(for: NSWorkspace.didLaunchApplicationNotification)
             .compactMap { $0.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication }
             .filter { [weak self] app in self?.shouldTrack(app) ?? false }
@@ -48,7 +47,6 @@ final class AppTracker: ObservableObject {
             .store(in: &cancellables)
 
         // --- App Terminated ---
-        
         nc.publisher(for: NSWorkspace.didTerminateApplicationNotification)
             .compactMap { $0.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication }
             .receive(on: DispatchQueue.main)
@@ -56,7 +54,6 @@ final class AppTracker: ObservableObject {
             .store(in: &cancellables)
 
         // --- App Hidden (Cmd+H) ---
-        
         nc.publisher(for: NSWorkspace.didHideApplicationNotification)
             .compactMap { $0.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication }
             .receive(on: DispatchQueue.main)
@@ -64,16 +61,21 @@ final class AppTracker: ObservableObject {
             .store(in: &cancellables)
 
         // --- App Unhidden ---
-        
         nc.publisher(for: NSWorkspace.didUnhideApplicationNotification)
             .compactMap { $0.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] app in self?.appDidUnhide(app) }
             .store(in: &cancellables)
+
+        // --- App Activated ---
+        
+        nc.publisher(for: NSWorkspace.didActivateApplicationNotification)
+            .compactMap { $0.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] app in self?.appDidActivate(app) }
+            .store(in: &cancellables)
     }
 
-    // Load apps that were already running before Nix launched.
-    /// Without this, Nix would be "blind" to everything open at startup.
     private func loadCurrentlyRunningApps() {
         NSWorkspace.shared.runningApplications
             .filter { shouldTrack($0) }
@@ -83,70 +85,62 @@ final class AppTracker: ObservableObject {
     // MARK: - Event Handlers
 
     private func appDidLaunch(_ app: NSRunningApplication) {
-        // Defensive guard: never add duplicates.
-        guard !trackedApps.contains(where: { $0.pid == app.processIdentifier }) else {
-            return
-        }
+        guard !trackedApps.contains(where: { $0.pid == app.processIdentifier }) else { return }
 
         let tracked = TrackedApp(runningApp: app)
         trackedApps.append(tracked)
-        
-        // Tell WindowMonitor to start watching this app's windows.
-        // WindowMonitor will create an AXObserver for this PID.
         windowMonitor.startMonitoring(app: app)
-        
-        print("📱 Now tracking + monitoring: \(tracked.name) (PID: \(tracked.pid))")
+        logger.info("📱 Tracking + monitoring: \(tracked.name) (PID: \(tracked.pid))")
     }
 
     private func appDidTerminate(_ app: NSRunningApplication) {
         trackedApps.removeAll { $0.pid == app.processIdentifier }
-        
-        // Tell WindowMonitor to clean up the observer for this PID.
-        // This removes the source from the run loop and releases the observer.
         windowMonitor.stopMonitoring(app: app)
-        
-        print("💀 Stopped tracking + monitoring: \(app.localizedName ?? "unknown")")
+        logger.info("💀 Stopped tracking: \(app.localizedName ?? "unknown")")
     }
 
     private func appDidHide(_ app: NSRunningApplication) {
         if let index = trackedApps.firstIndex(where: { $0.pid == app.processIdentifier }) {
             trackedApps[index].isHidden = true
         }
+        logger.debug("👁 App hidden: \(app.localizedName ?? "?")")
     }
 
     private func appDidUnhide(_ app: NSRunningApplication) {
         if let index = trackedApps.firstIndex(where: { $0.pid == app.processIdentifier }) {
             trackedApps[index].isHidden = false
         }
+        guard trackedApps.contains(where: { $0.pid == app.processIdentifier }) else { return }
+        logger.debug("👁 App unhidden: \(app.localizedName ?? "?") — cancelling any pending quit")
+        onCancelPendingQuit?(app.processIdentifier)
+    }
+
+    // MRK: - Activation handler
+    private func appDidActivate(_ app: NSRunningApplication) {
+        guard trackedApps.contains(where: { $0.pid == app.processIdentifier }) else { return }
+        logger.debug("▶️ App activated: \(app.localizedName ?? "?") — cancelling any pending quit")
+        onCancelPendingQuit?(app.processIdentifier)
     }
 
     // MARK: - Filter Logic
 
     private func shouldTrack(_ app: NSRunningApplication) -> Bool {
-        
         guard app.processIdentifier != ProcessInfo.processInfo.processIdentifier else {
-                return false
-            }
-        
-        // Rule 1: Only track regular apps (those that appear in the Dock)
+            return false
+        }
         guard app.activationPolicy == .regular else { return false }
-
-        // Rule 2: Never track whitelisted system apps
         if let bundleID = app.bundleIdentifier,
            permanentWhitelist.contains(bundleID) {
             return false
         }
-
         return true
     }
 }
 
-// MARK: - TrackedApp Model
+// MARK: - TrackedApp Model (unchanged)
 
 struct TrackedApp: Identifiable {
-
     var id: pid_t { pid }
-
     let pid: pid_t
     let bundleIdentifier: String?
     let name: String
