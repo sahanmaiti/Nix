@@ -33,6 +33,24 @@ final class WindowMonitor {
     private let logger = Logger(subsystem: "com.sahan.Nix", category: "WindowMonitor")
 
     // ─────────────────────────────────────────────────────────────
+    // MARK: - Known Hiders
+    // ─────────────────────────────────────────────────────────────
+
+    private let knownHiders: Set<String> = [
+        "com.hnc.Discord",
+        "com.spotify.client",
+        "com.tinyspeck.slackmacgap",     // Slack
+        "com.readdle.smartemail",         // Spark
+        "com.mimestream.Mimestream",
+        "com.apple.iChat",               // Messages
+        "us.zoom.xos",                   // Zoom
+        "com.microsoft.teams",
+        "com.microsoft.teams2",          // Teams new version
+        "com.skype.skype",
+        "com.apple.MobileSMS",
+    ]
+
+    // ─────────────────────────────────────────────────────────────
     // MARK: - Public Interface
     // ─────────────────────────────────────────────────────────────
 
@@ -67,7 +85,6 @@ final class WindowMonitor {
         let pid  = app.processIdentifier
         let name = app.localizedName ?? "unknown"
 
-        // Step 1: Create the AXObserver
         var axObserver: AXObserver?
         let createError = AXObserverCreate(pid, axWindowEventCallback, &axObserver)
 
@@ -76,13 +93,9 @@ final class WindowMonitor {
             return
         }
 
-        // Step 2: Get the app-level AX element
         let appElement = AXUIElementCreateApplication(pid)
+        let selfPtr    = Unmanaged.passUnretained(self).toOpaque()
 
-        // Step 3: Pack `self` as an opaque pointer for the C callback
-        let selfPtr = Unmanaged.passUnretained(self).toOpaque()
-
-        // Step 4: Register for window notifications
         let notifications: [CFString] = [
             kAXWindowClosedStr  as CFString,
             kAXWindowCreatedStr as CFString
@@ -101,14 +114,12 @@ final class WindowMonitor {
             }
         }
 
-        // Step 5: Connect to the main run loop
         CFRunLoopAddSource(
             CFRunLoopGetMain(),
             AXObserverGetRunLoopSource(observer),
             .defaultMode
         )
 
-        // Step 6: Store the observer (keeps it alive via ARC)
         observers[pid]       = observer
         lastWindowCount[pid] = visibleWindowCount(for: pid)
 
@@ -122,7 +133,6 @@ final class WindowMonitor {
     private func removeObserver(for pid: pid_t) {
         guard let observer = observers[pid] else { return }
 
-        // Remove from run loop BEFORE releasing — order matters.
         CFRunLoopRemoveSource(
             CFRunLoopGetMain(),
             AXObserverGetRunLoopSource(observer),
@@ -138,10 +148,18 @@ final class WindowMonitor {
 
     func handleWindowClosed(pid: pid_t) {
         logger.debug("Window closed event: PID \(pid)")
+        
+        let bundleID = NSWorkspace.shared.runningApplications
+            .first(where: { $0.processIdentifier == pid })?.bundleIdentifier ?? ""
 
-        // 150ms debounce: lets the AX tree settle after the closing animation
-        // before we count windows. Without this we sometimes get stale counts.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+        let isKnownHider = knownHiders.contains(bundleID)
+        let debounce: TimeInterval = isKnownHider ? 0.5 : 0.15
+
+        if isKnownHider {
+            logger.debug("Known hider '\(bundleID)' — using extended debounce (\(Int(debounce * 1000))ms)")
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + debounce) { [weak self] in
             self?.evaluateWindowCount(for: pid)
         }
     }
@@ -163,14 +181,13 @@ final class WindowMonitor {
             return
         }
 
-        // Never evaluate a hidden app — Cmd+H hides windows without closing them.
         guard !app.isHidden else {
             logger.debug("'\(app.localizedName ?? "?")' is hidden — skipping evaluation")
             return
         }
 
-        let windowCount    = visibleWindowCount(for: pid)
-        let previousCount  = lastWindowCount[pid] ?? 0
+        let windowCount   = visibleWindowCount(for: pid)
+        let previousCount = lastWindowCount[pid] ?? 0
         lastWindowCount[pid] = windowCount
 
         logger.info("'\(app.localizedName ?? "?")': \(windowCount) visible window(s) (was \(previousCount))")
@@ -183,7 +200,7 @@ final class WindowMonitor {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MARK: - C Callback (must be a top-level free function, not a method)
+// MARK: - C Callback
 // ─────────────────────────────────────────────────────────────────────────────
 
 private func axWindowEventCallback(
@@ -201,7 +218,6 @@ private func axWindowEventCallback(
     AXUIElementGetPid(element, &pid)
 
     DispatchQueue.main.async {
-        // ✅ FIX: Comparing against our locally defined string constants.
         if notification == kAXWindowClosedStr {
             monitor.handleWindowClosed(pid: pid)
         } else if notification == kAXWindowCreatedStr {
@@ -209,14 +225,13 @@ private func axWindowEventCallback(
         }
     }
 }
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MARK: - Window Counting Helper
 // ─────────────────────────────────────────────────────────────────────────────
 
 private extension WindowMonitor {
 
-    /// Returns the number of truly visible (non-minimized, non-sheet) windows
-    /// for the given process. This is the count that matters for quit decisions.
     func visibleWindowCount(for pid: pid_t) -> Int {
         let appElement = AXUIElementCreateApplication(pid)
 
