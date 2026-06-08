@@ -1,9 +1,10 @@
+// AppRule.swift
 import Foundation
 
 struct AppRule: Codable, Identifiable {
     
     // MARK: - Identifiable
-    var id: String{ bundleIdentifier }
+    var id: String { bundleIdentifier }
     
     // MARK: - Core Data
     var bundleIdentifier: String
@@ -21,7 +22,7 @@ struct AppRule: Codable, Identifiable {
         case gracePeriodSeconds
         case isWhitelisted
         case lastModified
-        }
+    }
     
     // MARK: - Initializer
     init(
@@ -29,13 +30,13 @@ struct AppRule: Codable, Identifiable {
         appName: String,
         behavior: AppBehavior = .quit,
         gracePeriodSeconds: Int = -1,
-        isWhilisted: Bool = false
+        isWhitelisted: Bool = false
     ) {
-        self.bundleIdentifier = bundleIdentifier
-        self.appName = appName
-        self.behavior = behavior
+        self.bundleIdentifier  = bundleIdentifier
+        self.appName           = appName
+        self.behavior          = behavior
         self.gracePeriodSeconds = gracePeriodSeconds
-        self.isWhitelisted = isWhilisted
-        self.lastModified = Date()
+        self.isWhitelisted     = isWhitelisted
+        self.lastModified      = Date()
     }
 }

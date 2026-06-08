@@ -3,6 +3,9 @@
 
 import ApplicationServices
 import AppKit
+import os.log
+
+private let axLogger = Logger(subsystem: "com.sahan.Nix", category: "AXWindowReader")
 
 //-------------------------------
 //MARK: - Core Window Counting
@@ -185,16 +188,11 @@ func printWindowReport(for app: NSRunningApplication) {
             // Check minimized and real status
             let minimized = isMinimized(window)
             let real = isRealWindow(window)
-
-            print("║  [\(index)] \"\(title)\"")
-            print("║      subrole: \(subrole)")
-            print("║      minimized: \(minimized)")
-            print("║      counts as real: \(real)")
+            
+            axLogger.debug("║  [\(index)] \"\(title)\" subrole=\(subrole) minimized=\(minimized) real=\(real)")
         }
-
-        // Summary
-        print("║")
-        print("║  ► VISIBLE COUNT: \(visibleWindowCount(for: pid))")
-        print("║  ► APP HIDDEN:    \(isApplicationHidden(pid: pid))")
-        print("╚══")
-    }
+               
+        axLogger.info("║  ► VISIBLE COUNT: \(visibleWindowCount(for: pid))")
+        axLogger.info("║  ► APP HIDDEN:    \(isApplicationHidden(pid: pid))")
+        axLogger.info("╚══")
+}

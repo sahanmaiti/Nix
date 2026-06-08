@@ -18,12 +18,12 @@ final class AccessibilityManager: ObservableObject {
         checkPermission()
         // Start the 1-second polling loop
         startPolling()
-        logger.info("AccessibilityManager intialized. Permission granted: \(self.isGranted)")
+        logger.info("AccessibilityManager initialized. Permission granted: \(self.isGranted)")
     }
     
     deinit {
         pollTimer?.invalidate()
-        logger.info("AccessibilityManager deallocated. Timer incalidated.")
+        logger.info("AccessibilityManager deallocated. Timer invalidated.")
     }
     
     // MARK: - Permission Check
@@ -37,7 +37,7 @@ final class AccessibilityManager: ObservableObject {
             
             let newValue = AXIsProcessTrusted()
             
-            //OPTIMIZATION: Only update ( and trgger SwiftUI redraw) if the value changed.
+            //OPTIMIZATION: Only update ( and trigger SwiftUI redraw) if the value changed.
             if self.isGranted != newValue {
                 self.isGranted = newValue
                 self.logger.info("Permission state changed -> \(newValue)")

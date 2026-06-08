@@ -20,40 +20,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         logger.info("Nix launched. AX permission: \(AXIsProcessTrusted())")
         
-        // ── TEMPORARY TEST — Day 6 only ──────────────────────────
-        // Wait 2 seconds after launch, then print AX reports for all
-        // currently running regular apps. Watch Console.app to see the output.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            self.runAXDiagnostic()
-        }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                Task { @MainActor in
-                    runAllVerifications()
-                }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            Task { @MainActor in
+                runAllVerifications()
+            }
         }
         //-----------------------------------------------------------
     }
-       func applicationWillTerminate(_ notification: Notification) {
+    func applicationWillTerminate(_ notification: Notification) {
         logger.info("Nix is shutting down = cleaning up")
     }
     func applicationDidBecomeActive(_ notification: Notification) {
         logger.debug("Nix became active - checking AX permission")
         AppEnvironment.shared.accessibilityManager.checkPermission()
     }
-    
-    // MARK: - Private Helpers
-    
-    private func runAXDiagnostic() {
-            print("\n Running AX diagnostic on all running apps...\n")
-
-            let regularApps = NSWorkspace.shared.runningApplications
-                .filter { $0.activationPolicy == .regular }
-                .sorted { ($0.localizedName ?? "") < ($1.localizedName ?? "") }
-
-            for app in regularApps {
-                printWindowReport(for: app)
-            }
-
-            print("\n AX diagnostic complete — \(regularApps.count) apps checked.\n")
-        }
-    }
+}
