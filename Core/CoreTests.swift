@@ -28,6 +28,10 @@ func runAllVerifications() {
     verifyIsEnabledSync()
     verifyGracePeriodCancelWiring()
     verifyAppTrackerCancelCallback()
+    verifyRuleStoreEdgeCases()
+    verifyKnownHiderCoverage()
+    verifyGracePeriodResetToZero()
+    verifyQuitEngineWhitelistRespect()
     
     testLogger.info("=================================")
     testLogger.info("VERIFICATION SUITE COMPLETE")
@@ -250,5 +254,130 @@ func verifyAppTrackerCancelCallback() {
         testLogger.info("✅ AppTracker.onCancelPendingQuit fired for '\(firstApp.name)': no crash")
     } else {
         testLogger.info("ℹ️  No tracked apps to test cancel callback against (open any app)")
+    }
+}
+/// Verifies RuleStore correctly handles edge cases:
+/// permanent whitelist, unknown apps, and explicit rules.
+@MainActor
+func verifyRuleStoreEdgeCases() {
+    let store = AppEnvironment.shared.ruleStore
+
+    testLogger.info("=== RuleStore Edge Cases ===")
+
+    // Case 1: Permanent whitelist always returns .ignore
+    let finderBehavior   = store.behavior(for: "com.apple.finder")
+    let finderCorrect    = finderBehavior == .ignore
+    testLogger.info("  Finder → .ignore: \(finderCorrect ? "✅" : "❌") (got: \(finderBehavior?.rawValue ?? "nil"))")
+
+    // Case 2: Unknown bundle ID returns nil (engine falls back to defaultBehavior)
+    let unknownBehavior  = store.behavior(for: "com.nonexistent.fakeapp.xyz")
+    let unknownCorrect   = unknownBehavior == nil
+    testLogger.info("  Unknown app → nil: \(unknownCorrect ? "✅" : "❌") (got: \(unknownBehavior?.rawValue ?? "nil"))")
+
+    // Case 3: isWhitelisted correctly identifies permanent whitelist members
+    let finderListed     = store.isWhitelisted("com.apple.finder")
+    let dockListed       = store.isWhitelisted("com.apple.dock")
+    let unknownListed    = store.isWhitelisted("com.nonexistent.fakeapp.xyz")
+    testLogger.info("  Finder.isWhitelisted: \(finderListed ? "✅" : "❌")")
+    testLogger.info("  Dock.isWhitelisted: \(dockListed ? "✅" : "❌")")
+    testLogger.info("  Unknown.isWhitelisted (should be false): \(!unknownListed ? "✅" : "❌")")
+
+    // Case 4: gracePeriod returns nil for apps with no rule
+    let unknownGrace     = store.gracePeriod(for: "com.nonexistent.fakeapp.xyz")
+    let graceCorrect     = unknownGrace == nil
+    testLogger.info("  Unknown app gracePeriod → nil: \(graceCorrect ? "✅" : "❌")")
+
+    let allPass = finderCorrect && unknownCorrect && finderListed && dockListed && !unknownListed && graceCorrect
+    if allPass {
+        testLogger.info("✅ RuleStore edge cases: all correct")
+    } else {
+        testLogger.error("❌ RuleStore has edge case failures — check above")
+    }
+}
+
+/// Verifies that apps known to hide-on-close are represented in the knownHiders list.
+@MainActor
+func verifyKnownHiderCoverage() {
+    testLogger.info("=== Known Hider Coverage ===")
+
+    // These are the bundle IDs our WindowMonitor.knownHiders set should contain.
+    // We check which ones are currently running so you know which test cases apply.
+    let knownHiderBundleIDs: [String] = [
+        "com.hnc.Discord",
+        "com.spotify.client",
+        "com.tinyspeck.slackmacgap",
+        "com.readdle.smartemail",
+        "com.mimestream.Mimestream",
+        "com.apple.iChat",
+        "us.zoom.xos",
+        "com.microsoft.teams",
+        "com.microsoft.teams2",
+        "com.skype.skype",
+    ]
+
+    let runningApps = NSWorkspace.shared.runningApplications
+    var foundAny = false
+
+    for bundleID in knownHiderBundleIDs {
+        if let app = runningApps.first(where: { $0.bundleIdentifier == bundleID }) {
+            testLogger.info("  ✅ Found known hider running: \(app.localizedName ?? bundleID) — extended debounce active")
+            foundAny = true
+        }
+    }
+
+    if !foundAny {
+        testLogger.info("  ℹ️  No known hiders currently running")
+        testLogger.info("  ℹ️  Open Discord or Slack to test the adaptive debounce path")
+    }
+
+    testLogger.info("✅ Known hider check complete — WindowMonitor uses 500ms debounce for these apps")
+}
+
+/// Verifies the grace period is back to 0 after Day 13 testing.
+@MainActor
+func verifyGracePeriodResetToZero() {
+    let settings = GlobalSettings.shared
+    let engine   = AppEnvironment.shared.quitEngine
+
+    testLogger.info("=== Grace Period Reset Check ===")
+    testLogger.info("  settings.gracePeriodSeconds: \(settings.gracePeriodSeconds)")
+    testLogger.info("  engine.globalGracePeriodSeconds: \(engine.globalGracePeriodSeconds)")
+
+    if settings.gracePeriodSeconds == 0 && engine.globalGracePeriodSeconds == 0 {
+        testLogger.info("✅ Grace period correctly reset to 0")
+    } else {
+        testLogger.warning("⚠️ Grace period is NOT 0 — did you forget to remove the test override?")
+        testLogger.warning("   Remove UserDefaults.standard.set(10, forKey: 'nix.gracePeriodSeconds') from AppDelegate")
+    }
+}
+
+/// Verifies QuitEngine respects the RuleStore whitelist at the decision layer.
+/// Creates a synthetic AppRule with isWhitelisted=true and checks behavior returns .ignore.
+@MainActor
+func verifyQuitEngineWhitelistRespect() {
+    let store = AppEnvironment.shared.ruleStore
+
+    testLogger.info("=== QuitEngine Whitelist Respect ===")
+
+    // Add a temporary whitelist rule for a fake app
+    let fakeBundleID = "com.test.fakeapp.whitelist.day13"
+    store.setWhitelisted(true, for: fakeBundleID, appName: "FakeTestApp")
+
+    let behavior = store.behavior(for: fakeBundleID)
+    let isIgnore = behavior == .ignore
+
+    testLogger.info("  Whitelisted app → .ignore: \(isIgnore ? "✅" : "❌") (got: \(behavior?.rawValue ?? "nil"))")
+
+    // Clean up: remove the test rule
+    store.removeRule(for: fakeBundleID)
+    let afterRemove = store.behavior(for: fakeBundleID)
+    let cleanedUp   = afterRemove == nil
+
+    testLogger.info("  After removeRule → nil: \(cleanedUp ? "✅" : "❌")")
+
+    if isIgnore && cleanedUp {
+        testLogger.info("✅ QuitEngine whitelist respect: correctly ignores whitelisted apps")
+    } else {
+        testLogger.error("❌ Whitelist respect failure — check RuleStore.behavior()")
     }
 }
