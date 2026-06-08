@@ -32,7 +32,7 @@ func runAllVerifications() {
     verifyKnownHiderCoverage()
     verifyGracePeriodResetToZero()
     verifyQuitEngineWhitelistRespect()
-    verifyStartupIsEnabled()
+    verifyStartupIsEnabledSync()
     verifyLoggerCategories()
     
     testLogger.info("=================================")
