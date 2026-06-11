@@ -110,7 +110,16 @@ final class WindowMonitor {
         } else {
             logger.debug("Registered AXWindowCreated on app element for '\(name)'")
         }
+        
+        let closedResult = AXObserverAddNotification(
+            observer,
+            appElement,
+            kAXWindowClosedStr as CFString,
+            selfPtr
+        )
 
+        logger.debug("AXWindowClosed on app element result: \(closedResult.rawValue)")
+        
         let registeredCount = registerWindowClosedOnAllCurrentWindows(
             pid: pid,
             observer: observer,
