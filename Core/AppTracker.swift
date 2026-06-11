@@ -23,7 +23,7 @@ final class AppTracker: ObservableObject {
     // MARK: - Dependencies
 
     private let windowMonitor: WindowMonitor
-    private let logger = Logger(subsystem: "com.sahan.Nix", category: "AppTracker")  // ← NEW
+    private let logger = Logger(subsystem: "com.sahan.Nix", category: "AppTracker")
 
     // MARK: - Init
 

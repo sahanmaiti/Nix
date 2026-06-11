@@ -15,20 +15,21 @@ private let kAXWindowCreatedStr = "AXWindowCreated"
 
 
 final class WindowMonitor {
-
+    
     // ─────────────────────────────────────────────────────────────
     // MARK: - Callbacks
     // ─────────────────────────────────────────────────────────────
-
+    
     var onZeroWindows:    ((NSRunningApplication) -> Void)?
     var onWindowAppeared: ((pid_t) -> Void)?
-
+    
     // ─────────────────────────────────────────────────────────────
     // MARK: - Observer Storage
     // ─────────────────────────────────────────────────────────────
-
-    private var observers:       [pid_t: AXObserver] = [:]
-    private var lastWindowCount: [pid_t: Int]        = [:]
+    
+    private var observers:       [pid_t: AXObserver]        = [:]
+    private var windowObservers: [pid_t: Set<WindowHandle>] = [:]
+    private var lastWindowCount: [pid_t: Int]               = [:]
 
     private let logger = Logger(subsystem: "com.sahan.Nix", category: "WindowMonitor")
 
@@ -39,13 +40,13 @@ final class WindowMonitor {
     private let knownHiders: Set<String> = [
         "com.hnc.Discord",
         "com.spotify.client",
-        "com.tinyspeck.slackmacgap",     // Slack
-        "com.readdle.smartemail",         // Spark
+        "com.tinyspeck.slackmacgap",
+        "com.readdle.smartemail",
         "com.mimestream.Mimestream",
-        "com.apple.iChat",               // Messages
-        "us.zoom.xos",                   // Zoom
+        "com.apple.iChat",
+        "us.zoom.xos",
         "com.microsoft.teams",
-        "com.microsoft.teams2",          // Teams new version
+        "com.microsoft.teams2",
         "com.skype.skype",
         "com.apple.MobileSMS",
     ]
@@ -73,6 +74,7 @@ final class WindowMonitor {
     func stopMonitoring(app: NSRunningApplication) {
         let pid = app.processIdentifier
         removeObserver(for: pid)
+        windowObservers.removeValue(forKey: pid)
         lastWindowCount.removeValue(forKey: pid)
         logger.info("Stopped monitoring \(app.localizedName ?? "?")")
     }
@@ -89,30 +91,34 @@ final class WindowMonitor {
         let createError = AXObserverCreate(pid, axWindowEventCallback, &axObserver)
 
         guard createError == .success, let observer = axObserver else {
-            logger.error("AXObserverCreate failed for \(name): error \(createError.rawValue)")
+            logger.error("AXObserverCreate failed for '\(name)': error \(createError.rawValue)")
             return
         }
 
         let appElement = AXUIElementCreateApplication(pid)
         let selfPtr    = Unmanaged.passUnretained(self).toOpaque()
 
-        let notifications: [CFString] = [
-            kAXWindowClosedStr  as CFString,
-            kAXWindowCreatedStr as CFString
-        ]
+        let createdResult = AXObserverAddNotification(
+            observer,
+            appElement,
+            kAXWindowCreatedStr as CFString,
+            selfPtr
+        )
 
-        for notification in notifications {
-            let addError = AXObserverAddNotification(
-                observer,
-                appElement,
-                notification,
-                selfPtr
-            )
-
-            if addError != .success && addError != .notificationAlreadyRegistered {
-                logger.warning("Failed to register \(notification) for \(name): \(addError.rawValue)")
-            }
+        if createdResult != .success && createdResult != .notificationAlreadyRegistered {
+            logger.warning("Failed to register AXWindowCreated for '\(name)': \(createdResult.rawValue)")
+        } else {
+            logger.debug("Registered AXWindowCreated on app element for '\(name)'")
         }
+
+        let registeredCount = registerWindowClosedOnAllCurrentWindows(
+            pid: pid,
+            observer: observer,
+            selfPtr: selfPtr,
+            appName: name
+        )
+
+        logger.debug("Registered AXWindowClosed on \(registeredCount) existing window(s) for '\(name)'")
 
         CFRunLoopAddSource(
             CFRunLoopGetMain(),
@@ -123,9 +129,84 @@ final class WindowMonitor {
         observers[pid]       = observer
         lastWindowCount[pid] = visibleWindowCount(for: pid)
 
-        logger.info("✅ Monitoring started: \(name) (PID \(pid))")
+        logger.info("✅ Monitoring started: '\(name)' (PID \(pid)) — \(registeredCount) window(s) observed")
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Window-Level kAXWindowClosed Registration
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @discardableResult
+    private func registerWindowClosedOnAllCurrentWindows(
+        pid: pid_t,
+        observer: AXObserver,
+        selfPtr: UnsafeMutableRawPointer,
+        appName: String
+    ) -> Int {
+        let appElement = AXUIElementCreateApplication(pid)
+
+        var windowsRef: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(
+            appElement,
+            kAXWindowsAttribute as CFString,
+            &windowsRef
+        )
+
+        guard result == .success, let windows = windowsRef as? [AXUIElement] else {
+            logger.debug("No windows to register for '\(appName)' (AX result: \(result.rawValue))")
+            return 0
+        }
+
+        var registeredCount = 0
+
+        for window in windows {
+            if registerWindowClosed(window: window, pid: pid, observer: observer, selfPtr: selfPtr) {
+                registeredCount += 1
+            }
+        }
+
+        return registeredCount
+    }
+
+    @discardableResult
+    private func registerWindowClosed(
+        window: AXUIElement,
+        pid: pid_t,
+        observer: AXObserver,
+        selfPtr: UnsafeMutableRawPointer
+    ) -> Bool {
+        let handle = WindowHandle(element: window)
+
+        if windowObservers[pid]?.contains(handle) == true {
+            return false
+        }
+
+        let addResult = AXObserverAddNotification(
+            observer,
+            window,
+            kAXWindowClosedStr as CFString,
+            selfPtr
+        )
+
+        switch addResult {
+        case .success:
+            if windowObservers[pid] == nil { windowObservers[pid] = [] }
+            windowObservers[pid]!.insert(handle)
+            return true
+
+        case .notificationAlreadyRegistered:
+            if windowObservers[pid] == nil { windowObservers[pid] = [] }
+            windowObservers[pid]!.insert(handle)
+            return false
+
+        default:
+            logger.debug("Could not register AXWindowClosed on window element: \(addResult.rawValue)")
+            return false
+        }
+    }
+
+    
+    
     // ─────────────────────────────────────────────────────────────
     // MARK: - Observer Removal
     // ─────────────────────────────────────────────────────────────
@@ -164,10 +245,28 @@ final class WindowMonitor {
         }
     }
 
-    func handleWindowCreated(pid: pid_t) {
+    func handleWindowCreated(pid: pid_t, windowElement: AXUIElement) {
         logger.debug("Window created event: PID \(pid)")
-        onWindowAppeared?(pid)
+        
+        guard let observer = observers[pid] else {
+            logger.warning("handleWindowCreated: no observer for PID \(pid) — cannot register close")
+            return
+        }
+
+        let selfPtr = Unmanaged.passUnretained(self).toOpaque()
+        let registered = registerWindowClosed(
+            window: windowElement,
+            pid: pid,
+            observer: observer,
+            selfPtr: selfPtr
+        )
+
+        if registered {
+            logger.debug("Registered AXWindowClosed on new window for PID \(pid)")
+        }
+
         lastWindowCount[pid] = visibleWindowCount(for: pid)
+        onWindowAppeared?(pid)
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -177,7 +276,7 @@ final class WindowMonitor {
     private func evaluateWindowCount(for pid: pid_t) {
         guard let app = NSWorkspace.shared.runningApplications
             .first(where: { $0.processIdentifier == pid }) else {
-            logger.debug("App with PID \(pid) no longer running — skipping")
+            logger.debug("App with PID \(pid) no longer running — skipping evaluation")
             return
         }
 
@@ -193,7 +292,7 @@ final class WindowMonitor {
         logger.info("'\(app.localizedName ?? "?")': \(windowCount) visible window(s) (was \(previousCount))")
 
         if windowCount == 0 {
-            logger.info("🎯 Zero windows — firing onZeroWindows for '\(app.localizedName ?? "?")'")
+            logger.info("Zero windows — firing onZeroWindows for '\(app.localizedName ?? "?")'")
             onZeroWindows?(app)
         }
     }
@@ -218,10 +317,15 @@ private func axWindowEventCallback(
     AXUIElementGetPid(element, &pid)
 
     DispatchQueue.main.async {
-        if notification == kAXWindowClosedStr {
+        switch notification {
+        case kAXWindowClosedStr:
             monitor.handleWindowClosed(pid: pid)
-        } else if notification == kAXWindowCreatedStr {
-            monitor.handleWindowCreated(pid: pid)
+
+        case kAXWindowCreatedStr:
+            monitor.handleWindowCreated(pid: pid, windowElement: element)
+
+        default:
+            break
         }
     }
 }
@@ -268,5 +372,21 @@ private extension WindowMonitor {
         var value: CFTypeRef?
         AXUIElementCopyAttributeValue(window, kAXSubroleAttribute as CFString, &value)
         return (value as? String) == "AXDialog"
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARK: - WindowHandle
+// ─────────────────────────────────────────────────────────────────────────────
+
+private struct WindowHandle: Hashable {
+    let element: AXUIElement
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(CFHash(element))
+    }
+
+    static func == (lhs: WindowHandle, rhs: WindowHandle) -> Bool {
+        CFEqual(lhs.element, rhs.element)
     }
 }
