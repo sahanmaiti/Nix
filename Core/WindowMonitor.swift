@@ -6,7 +6,6 @@ import os.log
 // ─────────────────────────────────────────────────────────────────────────────
 // MARK: - AX Notification Constants
 // ─────────────────────────────────────────────────────────────────────────────
-/// Only define the notifications we actually USE.
 
 private let kAXWindowCreatedStr        = "AXWindowCreated"
 private let kAXMainWindowChangedStr    = "AXMainWindowChanged"
