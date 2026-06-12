@@ -219,21 +219,23 @@ final class WindowMonitor {
 
 
     func handleWindowCreated(pid: pid_t) {
-        let newCount = currentWindowCount(for: pid)
+        let previousCount = lastWindowCount[pid] ?? 0
+        let newCount      = currentWindowCount(for: pid)
         lastWindowCount[pid] = newCount
 
-        logger.debug("Window created for '\(self.resolvedName(pid))' — count now \(newCount)")
+        logger.debug("AXWindowCreated for '\(self.resolvedName(pid))' — count \(newCount) (was \(previousCount))")
 
-
-        pendingPhase1Checks[pid]?.cancel()
-        pendingPhase1Checks.removeValue(forKey: pid)
+        guard newCount > previousCount else {
+            logger.debug("Count did not increase — likely close-sequence artefact. Phase 1 unaffected.")
+            return
+        }
 
         pendingPhase2PIDs.remove(pid)
-
         onWindowAppeared?(pid)
+
+        logger.debug("Count increased (\(previousCount)→\(newCount)) — cancelled Phase 2, notified QuitEngine.")
     }
 
- 
     func handlePossibleWindowClose(pid: pid_t) {
         pendingPhase1Checks[pid]?.cancel()
 
@@ -244,7 +246,6 @@ final class WindowMonitor {
         }
 
         pendingPhase1Checks[pid] = item
-
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: item)
     }
 
