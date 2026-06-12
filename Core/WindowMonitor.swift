@@ -8,6 +8,7 @@ import os.log
 // ─────────────────────────────────────────────────────────────────────────────
 
 private let kAXWindowCreatedStr        = "AXWindowCreated"
+private let kAXWindowClosedStr         = "AXWindowClosed"
 private let kAXMainWindowChangedStr    = "AXMainWindowChanged"
 private let kAXFocusedWindowChangedStr = "AXFocusedWindowChanged"
 
@@ -64,7 +65,6 @@ final class WindowMonitor {
         let pid = app.processIdentifier
 
         guard observers[pid] == nil else {
-
             logger.debug("Already monitoring '\(app.localizedName ?? "?")' — skipping duplicate")
             return
         }
@@ -79,7 +79,6 @@ final class WindowMonitor {
 
     func stopMonitoring(app: NSRunningApplication) {
         let pid = app.processIdentifier
-
 
         pendingPhase1Checks[pid]?.cancel()
         pendingPhase1Checks.removeValue(forKey: pid)
@@ -101,7 +100,7 @@ final class WindowMonitor {
         let name = app.localizedName ?? "unknown"
 
         // ── Step 1: Create the AXObserver ───────────────────────────
- 
+
         var axObserver: AXObserver?
         let createErr = AXObserverCreate(pid, axWindowEventCallback, &axObserver)
 
@@ -118,7 +117,15 @@ final class WindowMonitor {
 
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
 
-        // ── Step 4: Register notifications (all on the APP element) ─
+        // ── Step 4: Register notifications ──────────────────────────
+        
+        registerNotification(
+            kAXWindowClosedStr,
+            on:      appElement,
+            observer: observer,
+            context:  selfPtr,
+            appName:  name
+        )
 
         registerNotification(
             kAXWindowCreatedStr,
@@ -128,7 +135,6 @@ final class WindowMonitor {
             appName:  name
         )
 
-
         registerNotification(
             kAXMainWindowChangedStr,
             on:      appElement,
@@ -136,7 +142,6 @@ final class WindowMonitor {
             context:  selfPtr,
             appName:  name
         )
-
 
         registerNotification(
             kAXFocusedWindowChangedStr,
@@ -155,6 +160,7 @@ final class WindowMonitor {
         )
 
         // ── Step 6: Store observer and initial window count ──────────
+
         observers[pid]       = observer
         lastWindowCount[pid] = currentWindowCount(for: pid)
 
@@ -182,12 +188,10 @@ final class WindowMonitor {
             return true
 
         case .notificationAlreadyRegistered:
-
             logger.debug("'\(notification)' already registered for '\(appName)' — OK")
             return true
 
         default:
-
             logger.warning("Failed to register '\(notification)' for '\(appName)': error \(result.rawValue)")
             return false
         }
@@ -201,13 +205,11 @@ final class WindowMonitor {
     private func removeObserver(for pid: pid_t) {
         guard let observer = observers[pid] else { return }
 
-
         CFRunLoopRemoveSource(
             CFRunLoopGetMain(),
             AXObserverGetRunLoopSource(observer),
             .defaultMode
         )
-
 
         observers.removeValue(forKey: pid)
     }
@@ -217,23 +219,23 @@ final class WindowMonitor {
     // MARK: - Event Handlers (called from C callback via main queue)
     // ─────────────────────────────────────────────────────────────────
 
-
     func handleWindowCreated(pid: pid_t) {
         let previousCount = lastWindowCount[pid] ?? 0
         let newCount      = currentWindowCount(for: pid)
         lastWindowCount[pid] = newCount
 
-        logger.debug("AXWindowCreated for '\(self.resolvedName(pid))' — count \(newCount) (was \(previousCount))")
+        if newCount > previousCount {
+            pendingPhase2PIDs.remove(pid)
+            onWindowAppeared?(pid)
+            logger.debug("Count increased (\(previousCount)→\(newCount)) — cancelled Phase 2, notified QuitEngine.")
 
-        guard newCount > previousCount else {
-            logger.debug("Count did not increase — likely close-sequence artefact. Phase 1 unaffected.")
-            return
+        } else if newCount < previousCount {
+            logger.debug("Count decreased (\(previousCount)→\(newCount)) via AXWindowCreated artefact — triggering Phase 1 as backup")
+            handlePossibleWindowClose(pid: pid)
+
+        } else {
+            logger.debug("Count unchanged at \(newCount) — spurious AX event, ignoring")
         }
-
-        pendingPhase2PIDs.remove(pid)
-        onWindowAppeared?(pid)
-
-        logger.debug("Count increased (\(previousCount)→\(newCount)) — cancelled Phase 2, notified QuitEngine.")
     }
 
     func handlePossibleWindowClose(pid: pid_t) {
@@ -254,7 +256,6 @@ final class WindowMonitor {
     // MARK: - Two-Phase TOCTOU Detection
     // ─────────────────────────────────────────────────────────────────
 
-
     private func phaseOneCheck(pid: pid_t) {
         guard let app = NSWorkspace.shared.runningApplications
             .first(where: { $0.processIdentifier == pid }),
@@ -262,7 +263,6 @@ final class WindowMonitor {
             logger.debug("Phase 1: PID \(pid) no longer running — skipping")
             return
         }
-
 
         guard !app.isHidden else {
             logger.debug("Phase 1: '\(app.localizedName ?? "?")' is hidden — skipping")
@@ -281,7 +281,6 @@ final class WindowMonitor {
         let isKnownHider  = knownHiders.contains(bundleID)
 
         if isKnownHider {
-
             logger.debug("Phase 1: '\(app.localizedName ?? "?")' is a known hider — deferring to Phase 2")
             schedulePhaseTwoCheck(pid: pid)
         } else {
@@ -304,7 +303,6 @@ final class WindowMonitor {
             self.phaseTwoCheck(pid: pid)
         }
     }
-
 
     private func phaseTwoCheck(pid: pid_t) {
         guard let app = NSWorkspace.shared.runningApplications
@@ -346,19 +344,15 @@ final class WindowMonitor {
             &windowsRef
         )
 
-
         guard result == .success,
               let windows = windowsRef as? [AXUIElement] else {
             return 0
         }
 
         return windows.filter { window in
-
             !isSheet(window) && !isDialog(window) && !isFloatingWindow(window)
         }.count
     }
-
-    // ── Window type helpers ─────────────────────────────────────────
 
     private func isSheet(_ window: AXUIElement) -> Bool {
         var value: CFTypeRef?
@@ -378,9 +372,6 @@ final class WindowMonitor {
         return (value as? String) == "AXFloatingWindow"
     }
 
-    // ── Utility ─────────────────────────────────────────────────────
-
-
     private func resolvedName(_ pid: pid_t) -> String {
         NSWorkspace.shared.runningApplications
             .first(where: { $0.processIdentifier == pid })?
@@ -393,7 +384,6 @@ final class WindowMonitor {
 // MARK: - C Callback (free function — required by AXObserverCreate API)
 // ─────────────────────────────────────────────────────────────────────────────
 
-
 private func axWindowEventCallback(
     observer:         AXObserver,
     element:          AXUIElement,
@@ -402,29 +392,24 @@ private func axWindowEventCallback(
 ) {
     guard let refcon = refcon else { return }
 
-
     let monitor      = Unmanaged<WindowMonitor>.fromOpaque(refcon).takeUnretainedValue()
     let notification = notificationName as String
-
 
     var pid: pid_t = 0
     let pidErr = AXUIElementGetPid(element, &pid)
 
-    guard pidErr == .success, pid != 0 else {
-
-        return
-    }
-
+    guard pidErr == .success, pid != 0 else { return }
 
     DispatchQueue.main.async {
         switch notification {
 
-        case kAXWindowCreatedStr:
+        case kAXWindowClosedStr:
+            monitor.handlePossibleWindowClose(pid: pid)
 
+        case kAXWindowCreatedStr:
             monitor.handleWindowCreated(pid: pid)
 
         case kAXMainWindowChangedStr, kAXFocusedWindowChangedStr:
-
             monitor.handlePossibleWindowClose(pid: pid)
 
         default:
