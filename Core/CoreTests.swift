@@ -34,6 +34,8 @@ func runAllVerifications() {
     verifyQuitEngineWhitelistRespect()
     verifyStartupIsEnabledSync()
     verifyLoggerCategories()
+    verifyWindowDetails(appName: "Preview")
+    verifyWindowDetails(appName: "Calculator")
     
     testLogger.info("=================================")
     testLogger.info("VERIFICATION SUITE COMPLETE")
@@ -438,4 +440,59 @@ func verifyLoggerCategories() {
     testLogger.info("✅ All services reachable — loggers initialized correctly")
     testLogger.info("   Tip: In Console.app, filter subsystem: com.sahan.Nix")
     testLogger.info("   Then filter category to isolate one service at a time.")
+}
+
+
+/// Prints the full AX window list for any running app.
+/// Call this to diagnose why an app shows N windows in Nix's count.
+@MainActor
+func verifyWindowDetails(appName: String) {
+    guard let app = NSWorkspace.shared.runningApplications
+        .first(where: { $0.localizedName == appName }) else {
+        testLogger.info("ℹ️  '\(appName)' is not running — launch it first")
+        return
+    }
+    let pid = app.processIdentifier
+    let appElement = AXUIElementCreateApplication(pid)
+    var windowsRef: CFTypeRef?
+    let result = AXUIElementCopyAttributeValue(
+        appElement,
+        kAXWindowsAttribute as CFString,
+        &windowsRef
+    )
+    testLogger.info("=== AX Window Details: \(appName) (PID \(pid)) ===")
+    guard result == .success, let windows = windowsRef as? [AXUIElement] else {
+        testLogger.error("  Could not read windows: AXError \(result.rawValue)")
+        return
+    }
+    testLogger.info("  Total windows in AX tree: \(windows.count)")
+    for (i, window) in windows.enumerated() {
+        // Title
+        var titleRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(window, kAXTitleAttribute as CFString, &titleRef)
+        let title = (titleRef as? String) ?? "(no title)"
+        // Subrole (AXStandardWindow, AXSheet, AXDialog, etc.)
+        var subroleRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(window, kAXSubroleAttribute as CFString, &subroleRef)
+        let subrole = (subroleRef as? String) ?? "(no subrole)"
+        // Is it minimized to Dock?
+        var minRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(window, kAXMinimizedAttribute as CFString, &minRef)
+        let minimized = (minRef as? Bool) ?? false
+        // Is it the main window?
+        var mainRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(window, kAXMainAttribute as CFString, &mainRef)
+        let isMain = (mainRef as? Bool) ?? false
+        // Is it visible/onscreen?
+        var visibleRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(window, "AXVisible" as CFString, &visibleRef)
+        let visible = (visibleRef as? Bool) ?? true  // assume visible if unreadable
+        let filtered = (subrole == "AXSheet" || subrole == "AXDialog" ||
+                        subrole == "AXFloatingWindow" || subrole == "AXSystemDialog" ||
+                        minimized)
+        testLogger.info("  [\(i)] '\(title)'")
+        testLogger.info("       subrole=\(subrole) minimized=\(minimized) main=\(isMain) visible=\(visible)")
+        testLogger.info("       → counted by Nix: \(!filtered)")
+    }
+    testLogger.info("=== End Window Details ===")
 }

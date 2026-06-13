@@ -23,7 +23,8 @@ final class WindowMonitor {
     // MARK: - Outbound Callbacks
     // ─────────────────────────────────────────────────────────────────
 
-    var onZeroWindows:    ((NSRunningApplication) -> Void)?
+    var onZeroWindows: ((NSRunningApplication) -> Void)?
+
     var onWindowAppeared: ((pid_t) -> Void)?
 
 
@@ -31,10 +32,10 @@ final class WindowMonitor {
     // MARK: - Internal State
     // ─────────────────────────────────────────────────────────────────
 
-    private var observers: [pid_t: AXObserver] = [:]
-    private var lastWindowCount: [pid_t: Int] = [:]
-    private var pendingPhase1Checks: [pid_t: DispatchWorkItem] = [:]
-    private var pendingPhase2PIDs: Set<pid_t> = []
+    private var observers:            [pid_t: AXObserver]      = [:]
+    private var lastWindowCount:      [pid_t: Int]              = [:]
+    private var pendingPhase1Checks:  [pid_t: DispatchWorkItem] = [:]
+    private var pendingPhase2PIDs:    Set<pid_t>                = []
     private let logger = Logger(subsystem: "com.sahan.Nix", category: "WindowMonitor")
 
 
@@ -65,10 +66,9 @@ final class WindowMonitor {
         let pid = app.processIdentifier
 
         guard observers[pid] == nil else {
-            logger.debug("Already monitoring '\(app.localizedName ?? "?")' — skipping duplicate")
+            logger.debug("Already monitoring '\(app.localizedName ?? "?")' — skipping")
             return
         }
-
         guard AXIsProcessTrusted() else {
             logger.warning("No AX permission — cannot monitor '\(app.localizedName ?? "?")'")
             return
@@ -83,7 +83,6 @@ final class WindowMonitor {
         pendingPhase1Checks[pid]?.cancel()
         pendingPhase1Checks.removeValue(forKey: pid)
         pendingPhase2PIDs.remove(pid)
-
         removeObserver(for: pid)
         lastWindowCount.removeValue(forKey: pid)
 
@@ -99,8 +98,6 @@ final class WindowMonitor {
         let pid  = app.processIdentifier
         let name = app.localizedName ?? "unknown"
 
-        // ── Step 1: Create the AXObserver ───────────────────────────
-
         var axObserver: AXObserver?
         let createErr = AXObserverCreate(pid, axWindowEventCallback, &axObserver)
 
@@ -109,57 +106,15 @@ final class WindowMonitor {
             return
         }
 
-        // ── Step 2: Get the application-level AX element ────────────
-
         let appElement = AXUIElementCreateApplication(pid)
+        let selfPtr    = Unmanaged.passUnretained(self).toOpaque()
 
-        // ── Step 3: Capture 'self' as an opaque context pointer ─────
+        registerNotification(kAXWindowClosedStr,         on: appElement, observer: observer, context: selfPtr, appName: name)
+        registerNotification(kAXWindowCreatedStr,        on: appElement, observer: observer, context: selfPtr, appName: name)
+        registerNotification(kAXMainWindowChangedStr,    on: appElement, observer: observer, context: selfPtr, appName: name)
+        registerNotification(kAXFocusedWindowChangedStr, on: appElement, observer: observer, context: selfPtr, appName: name)
 
-        let selfPtr = Unmanaged.passUnretained(self).toOpaque()
-
-        // ── Step 4: Register notifications ──────────────────────────
-        
-        registerNotification(
-            kAXWindowClosedStr,
-            on:      appElement,
-            observer: observer,
-            context:  selfPtr,
-            appName:  name
-        )
-
-        registerNotification(
-            kAXWindowCreatedStr,
-            on:      appElement,
-            observer: observer,
-            context:  selfPtr,
-            appName:  name
-        )
-
-        registerNotification(
-            kAXMainWindowChangedStr,
-            on:      appElement,
-            observer: observer,
-            context:  selfPtr,
-            appName:  name
-        )
-
-        registerNotification(
-            kAXFocusedWindowChangedStr,
-            on:      appElement,
-            observer: observer,
-            context:  selfPtr,
-            appName:  name
-        )
-
-        // ── Step 5: Attach observer to the main run loop ─────────────
-
-        CFRunLoopAddSource(
-            CFRunLoopGetMain(),
-            AXObserverGetRunLoopSource(observer),
-            .defaultMode
-        )
-
-        // ── Step 6: Store observer and initial window count ──────────
+        CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
 
         observers[pid]       = observer
         lastWindowCount[pid] = currentWindowCount(for: pid)
@@ -170,29 +125,21 @@ final class WindowMonitor {
     @discardableResult
     private func registerNotification(
         _ notification: String,
-        on element:    AXUIElement,
-        observer:      AXObserver,
-        context:       UnsafeMutableRawPointer,
-        appName:       String
+        on element:     AXUIElement,
+        observer:       AXObserver,
+        context:        UnsafeMutableRawPointer,
+        appName:        String
     ) -> Bool {
-        let result = AXObserverAddNotification(
-            observer,
-            element,
-            notification as CFString,
-            context
-        )
-
+        let result = AXObserverAddNotification(observer, element, notification as CFString, context)
         switch result {
         case .success:
             logger.debug("Registered '\(notification)' for '\(appName)'")
             return true
-
         case .notificationAlreadyRegistered:
             logger.debug("'\(notification)' already registered for '\(appName)' — OK")
             return true
-
         default:
-            logger.warning("Failed to register '\(notification)' for '\(appName)': error \(result.rawValue)")
+            logger.warning("Failed to register '\(notification)' for '\(appName)': \(result.rawValue)")
             return false
         }
     }
@@ -204,41 +151,16 @@ final class WindowMonitor {
 
     private func removeObserver(for pid: pid_t) {
         guard let observer = observers[pid] else { return }
-
-        CFRunLoopRemoveSource(
-            CFRunLoopGetMain(),
-            AXObserverGetRunLoopSource(observer),
-            .defaultMode
-        )
-
+        CFRunLoopRemoveSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
         observers.removeValue(forKey: pid)
     }
 
 
     // ─────────────────────────────────────────────────────────────────
-    // MARK: - Event Handlers (called from C callback via main queue)
+    // MARK: - Unified Event Entry Point
     // ─────────────────────────────────────────────────────────────────
 
-    func handleWindowCreated(pid: pid_t) {
-        let previousCount = lastWindowCount[pid] ?? 0
-        let newCount      = currentWindowCount(for: pid)
-        lastWindowCount[pid] = newCount
-
-        if newCount > previousCount {
-            pendingPhase2PIDs.remove(pid)
-            onWindowAppeared?(pid)
-            logger.debug("Count increased (\(previousCount)→\(newCount)) — cancelled Phase 2, notified QuitEngine.")
-
-        } else if newCount < previousCount {
-            logger.debug("Count decreased (\(previousCount)→\(newCount)) via AXWindowCreated artefact — triggering Phase 1 as backup")
-            handlePossibleWindowClose(pid: pid)
-
-        } else {
-            logger.debug("Count unchanged at \(newCount) — spurious AX event, ignoring")
-        }
-    }
-
-    func handlePossibleWindowClose(pid: pid_t) {
+    func handlePossibleWindowChange(pid: pid_t) {
         pendingPhase1Checks[pid]?.cancel()
 
         let item = DispatchWorkItem { [weak self] in
@@ -253,7 +175,7 @@ final class WindowMonitor {
 
 
     // ─────────────────────────────────────────────────────────────────
-    // MARK: - Two-Phase TOCTOU Detection
+    // MARK: - Phase 1: The Single Authoritative Decision Point
     // ─────────────────────────────────────────────────────────────────
 
     private func phaseOneCheck(pid: pid_t) {
@@ -273,21 +195,31 @@ final class WindowMonitor {
         let previous = lastWindowCount[pid] ?? 0
         lastWindowCount[pid] = count
 
-        logger.info("'\(app.localizedName ?? "?")': \(count) window(s) after Phase 1 (was \(previous))")
+        logger.info("'\(app.localizedName ?? "?")': \(count) visible window(s) (was \(previous))")
 
-        guard count == 0 else { return }
+        if count > 0 {
+            pendingPhase2PIDs.remove(pid)
+            onWindowAppeared?(pid)
+            return
+        }
 
-        let bundleID      = app.bundleIdentifier ?? ""
-        let isKnownHider  = knownHiders.contains(bundleID)
+
+        let bundleID     = app.bundleIdentifier ?? ""
+        let isKnownHider = knownHiders.contains(bundleID)
 
         if isKnownHider {
             logger.debug("Phase 1: '\(app.localizedName ?? "?")' is a known hider — deferring to Phase 2")
             schedulePhaseTwoCheck(pid: pid)
         } else {
-            logger.info("🎯 Phase 1 confirmed: zero windows — firing for '\(app.localizedName ?? "?")'")
+            logger.info("🎯 Phase 1 confirmed: zero windows — firing onZeroWindows for '\(app.localizedName ?? "?")'")
             onZeroWindows?(app)
         }
     }
+
+
+    // ─────────────────────────────────────────────────────────────────
+    // MARK: - Phase 2 (Known Hiders Only)
+    // ─────────────────────────────────────────────────────────────────
 
     private func schedulePhaseTwoCheck(pid: pid_t) {
         guard !pendingPhase2PIDs.contains(pid) else {
@@ -313,25 +245,25 @@ final class WindowMonitor {
         }
 
         guard !app.isHidden else {
-            logger.debug("Phase 2: '\(app.localizedName ?? "?")' is hidden — hide-on-close confirmed. Not quitting.")
+            logger.debug("Phase 2: '\(app.localizedName ?? "?")' is hidden — hide-on-close confirmed, not quitting")
             return
         }
 
         let count = currentWindowCount(for: pid)
-        logger.info("'\(app.localizedName ?? "?")': \(count) window(s) at Phase 2 (650ms)")
+        logger.info("'\(app.localizedName ?? "?")': \(count) window(s) at Phase 2 (650ms total)")
 
         guard count == 0 else {
             logger.debug("Phase 2: '\(app.localizedName ?? "?")' has windows now — skipping quit")
             return
         }
 
-        logger.info("🎯 Phase 2 confirmed: zero windows — firing for '\(app.localizedName ?? "?")'")
+        logger.info("🎯 Phase 2 confirmed: zero windows — firing onZeroWindows for '\(app.localizedName ?? "?")'")
         onZeroWindows?(app)
     }
 
 
     // ─────────────────────────────────────────────────────────────────
-    // MARK: - Window Count
+    // MARK: - Window Count Query
     // ─────────────────────────────────────────────────────────────────
 
     private func currentWindowCount(for pid: pid_t) -> Int {
@@ -349,39 +281,22 @@ final class WindowMonitor {
             return 0
         }
 
-        return windows.filter { window in
-            !isSheet(window) && !isDialog(window) && !isFloatingWindow(window)
-        }.count
+        return windows.filter { !isNonPrimaryWindow($0) }.count
     }
 
-    private func isSheet(_ window: AXUIElement) -> Bool {
+    private func isNonPrimaryWindow(_ window: AXUIElement) -> Bool {
         var value: CFTypeRef?
-        AXUIElementCopyAttributeValue(window, kAXSubroleAttribute as CFString, &value)
-        return (value as? String) == "AXSheet"
-    }
-
-    private func isDialog(_ window: AXUIElement) -> Bool {
-        var value: CFTypeRef?
-        AXUIElementCopyAttributeValue(window, kAXSubroleAttribute as CFString, &value)
-        return (value as? String) == "AXDialog"
-    }
-
-    private func isFloatingWindow(_ window: AXUIElement) -> Bool {
-        var value: CFTypeRef?
-        AXUIElementCopyAttributeValue(window, kAXSubroleAttribute as CFString, &value)
-        return (value as? String) == "AXFloatingWindow"
-    }
-
-    private func resolvedName(_ pid: pid_t) -> String {
-        NSWorkspace.shared.runningApplications
-            .first(where: { $0.processIdentifier == pid })?
-            .localizedName ?? "PID:\(pid)"
+        guard AXUIElementCopyAttributeValue(window, kAXSubroleAttribute as CFString, &value) == .success,
+              let subrole = value as? String else {
+            return false
+        }
+        return subrole == "AXSheet" || subrole == "AXDialog" || subrole == "AXFloatingWindow"
     }
 }
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MARK: - C Callback (free function — required by AXObserverCreate API)
+// MARK: - C Callback
 // ─────────────────────────────────────────────────────────────────────────────
 
 private func axWindowEventCallback(
@@ -392,28 +307,12 @@ private func axWindowEventCallback(
 ) {
     guard let refcon = refcon else { return }
 
-    let monitor      = Unmanaged<WindowMonitor>.fromOpaque(refcon).takeUnretainedValue()
-    let notification = notificationName as String
+    let monitor = Unmanaged<WindowMonitor>.fromOpaque(refcon).takeUnretainedValue()
 
     var pid: pid_t = 0
-    let pidErr = AXUIElementGetPid(element, &pid)
-
-    guard pidErr == .success, pid != 0 else { return }
+    guard AXUIElementGetPid(element, &pid) == .success, pid != 0 else { return }
 
     DispatchQueue.main.async {
-        switch notification {
-
-        case kAXWindowClosedStr:
-            monitor.handlePossibleWindowClose(pid: pid)
-
-        case kAXWindowCreatedStr:
-            monitor.handleWindowCreated(pid: pid)
-
-        case kAXMainWindowChangedStr, kAXFocusedWindowChangedStr:
-            monitor.handlePossibleWindowClose(pid: pid)
-
-        default:
-            break
-        }
+        monitor.handlePossibleWindowChange(pid: pid)
     }
 }
