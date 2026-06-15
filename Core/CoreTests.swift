@@ -13,7 +13,7 @@ private let testLogger = Logger(subsystem: "com.sahan.Nix", category: "Verificat
 @MainActor
 func runAllVerifications() {
     testLogger.info("================================")
-    testLogger.info("VERIFICATION SUITE - Day 13")
+    testLogger.info("VERIFICATION SUITE - Day 14")
     testLogger.info("================================")
     
     verifyAppTracker()

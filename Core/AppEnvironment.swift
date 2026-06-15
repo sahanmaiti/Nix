@@ -4,7 +4,7 @@ import SwiftUI
 import Combine
 import OSLog
 
-@MainActor  // All updates to @Published properties happen on main thread
+@MainActor
 final class AppEnvironment: ObservableObject {
     
     // ──────────────────────────────────────────────────
@@ -63,8 +63,8 @@ final class AppEnvironment: ObservableObject {
         self.appTracker = AppTracker(windowMonitor: windowMonitor)
         
         // --- 2: Load persisted settings into engine (startup sync) ---------------------
-        syncSettingsToEngine()
-        
+        loadPersistedSettings()
+
         // --- 3. Wire the detection → decision pipeline ----------------------
         /// WindowMonitor fires → QuitEngine decides
         windowMonitor.onZeroWindows = { [weak quitEngine] app in
@@ -113,7 +113,12 @@ final class AppEnvironment: ObservableObject {
         
         _isEnabled = Published(initialValue: settings.isEnabled)
         
-        logger.info("Startup settings loaded: isEnabled=\(settings.isEnabled), behavior=\(settings.defaultBehaviorRaw), grace=\(settings.gracePeriodSeconds)s")
+        logger.info("""
+                    Startup settings loaded: \
+                    isEnabled=\(settings.isEnabled), \
+                    behavior=\(settings.defaultBehaviorRaw), \
+                    grace=\(settings.gracePeriodSeconds)s
+                    """)
     }
         
     private func syncSettingsToEngine() {
@@ -122,8 +127,12 @@ final class AppEnvironment: ObservableObject {
             quitEngine.defaultBehavior          = settings.defaultBehavior
             quitEngine.globalGracePeriodSeconds = settings.gracePeriodSeconds
             
-            logger.debug("Engine synced (runtime): behavior=\(settings.defaultBehaviorRaw), grace=\(settings.gracePeriodSeconds)s")
-        }
+        logger.debug("""
+                    Engine synced (runtime): \
+                    behavior=\(settings.defaultBehaviorRaw), \
+                    grace=\(settings.gracePeriodSeconds)s
+                    """)
+    }
         
         // ──────────────────────────────────────────────────
         // MARK: - ACTIONS
