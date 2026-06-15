@@ -6,7 +6,7 @@ import SwiftUI
 struct NixApp: App {
 
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    
+
     @StateObject private var env = AppEnvironment.shared
 
     var body: some Scene {
@@ -15,10 +15,9 @@ struct NixApp: App {
                 .environmentObject(env)
         }
         .menuBarExtraStyle(.window)
-
         Settings {
-            Text("Settings — coming Day 15")
-                .padding(40)
+            SettingsView()
+                .environmentObject(env)
         }
     }
 
