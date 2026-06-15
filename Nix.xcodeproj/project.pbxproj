@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DE2D74282FDFD99600B6D3CE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2D74272FDFD99100B6D3CE /* SettingsView.swift */; };
+		DE2D742A2FDFDAD000B6D3CE /* GeneralTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2D74292FDFDACB00B6D3CE /* GeneralTab.swift */; };
 		DE5B43512FD08F4C0059F34F /* QuitEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5B43502FD08F430059F34F /* QuitEngine.swift */; };
 		DE5B43562FD31FDD0059F34F /* RuleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5B43542FD317860059F34F /* RuleStore.swift */; };
 		DE5B43572FD31FF00059F34F /* GlobalSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5B43552FD31A9D0059F34F /* GlobalSettings.swift */; };
@@ -21,6 +23,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		DE2D74262FDFD7EC00B6D3CE /* LoginItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
+		DE2D74272FDFD99100B6D3CE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		DE2D74292FDFDACB00B6D3CE /* GeneralTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralTab.swift; sourceTree = "<group>"; };
 		DE5B43502FD08F430059F34F /* QuitEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuitEngine.swift; sourceTree = "<group>"; };
 		DE5B43532FD315DA0059F34F /* AppRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRule.swift; sourceTree = "<group>"; };
 		DE5B43542FD317860059F34F /* RuleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleStore.swift; sourceTree = "<group>"; };
@@ -54,6 +59,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		DE2D74252FDFD7C800B6D3CE /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				DE2D74262FDFD7EC00B6D3CE /* LoginItemService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
 		DE5B43522FD315C30059F34F /* RuleEngine */ = {
 			isa = PBXGroup;
 			children = (
@@ -71,6 +84,7 @@
 				DEB830892FC8ABDD00F886C2 /* Core */,
 				DE5B43522FD315C30059F34F /* RuleEngine */,
 				DEB830822FC88F2100F886C2 /* UI */,
+				DE2D74252FDFD7C800B6D3CE /* Services */,
 				DEB8306D2FC5774100F886C2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -86,6 +100,8 @@
 		DEB830822FC88F2100F886C2 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				DE2D74292FDFDACB00B6D3CE /* GeneralTab.swift */,
+				DE2D74272FDFD99100B6D3CE /* SettingsView.swift */,
 				DEB830842FC890A300F886C2 /* MenuBarView.swift */,
 			);
 			path = UI;
@@ -186,6 +202,8 @@
 				DEABF1222FCC0192009A5C40 /* AXWindowReader.swift in Sources */,
 				DE5B43512FD08F4C0059F34F /* QuitEngine.swift in Sources */,
 				DE5B43572FD31FF00059F34F /* GlobalSettings.swift in Sources */,
+				DE2D74282FDFD99600B6D3CE /* SettingsView.swift in Sources */,
+				DE2D742A2FDFDAD000B6D3CE /* GeneralTab.swift in Sources */,
 				DED5B7082FCEBDCC00735E04 /* WindowMonitor.swift in Sources */,
 				DEABF11E2FCAB241009A5C40 /* AccessibilityManager.swift in Sources */,
 				DEABF1242FCD5231009A5C40 /* CoreTests.swift in Sources */,
