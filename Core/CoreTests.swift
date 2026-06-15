@@ -1,4 +1,4 @@
-// DEBUG FILe- DELETE BEFORE SHIPPING
+// DEBUG FILE - DELETE BEFORE SHIPPING
 
 import AppKit
 import ApplicationServices
@@ -13,7 +13,7 @@ private let testLogger = Logger(subsystem: "com.sahan.Nix", category: "Verificat
 @MainActor
 func runAllVerifications() {
     testLogger.info("================================")
-    testLogger.info("VERIFICATION SUITE - Day 12 ")
+    testLogger.info("VERIFICATION SUITE - Day 13")
     testLogger.info("================================")
     
     verifyAppTracker()
@@ -34,8 +34,6 @@ func runAllVerifications() {
     verifyQuitEngineWhitelistRespect()
     verifyStartupIsEnabledSync()
     verifyLoggerCategories()
-    verifyWindowDetails(appName: "Preview")
-    verifyWindowDetails(appName: "Calculator")
     
     testLogger.info("=================================")
     testLogger.info("VERIFICATION SUITE COMPLETE")
@@ -44,9 +42,9 @@ func runAllVerifications() {
 
 // ------------------------------------------------------
 // MARK: - Individual Verifications
-///Verifies Apptracker is populated with currently running apps.
 // ------------------------------------------------------
 
+/// Verifies AppTracker is populated with currently running apps.
 @MainActor
 func verifyAppTracker() {
     let tracker = AppEnvironment.shared.appTracker
@@ -55,10 +53,10 @@ func verifyAppTracker() {
     if count > 0 {
         testLogger.info("✅ AppTracker has \(count) apps tracked")
         for app in tracker.trackedApps.prefix(3) {
-            testLogger.debug("   -> \(app.name) (PID: \(app.pid)")
+            testLogger.debug("   -> \(app.name) (PID: \(app.pid))")
         }
     } else {
-        testLogger.warning("AppTracker: 0 aps tracked - is any regular app running?")
+        testLogger.warning("⚠️ AppTracker: 0 apps tracked — is any regular app running?")
     }
 }
 
@@ -80,7 +78,7 @@ func verifyWhitelist() {
         }
         
         if isTracked {
-            testLogger.error("❌ WHITELIST FAIL: \(bundleID) IS being tracked (shouldbe executed)")
+            testLogger.error("❌ WHITELIST FAIL: \(bundleID) IS being tracked (should be excluded)")
             allPassed = false
         } else {
             testLogger.info("✅ WHITELIST PASS: \(bundleID) correctly excluded")
@@ -109,7 +107,7 @@ func verifyActivationPolicyFilter() {
         }
     }
 
-    let regularCount = allRunning.filter { $0.activationPolicy == .regular }.count
+    let regularCount  = allRunning.filter { $0.activationPolicy == .regular }.count
     let accessoryCount = allRunning.filter { $0.activationPolicy == .accessory }.count
 
     testLogger.info("✅ Activation policy: \(regularCount) regular, \(accessoryCount) accessory (excluded)")
@@ -122,8 +120,8 @@ func verifyActivationPolicyFilter() {
 /// Verifies that AccessibilityManager correctly reflects current AX permission.
 @MainActor
 func verifyAXPermission() {
-    let manager = AppEnvironment.shared.accessibilityManager
-    let systemValue = AXIsProcessTrusted()
+    let manager      = AppEnvironment.shared.accessibilityManager
+    let systemValue  = AXIsProcessTrusted()
     let managerValue = manager.isGranted
 
     if systemValue == managerValue {
@@ -135,7 +133,6 @@ func verifyAXPermission() {
 }
 
 /// Verifies that AppEnvironment properly forwards child change notifications.
-/// When appTracker.trackedApps changes, AppEnvironment should publish too.
 @MainActor
 func verifyObjectWillChangeForwarding() {
     let env = AppEnvironment.shared
@@ -145,8 +142,7 @@ func verifyObjectWillChangeForwarding() {
     testLogger.info("   accessibilityManager.isGranted: \(env.accessibilityManager.isGranted)")
 }
 
-
-/// Verifies QuitEngine respects the isEnabled flag
+/// Verifies QuitEngine respects the isEnabled flag.
 @MainActor
 func verifyQuitEngineEnabled() {
     let engine = AppEnvironment.shared.quitEngine
@@ -156,15 +152,13 @@ func verifyQuitEngineEnabled() {
     testLogger.info("✅ QuitEngine initialized and accessible")
 }
 
-/// Verifies that cancelPendingQuit doesn't crash for a non-existent PID
+/// Verifies that cancelPendingQuit doesn't crash for a non-existent PID.
 @MainActor
 func verifyQuitEngineCancelSafety() {
     let engine = AppEnvironment.shared.quitEngine
-    // This should be a no-op — not crash
     engine.cancelPendingQuit(for: pid_t(99999))
     testLogger.info("✅ cancelPendingQuit with unknown PID: safe (no crash)")
 }
-
 
 /// Verifies GlobalSettings loads and reports correct values.
 @MainActor
@@ -220,7 +214,6 @@ func verifyIsEnabledSync() {
 func verifyGracePeriodCancelWiring() {
     let env = AppEnvironment.shared
 
-    // Check Path 1: WindowMonitor.onWindowAppeared → QuitEngine
     let path1Wired = env.windowMonitor.onWindowAppeared != nil
     if path1Wired {
         testLogger.info("✅ Path 1 wired: windowMonitor.onWindowAppeared → QuitEngine")
@@ -228,7 +221,6 @@ func verifyGracePeriodCancelWiring() {
         testLogger.error("❌ Path 1 NOT wired: windowMonitor.onWindowAppeared is nil")
     }
 
-    // Check Path 2: AppTracker.onCancelPendingQuit → QuitEngine
     let path2Wired = env.appTracker.onCancelPendingQuit != nil
     if path2Wired {
         testLogger.info("✅ Path 2 wired: appTracker.onCancelPendingQuit → QuitEngine")
@@ -242,17 +234,13 @@ func verifyGracePeriodCancelWiring() {
 }
 
 /// Verifies that the cancel callback fires without crashing for tracked apps.
-/// Also verifies it's a no-op for unknown PIDs.
 @MainActor
 func verifyAppTrackerCancelCallback() {
     let tracker = AppEnvironment.shared.appTracker
 
-    // Test 1: Firing with an unknown PID should be silent (no crash)
-    // (Already tested in verifyQuitEngineCancelSafety — this tests the AppTracker side)
     tracker.onCancelPendingQuit?(pid_t(99999))
     testLogger.info("✅ AppTracker.onCancelPendingQuit with unknown PID: safe")
 
-    // Test 2: If any tracked app exists, verify the callback fires for it
     if let firstApp = tracker.trackedApps.first {
         tracker.onCancelPendingQuit?(firstApp.pid)
         testLogger.info("✅ AppTracker.onCancelPendingQuit fired for '\(firstApp.name)': no crash")
@@ -260,35 +248,31 @@ func verifyAppTrackerCancelCallback() {
         testLogger.info("ℹ️  No tracked apps to test cancel callback against (open any app)")
     }
 }
-/// Verifies RuleStore correctly handles edge cases:
-/// permanent whitelist, unknown apps, and explicit rules.
+
+/// Verifies RuleStore correctly handles edge cases.
 @MainActor
 func verifyRuleStoreEdgeCases() {
     let store = AppEnvironment.shared.ruleStore
 
     testLogger.info("=== RuleStore Edge Cases ===")
 
-    // Case 1: Permanent whitelist always returns .ignore
-    let finderBehavior   = store.behavior(for: "com.apple.finder")
-    let finderCorrect    = finderBehavior == .ignore
+    let finderBehavior = store.behavior(for: "com.apple.finder")
+    let finderCorrect  = finderBehavior == .ignore
     testLogger.info("  Finder → .ignore: \(finderCorrect ? "✅" : "❌") (got: \(finderBehavior?.rawValue ?? "nil"))")
 
-    // Case 2: Unknown bundle ID returns nil (engine falls back to defaultBehavior)
-    let unknownBehavior  = store.behavior(for: "com.nonexistent.fakeapp.xyz")
-    let unknownCorrect   = unknownBehavior == nil
+    let unknownBehavior = store.behavior(for: "com.nonexistent.fakeapp.xyz")
+    let unknownCorrect  = unknownBehavior == nil
     testLogger.info("  Unknown app → nil: \(unknownCorrect ? "✅" : "❌") (got: \(unknownBehavior?.rawValue ?? "nil"))")
 
-    // Case 3: isWhitelisted correctly identifies permanent whitelist members
-    let finderListed     = store.isWhitelisted("com.apple.finder")
-    let dockListed       = store.isWhitelisted("com.apple.dock")
-    let unknownListed    = store.isWhitelisted("com.nonexistent.fakeapp.xyz")
+    let finderListed  = store.isWhitelisted("com.apple.finder")
+    let dockListed    = store.isWhitelisted("com.apple.dock")
+    let unknownListed = store.isWhitelisted("com.nonexistent.fakeapp.xyz")
     testLogger.info("  Finder.isWhitelisted: \(finderListed ? "✅" : "❌")")
     testLogger.info("  Dock.isWhitelisted: \(dockListed ? "✅" : "❌")")
     testLogger.info("  Unknown.isWhitelisted (should be false): \(!unknownListed ? "✅" : "❌")")
 
-    // Case 4: gracePeriod returns nil for apps with no rule
-    let unknownGrace     = store.gracePeriod(for: "com.nonexistent.fakeapp.xyz")
-    let graceCorrect     = unknownGrace == nil
+    let unknownGrace = store.gracePeriod(for: "com.nonexistent.fakeapp.xyz")
+    let graceCorrect = unknownGrace == nil
     testLogger.info("  Unknown app gracePeriod → nil: \(graceCorrect ? "✅" : "❌")")
 
     let allPass = finderCorrect && unknownCorrect && finderListed && dockListed && !unknownListed && graceCorrect
@@ -299,13 +283,11 @@ func verifyRuleStoreEdgeCases() {
     }
 }
 
-/// Verifies that apps known to hide-on-close are represented in the knownHiders list.
+/// Verifies that apps known to hide-on-close are in the knownHiders list.
 @MainActor
 func verifyKnownHiderCoverage() {
     testLogger.info("=== Known Hider Coverage ===")
 
-    // These are the bundle IDs our WindowMonitor.knownHiders set should contain.
-    // We check which ones are currently running so you know which test cases apply.
     let knownHiderBundleIDs: [String] = [
         "com.hnc.Discord",
         "com.spotify.client",
@@ -331,13 +313,12 @@ func verifyKnownHiderCoverage() {
 
     if !foundAny {
         testLogger.info("  ℹ️  No known hiders currently running")
-        testLogger.info("  ℹ️  Open Discord or Slack to test the adaptive debounce path")
     }
 
-    testLogger.info("✅ Known hider check complete — WindowMonitor uses 500ms debounce for these apps")
+    testLogger.info("✅ Known hider check complete")
 }
 
-/// Verifies the grace period is back to 0 after Day 13 testing.
+/// Verifies the grace period is back to 0.
 @MainActor
 func verifyGracePeriodResetToZero() {
     let settings = GlobalSettings.shared
@@ -351,32 +332,26 @@ func verifyGracePeriodResetToZero() {
         testLogger.info("✅ Grace period correctly reset to 0")
     } else {
         testLogger.warning("⚠️ Grace period is NOT 0 — did you forget to remove the test override?")
-        testLogger.warning("   Remove UserDefaults.standard.set(10, forKey: 'nix.gracePeriodSeconds') from AppDelegate")
     }
 }
 
 /// Verifies QuitEngine respects the RuleStore whitelist at the decision layer.
-/// Creates a synthetic AppRule with isWhitelisted=true and checks behavior returns .ignore.
 @MainActor
 func verifyQuitEngineWhitelistRespect() {
     let store = AppEnvironment.shared.ruleStore
 
     testLogger.info("=== QuitEngine Whitelist Respect ===")
 
-    // Add a temporary whitelist rule for a fake app
     let fakeBundleID = "com.test.fakeapp.whitelist.day13"
     store.setWhitelisted(true, for: fakeBundleID, appName: "FakeTestApp")
 
-    let behavior = store.behavior(for: fakeBundleID)
-    let isIgnore = behavior == .ignore
-
+    let behavior  = store.behavior(for: fakeBundleID)
+    let isIgnore  = behavior == .ignore
     testLogger.info("  Whitelisted app → .ignore: \(isIgnore ? "✅" : "❌") (got: \(behavior?.rawValue ?? "nil"))")
 
-    // Clean up: remove the test rule
     store.removeRule(for: fakeBundleID)
     let afterRemove = store.behavior(for: fakeBundleID)
     let cleanedUp   = afterRemove == nil
-
     testLogger.info("  After removeRule → nil: \(cleanedUp ? "✅" : "❌")")
 
     if isIgnore && cleanedUp {
@@ -391,108 +366,140 @@ func verifyQuitEngineWhitelistRespect() {
 func verifyStartupIsEnabledSync() {
     let env      = AppEnvironment.shared
     let settings = GlobalSettings.shared
-    
-    testLogger.info("=== Startup isEnabled Sync (Day 14 Bug Fix) ===")
-    
-    let envValue      = env.isEnabled
-    let settingsValue = settings.isEnabled
-    let engineValue   = env.quitEngine.isEnabled
-    
-    testLogger.info("  AppEnvironment.isEnabled:       \(envValue)")
-    testLogger.info("  GlobalSettings.isEnabled:       \(settingsValue)")
-    testLogger.info("  QuitEngine.isEnabled:           \(engineValue)")
-    
-    let envMatchesSettings = envValue == settingsValue
+
+    testLogger.info("=== Startup isEnabled Sync ===")
+
+    let envValue    = env.isEnabled
+    let settingsVal = settings.isEnabled
+    let engineValue = env.quitEngine.isEnabled
+
+    testLogger.info("  AppEnvironment.isEnabled: \(envValue)")
+    testLogger.info("  GlobalSettings.isEnabled: \(settingsVal)")
+    testLogger.info("  QuitEngine.isEnabled:     \(engineValue)")
+
+    let envMatchesSettings = envValue == settingsVal
     let engineMatchesEnv   = engineValue == envValue
-    
+
     testLogger.info("  env == settings: \(envMatchesSettings ? "✅" : "❌ BUG: startup sync failed")")
     testLogger.info("  engine == env:   \(engineMatchesEnv   ? "✅" : "❌ BUG: engine not synced")")
-    
+
     if envMatchesSettings && engineMatchesEnv {
         testLogger.info("✅ Startup isEnabled sync: all three sources agree")
     } else {
-        testLogger.error("❌ isEnabled is out of sync at startup — check loadPersistedSettings()")
+        testLogger.error("❌ isEnabled is out of sync at startup")
     }
 }
 
 /// Verifies that all key services have a logger by checking log output is coherent.
-/// Also confirms the subsystem string is consistent.
 @MainActor
 func verifyLoggerCategories() {
-    // This is a structural check, not a runtime check.
-    // We verify the services are all wired by confirming they're accessible.
     let env = AppEnvironment.shared
-    
+
     testLogger.info("=== Logger Category Coverage ===")
-    
-    // Touch each service to confirm it's alive. If any logger had a crash,
-    // we'd never reach these lines.
     let _ = env.accessibilityManager.isGranted
     let _ = env.appTracker.trackedApps.count
     let _ = env.quitEngine.isEnabled
     let _ = env.ruleStore.rules.count
-    
+
     testLogger.info("  AccessibilityManager: accessible ✅")
     testLogger.info("  AppTracker:           accessible ✅")
     testLogger.info("  QuitEngine:           accessible ✅")
     testLogger.info("  RuleStore:            accessible ✅")
-    testLogger.info("  WindowMonitor:        accessible ✅ (no direct public property to check)")
+    testLogger.info("  WindowMonitor:        accessible ✅")
     testLogger.info("✅ All services reachable — loggers initialized correctly")
-    testLogger.info("   Tip: In Console.app, filter subsystem: com.sahan.Nix")
-    testLogger.info("   Then filter category to isolate one service at a time.")
 }
 
 
-/// Prints the full AX window list for any running app.
-/// Call this to diagnose why an app shows N windows in Nix's count.
+// ──────────────────────────────────────────────────────────────────────────────
+// MARK: - Phantom Window Diagnostic
+// ──────────────────────────────────────────────────────────────────────────────
+
 @MainActor
-func verifyWindowDetails(appName: String) {
+func diagnoseWindowTree(appName: String) {
     guard let app = NSWorkspace.shared.runningApplications
         .first(where: { $0.localizedName == appName }) else {
-        testLogger.info("ℹ️  '\(appName)' is not running — launch it first")
+        testLogger.warning("⚠️  '\(appName)' is not running — open it first, then wait for the diagnostic")
         return
     }
-    let pid = app.processIdentifier
+
+    let pid        = app.processIdentifier
     let appElement = AXUIElementCreateApplication(pid)
+
     var windowsRef: CFTypeRef?
     let result = AXUIElementCopyAttributeValue(
         appElement,
         kAXWindowsAttribute as CFString,
         &windowsRef
     )
-    testLogger.info("=== AX Window Details: \(appName) (PID \(pid)) ===")
+
+    testLogger.info("╔══ PHANTOM WINDOW DIAGNOSTIC: \(appName) (PID \(pid)) ══")
+
     guard result == .success, let windows = windowsRef as? [AXUIElement] else {
-        testLogger.error("  Could not read windows: AXError \(result.rawValue)")
+        testLogger.error("║  AX call failed: \(result.rawValue) — no Accessibility permission?")
+        testLogger.info("╚══")
         return
     }
-    testLogger.info("  Total windows in AX tree: \(windows.count)")
+
+    testLogger.info("║  Total windows in AX tree: \(windows.count)")
+    testLogger.info("║  (Nix should count only 'real' ones — phantom windows inflate this)")
+    testLogger.info("║")
+
     for (i, window) in windows.enumerated() {
+
         // Title
         var titleRef: CFTypeRef?
         AXUIElementCopyAttributeValue(window, kAXTitleAttribute as CFString, &titleRef)
         let title = (titleRef as? String) ?? "(no title)"
-        // Subrole (AXStandardWindow, AXSheet, AXDialog, etc.)
+
+        // Role (should be AXWindow for most)
+        var roleRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(window, kAXRoleAttribute as CFString, &roleRef)
+        let role = (roleRef as? String) ?? "(no role)"
+
+        // Subrole — THIS IS THE KEY FIELD for phantom identification
         var subroleRef: CFTypeRef?
         AXUIElementCopyAttributeValue(window, kAXSubroleAttribute as CFString, &subroleRef)
-        let subrole = (subroleRef as? String) ?? "(no subrole)"
-        // Is it minimized to Dock?
+        let subrole = (subroleRef as? String) ?? "(no subrole — Nix treats as primary!)"
+
+        // Minimized?
         var minRef: CFTypeRef?
         AXUIElementCopyAttributeValue(window, kAXMinimizedAttribute as CFString, &minRef)
         let minimized = (minRef as? Bool) ?? false
-        // Is it the main window?
+
+        // Is main window?
         var mainRef: CFTypeRef?
         AXUIElementCopyAttributeValue(window, kAXMainAttribute as CFString, &mainRef)
         let isMain = (mainRef as? Bool) ?? false
-        // Is it visible/onscreen?
-        var visibleRef: CFTypeRef?
-        AXUIElementCopyAttributeValue(window, "AXVisible" as CFString, &visibleRef)
-        let visible = (visibleRef as? Bool) ?? true  // assume visible if unreadable
-        let filtered = (subrole == "AXSheet" || subrole == "AXDialog" ||
-                        subrole == "AXFloatingWindow" || subrole == "AXSystemDialog" ||
-                        minimized)
-        testLogger.info("  [\(i)] '\(title)'")
-        testLogger.info("       subrole=\(subrole) minimized=\(minimized) main=\(isMain) visible=\(visible)")
-        testLogger.info("       → counted by Nix: \(!filtered)")
+
+        // Would Nix currently count this window?
+        let nixCounts = (subrole != "(no subrole — Nix treats as primary!)" &&
+                         subrole != "AXSheet" &&
+                         subrole != "AXDialog" &&
+                         subrole != "AXFloatingWindow" &&
+                         subrole != "AXSystemDialog" &&
+                         !minimized)
+                        || (subrole == "(no subrole — Nix treats as primary!)" && !minimized)
+
+        testLogger.info("║  [\(i)] \"\(title)\"")
+        testLogger.info("║       role=\(role)  subrole=\(subrole)")
+        testLogger.info("║       minimized=\(minimized)  main=\(isMain)")
+        testLogger.info("║       → Nix currently COUNTS this: \(nixCounts ? "YES ← if unexpected, add subrole to exclusion list" : "NO (excluded)")")
+        testLogger.info("║")
     }
-    testLogger.info("=== End Window Details ===")
+
+    testLogger.info("║  SUMMARY: Nix sees \(windows.count) total AX windows for '\(appName)'")
+    testLogger.info("║  If any window above is a phantom:")
+    testLogger.info("║    1. Note its subrole from the log above")
+    testLogger.info("║    2. Add that subrole to isNonPrimaryWindow() in WindowMonitor.swift")
+    testLogger.info("╚══")
+}
+
+
+// ──────────────────────────────────────────────────────────────────────────────
+// MARK: - Legacy: verifyWindowDetails (kept for compatibility)
+// ──────────────────────────────────────────────────────────────────────────────
+
+@MainActor
+func verifyWindowDetails(appName: String) {
+    diagnoseWindowTree(appName: appName)
 }
