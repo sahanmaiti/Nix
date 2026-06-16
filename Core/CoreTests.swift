@@ -34,6 +34,7 @@ func runAllVerifications() {
     verifyQuitEngineWhitelistRespect()
     verifyStartupIsEnabledSync()
     verifyLoggerCategories()
+    verifyOnboardingState()
     
     testLogger.info("=================================")
     testLogger.info("VERIFICATION SUITE COMPLETE")
@@ -502,4 +503,25 @@ func diagnoseWindowTree(appName: String) {
 @MainActor
 func verifyWindowDetails(appName: String) {
     diagnoseWindowTree(appName: appName)
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// MARK: - Day 17: Onboarding State
+// ──────────────────────────────────────────────────────────────────────────────
+/// Verifies the onboarding completion flag is readable and reports its current state.
+
+@MainActor
+func verifyOnboardingState() {
+    let isComplete = UserDefaults.standard.bool(forKey: "nix.onboardingComplete")
+
+    testLogger.info("=== Onboarding State (Day 17) ===")
+    testLogger.info("  nix.onboardingComplete: \(isComplete)")
+
+    if isComplete {
+        testLogger.info("  ✅ Onboarding complete — window will not show on next launch")
+    } else {
+        testLogger.info("  ℹ️  Onboarding NOT complete — window will show on next launch")
+        testLogger.info("      To test the complete flow: launch the app fresh")
+        testLogger.info("      To reset: run 'defaults delete com.sahan.Nix nix.onboardingComplete'")
+    }
 }
