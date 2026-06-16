@@ -16,13 +16,13 @@ final class AppEnvironment: ObservableObject {
         didSet {
             quitEngine.isEnabled = isEnabled
             GlobalSettings.shared.isEnabled = isEnabled
-            logger.info("isEnabled \(self.isEnabled)")
+            logger.info("isEnabled → \(self.isEnabled)")
         }
     }
     @Published var isPaused: Bool = false {
         didSet {
             quitEngine.isPaused = isPaused
-            logger.info("isPaused \(self.isPaused)")
+            logger.info("isPaused → \(self.isPaused)")
         }
     }
     
@@ -32,10 +32,12 @@ final class AppEnvironment: ObservableObject {
     // ──────────────────────────────────────────────────
     
     let accessibilityManager: AccessibilityManager
-    let windowMonitor: WindowMonitor
-    let appTracker: AppTracker
-    let quitEngine: QuitEngine
-    let ruleStore: RuleStore
+    let windowMonitor:        WindowMonitor
+    let appTracker:           AppTracker
+    let quitEngine:           QuitEngine
+    let ruleStore:            RuleStore
+
+    let settings: GlobalSettings = GlobalSettings.shared
     
     // ──────────────────────────────────────────────────
     // MARK: - Private
@@ -43,7 +45,6 @@ final class AppEnvironment: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     private let logger = Logger(subsystem: "com.sahan.Nix", category: "AppEnvironment")
-    
     
     // ──────────────────────────────────────────────────
     // MARK: - SINGLETON
@@ -56,102 +57,89 @@ final class AppEnvironment: ObservableObject {
         self.accessibilityManager = AccessibilityManager()
         
         let store = RuleStore()
-        self.ruleStore = store
-        
+        self.ruleStore  = store
         self.quitEngine = QuitEngine(ruleStore: store)
         self.windowMonitor = WindowMonitor()
-        self.appTracker = AppTracker(windowMonitor: windowMonitor)
+        self.appTracker    = AppTracker(windowMonitor: windowMonitor)
         
-        // --- 2: Load persisted settings into engine (startup sync) ---------------------
+        // 2. Load persisted settings into engine at startup.
         loadPersistedSettings()
 
-        // --- 3. Wire the detection → decision pipeline ----------------------
-        /// WindowMonitor fires → QuitEngine decides
+        // 3. Wire the detection → decision pipeline.
         windowMonitor.onZeroWindows = { [weak quitEngine] app in
             quitEngine?.evaluate(app: app)
         }
-        
-        /// WindowMonitor sees new window → cancel any pending quit
         windowMonitor.onWindowAppeared = { [weak quitEngine] pid in
             quitEngine?.cancelPendingQuit(for: pid)
         }
-        
         appTracker.onCancelPendingQuit = { [weak quitEngine] pid in
             quitEngine?.cancelPendingQuit(for: pid)
         }
         
-        // --- 4. Forward child changes to AppEnvironment ------------------
+        // 4. Forward child changes so SwiftUI views that observe AppEnvironment
+        //    redraw when appTracker or accessibilityManager publish changes.
         appTracker.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
-        
         accessibilityManager.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
         
-        // --- 5: Observe GlobalSettings for runtime changes ----------------
+        // 5. Watch GlobalSettings for runtime changes → sync into engine.
         GlobalSettings.shared.objectWillChange
             .debounce(for: .milliseconds(150), scheduler: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.syncSettingsToEngine()
-            }
+            .sink { [weak self] _ in self?.syncSettingsToEngine() }
             .store(in: &cancellables)
         
         logger.info("AppEnvironment initialised — all services wired")
     }
     
-    // ----------------------------------------
+    // ──────────────────────────────────────────────────
     // MARK: - Settings Sync
-    // ----------------------------------------
+    // ──────────────────────────────────────────────────
     
     private func loadPersistedSettings() {
-        let settings = GlobalSettings.shared
+        let s = GlobalSettings.shared
         
-        quitEngine.isEnabled                = settings.isEnabled
-        quitEngine.defaultBehavior          = settings.defaultBehavior
-        quitEngine.globalGracePeriodSeconds = settings.gracePeriodSeconds
+        quitEngine.isEnabled                = s.isEnabled
+        quitEngine.defaultBehavior          = s.defaultBehavior
+        quitEngine.globalGracePeriodSeconds = s.gracePeriodSeconds
         
-        _isEnabled = Published(initialValue: settings.isEnabled)
+        // Align the @Published property with the persisted value.
+        _isEnabled = Published(initialValue: s.isEnabled)
         
         logger.info("""
-                    Startup settings loaded: \
-                    isEnabled=\(settings.isEnabled), \
-                    behavior=\(settings.defaultBehaviorRaw), \
-                    grace=\(settings.gracePeriodSeconds)s
-                    """)
+            Startup settings loaded: \
+            isEnabled=\(s.isEnabled), \
+            behavior=\(s.defaultBehaviorRaw), \
+            grace=\(s.gracePeriodSeconds)s
+            """)
     }
-        
+    
     private func syncSettingsToEngine() {
-        let settings = GlobalSettings.shared
-            
-            quitEngine.defaultBehavior          = settings.defaultBehavior
-            quitEngine.globalGracePeriodSeconds = settings.gracePeriodSeconds
-            
+        let s = GlobalSettings.shared
+        quitEngine.defaultBehavior          = s.defaultBehavior
+        quitEngine.globalGracePeriodSeconds = s.gracePeriodSeconds
+        
         logger.debug("""
-                    Engine synced (runtime): \
-                    behavior=\(settings.defaultBehaviorRaw), \
-                    grace=\(settings.gracePeriodSeconds)s
-                    """)
+            Engine synced (runtime): \
+            behavior=\(s.defaultBehaviorRaw), \
+            grace=\(s.gracePeriodSeconds)s
+            """)
     }
-        
-        // ──────────────────────────────────────────────────
-        // MARK: - ACTIONS
-        // User-facing operations that modify state.
-        // ──────────────────────────────────────────────────
-        
-        func toggleEnabled() {
-            isEnabled.toggle()
-        }
-        
-        func pause(minutes: Int) {
-            isPaused = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(minutes * 60)) { [weak self] in
-                self?.isPaused = false
-            }
-        }
-        
-        func resume() {
-            isPaused = false
+    
+    // ──────────────────────────────────────────────────
+    // MARK: - ACTIONS
+    // ──────────────────────────────────────────────────
+    
+    func toggleEnabled() { isEnabled.toggle() }
+    
+    func pause(minutes: Int) {
+        isPaused = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(minutes * 60)) { [weak self] in
+            self?.isPaused = false
         }
     }
-
+    
+    func resume() { isPaused = false }
+}

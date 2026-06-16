@@ -5,7 +5,7 @@ import SwiftUI
 struct MenuBarView: View {
 
     @EnvironmentObject var env: AppEnvironment
-    @Environment(\.openSettings) var openSettings
+    @Environment(\.openWindow) var openWindow
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -222,7 +222,7 @@ struct MenuBarView: View {
     private var footerSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             menuRow(icon: "gear", label: "Settings...") {
-                openSettings()
+                openWindow(id: "settings")
             }
             menuRow(icon: "power", label: "Quit Nix") {
                 NSApplication.shared.terminate(nil)

@@ -150,4 +150,3 @@ private func updateLoginItemState(_ enabled: Bool) {
             .error("Login item update failed: \(error.localizedDescription)")
     }
 }
-

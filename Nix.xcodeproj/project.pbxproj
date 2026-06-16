@@ -19,6 +19,7 @@
 		DEB830862FC8A19300F886C2 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB830842FC890A300F886C2 /* MenuBarView.swift */; };
 		DEB8308A2FC8ABDD00F886C2 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB830882FC8ABDD00F886C2 /* AppEnvironment.swift */; };
 		DEB8308C2FC9D02800F886C2 /* AppTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB8308B2FC9D02000F886C2 /* AppTracker.swift */; };
+		DEC9109A2FE15C0B00D34F39 /* AppsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC910992FE15C0400D34F39 /* AppsTab.swift */; };
 		DED5B7082FCEBDCC00735E04 /* WindowMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = DED5B7072FCEBDC200735E04 /* WindowMonitor.swift */; };
 /* End PBXBuildFile section */
 
@@ -37,6 +38,7 @@
 		DEB830842FC890A300F886C2 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		DEB830882FC8ABDD00F886C2 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		DEB8308B2FC9D02000F886C2 /* AppTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTracker.swift; sourceTree = "<group>"; };
+		DEC910992FE15C0400D34F39 /* AppsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppsTab.swift; sourceTree = "<group>"; };
 		DED5B7072FCEBDC200735E04 /* WindowMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowMonitor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -100,6 +102,7 @@
 		DEB830822FC88F2100F886C2 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				DEC910992FE15C0400D34F39 /* AppsTab.swift */,
 				DE2D74292FDFDACB00B6D3CE /* GeneralTab.swift */,
 				DE2D74272FDFD99100B6D3CE /* SettingsView.swift */,
 				DEB830842FC890A300F886C2 /* MenuBarView.swift */,
@@ -198,6 +201,7 @@
 				DEB8308A2FC8ABDD00F886C2 /* AppEnvironment.swift in Sources */,
 				DE5B43582FD31FF40059F34F /* AppRule.swift in Sources */,
 				DEB830862FC8A19300F886C2 /* MenuBarView.swift in Sources */,
+				DEC9109A2FE15C0B00D34F39 /* AppsTab.swift in Sources */,
 				DEB8308C2FC9D02800F886C2 /* AppTracker.swift in Sources */,
 				DEABF1222FCC0192009A5C40 /* AXWindowReader.swift in Sources */,
 				DE5B43512FD08F4C0059F34F /* QuitEngine.swift in Sources */,

@@ -15,10 +15,12 @@ struct NixApp: App {
                 .environmentObject(env)
         }
         .menuBarExtraStyle(.window)
-        Settings {
+        Window("Settings", id: "settings") {
             SettingsView()
                 .environmentObject(env)
         }
+        .windowResizability(.contentMinSize)
+        .defaultSize(width: 520, height: 420)
     }
 
     private var menuBarIcon: String {
