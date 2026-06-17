@@ -7,9 +7,11 @@ import os.log
 // MARK: - AX Notification Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
-private let kAXWindowClosedStr       = "AXWindowClosed"
-private let kAXWindowCreatedStr      = "AXWindowCreated"
-private let kAXMainWindowChangedStr  = "AXMainWindowChanged"
+private let kAXWindowCreatedStr          = "AXWindowCreated"
+private let kAXMainWindowChangedStr      = "AXMainWindowChanged"
+private let kAXFocusedWindowChangedStr   = "AXFocusedWindowChanged"
+
+private let kAXWindowClosedStr           = "AXWindowClosed"
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -90,6 +92,21 @@ final class WindowMonitor {
         logger.info("Stopped monitoring '\(app.localizedName ?? "?")'")
     }
 
+    /// NSWorkspace fallback: apps reliably lose OS focus when their last window closes.
+    /// Triggered by AppTracker when didDeactivateApplicationNotification fires.
+    func checkOnDeactivation(for pid: pid_t) {
+        guard observers[pid] != nil else { return }
+        logger.debug("Deactivation check for PID \(pid)")
+
+        pendingPhase1Checks[pid]?.cancel()
+        let item = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            pendingPhase1Checks.removeValue(forKey: pid)
+            phaseOneCheck(pid: pid)
+        }
+        pendingPhase1Checks[pid] = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + debounceInterval, execute: item)
+    }
 
     // ─────────────────────────────────────────────────────────────────
     // MARK: - Observer Creation
@@ -110,18 +127,49 @@ final class WindowMonitor {
         let appElement = AXUIElementCreateApplication(pid)
         let selfPtr    = Unmanaged.passUnretained(self).toOpaque()
 
-        // Register exactly three events. See the MARK comment at the top for
-        // the full reasoning behind this specific selection.
-        registerNotification(kAXWindowClosedStr,      on: appElement, observer: observer, context: selfPtr, appName: name)
-        registerNotification(kAXWindowCreatedStr,     on: appElement, observer: observer, context: selfPtr, appName: name)
-        registerNotification(kAXMainWindowChangedStr, on: appElement, observer: observer, context: selfPtr, appName: name)
+        // ── App-level notifications ───────────────────────────────────────
+        registerNotification(kAXWindowCreatedStr,        on: appElement, observer: observer, context: selfPtr, appName: name)
+        registerNotification(kAXMainWindowChangedStr,    on: appElement, observer: observer, context: selfPtr, appName: name)
+        registerNotification(kAXFocusedWindowChangedStr, on: appElement, observer: observer, context: selfPtr, appName: name)
+
+        // ── Window-level close notification ───────────────────────────────
+        registerWindowClosedOnAllCurrentWindows(pid: pid, observer: observer, context: selfPtr, appName: name)
 
         CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
 
         observers[pid]       = observer
         lastWindowCount[pid] = currentWindowCount(for: pid)
 
-        logger.info("✅ Monitoring started: '\(name)' (PID \(pid)) — \(self.lastWindowCount[pid] ?? 0) window(s)")
+        logger.info("✅ Monitoring '\(name)' (PID \(pid)) — \(self.lastWindowCount[pid] ?? 0) window(s)")
+    }
+
+    private func registerWindowClosedOnAllCurrentWindows(
+        pid:      pid_t,
+        observer: AXObserver,
+        context:  UnsafeMutableRawPointer,
+        appName:  String
+    ) {
+        let appElement = AXUIElementCreateApplication(pid)
+        var windowsRef: CFTypeRef?
+
+        guard AXUIElementCopyAttributeValue(appElement, kAXWindowsAttribute as CFString, &windowsRef) == .success,
+              let windows = windowsRef as? [AXUIElement], !windows.isEmpty else {
+            logger.debug("'\(appName)': no windows yet — will register on first kAXWindowCreated")
+            return
+        }
+
+        var registered = 0
+        for window in windows {
+            let result = AXObserverAddNotification(observer, window, kAXWindowClosedStr as CFString, context)
+            switch result {
+            case .success:                       registered += 1
+            case .notificationAlreadyRegistered: registered += 1
+            default:
+                logger.warning("AXWindowClosed window-registration failed for '\(appName)': \(result.rawValue)")
+            }
+        }
+
+        logger.debug("AXWindowClosed registered on \(registered)/\(windows.count) window element(s) for '\(appName)'")
     }
 
     @discardableResult
@@ -135,10 +183,9 @@ final class WindowMonitor {
         let result = AXObserverAddNotification(observer, element, notification as CFString, context)
         switch result {
         case .success:
-            logger.debug("Registered '\(notification)' for '\(appName)'")
+            logger.debug("Registered '\(notification)' on app element for '\(appName)'")
             return true
         case .notificationAlreadyRegistered:
-            logger.debug("'\(notification)' already registered for '\(appName)' — OK")
             return true
         default:
             logger.warning("Failed to register '\(notification)' for '\(appName)': \(result.rawValue)")
@@ -163,8 +210,15 @@ final class WindowMonitor {
     // ─────────────────────────────────────────────────────────────────
 
     func handlePossibleWindowChange(pid: pid_t, notification: String) {
-        // Log which event triggered this — valuable for diagnosing future issues
         logger.debug("AX event '\(notification)' for PID \(pid) — debounce reset")
+
+        if notification == kAXWindowCreatedStr, let observer = observers[pid] {
+            let selfPtr = Unmanaged.passUnretained(self).toOpaque()
+            let appName = NSWorkspace.shared.runningApplications
+                .first(where: { $0.processIdentifier == pid })?
+                .localizedName ?? "unknown"
+            registerWindowClosedOnAllCurrentWindows(pid: pid, observer: observer, context: selfPtr, appName: appName)
+        }
 
         pendingPhase1Checks[pid]?.cancel()
 
@@ -289,7 +343,6 @@ final class WindowMonitor {
     }
 
     private func isNonPrimaryWindow(_ window: AXUIElement) -> Bool {
-
         var minimizedRef: CFTypeRef?
         if AXUIElementCopyAttributeValue(window, kAXMinimizedAttribute as CFString, &minimizedRef) == .success,
            let isMinimized = minimizedRef as? Bool,
@@ -300,7 +353,7 @@ final class WindowMonitor {
         var subroleRef: CFTypeRef?
         guard AXUIElementCopyAttributeValue(window, kAXSubroleAttribute as CFString, &subroleRef) == .success,
               let subrole = subroleRef as? String else {
-            return false  // unknown subrole → assume primary (safe: prefer not quitting)
+            return false
         }
 
         let nonPrimarySubroles: Set<String> = [
@@ -330,6 +383,8 @@ private func axWindowEventCallback(
     let monitor = Unmanaged<WindowMonitor>.fromOpaque(refcon).takeUnretainedValue()
 
     var pid: pid_t = 0
+    // AXUIElementGetPid works on both app elements AND window elements,
+    // so this callback handles both app-level and window-level notifications correctly.
     guard AXUIElementGetPid(element, &pid) == .success, pid != 0 else { return }
 
     let notifName = notificationName as String

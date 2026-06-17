@@ -37,7 +37,7 @@ final class AppTracker: ObservableObject {
 
     private func setupWorkspaceObservers() {
         let nc = NSWorkspace.shared.notificationCenter
-
+        
         // --- App Launched ---
         nc.publisher(for: NSWorkspace.didLaunchApplicationNotification)
             .compactMap { $0.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication }
@@ -45,28 +45,28 @@ final class AppTracker: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] app in self?.appDidLaunch(app) }
             .store(in: &cancellables)
-
+        
         // --- App Terminated ---
         nc.publisher(for: NSWorkspace.didTerminateApplicationNotification)
             .compactMap { $0.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] app in self?.appDidTerminate(app) }
             .store(in: &cancellables)
-
+        
         // --- App Hidden (Cmd+H) ---
         nc.publisher(for: NSWorkspace.didHideApplicationNotification)
             .compactMap { $0.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] app in self?.appDidHide(app) }
             .store(in: &cancellables)
-
+        
         // --- App Unhidden ---
         nc.publisher(for: NSWorkspace.didUnhideApplicationNotification)
             .compactMap { $0.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] app in self?.appDidUnhide(app) }
             .store(in: &cancellables)
-
+        
         // --- App Activated ---
         
         nc.publisher(for: NSWorkspace.didActivateApplicationNotification)
@@ -74,8 +74,15 @@ final class AppTracker: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] app in self?.appDidActivate(app) }
             .store(in: &cancellables)
+        
+        // --- App Deactivated (fallback for window-close detection) ---
+        nc.publisher(for: NSWorkspace.didDeactivateApplicationNotification)
+            .compactMap { $0.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] app in self?.appDidDeactivate(app) }
+            .store(in: &cancellables)
     }
-
+    
     private func loadCurrentlyRunningApps() {
         NSWorkspace.shared.runningApplications
             .filter { shouldTrack($0) }
@@ -114,13 +121,20 @@ final class AppTracker: ObservableObject {
         logger.debug("👁 App unhidden: \(app.localizedName ?? "?") — cancelling any pending quit")
         onCancelPendingQuit?(app.processIdentifier)
     }
+    
+    private func appDidDeactivate(_ app: NSRunningApplication) {
+        guard trackedApps.contains(where: { $0.pid == app.processIdentifier }) else { return }
+        logger.debug("👁 App deactivated: \(app.localizedName ?? "?") — fallback window check")
+        windowMonitor.checkOnDeactivation(for: app.processIdentifier)
+    }
 
-    // MRK: - Activation handler
+    // MARK: - Activation handler
     private func appDidActivate(_ app: NSRunningApplication) {
         guard trackedApps.contains(where: { $0.pid == app.processIdentifier }) else { return }
         logger.debug("▶️ App activated: \(app.localizedName ?? "?") — cancelling any pending quit")
         onCancelPendingQuit?(app.processIdentifier)
     }
+    
 
     // MARK: - Filter Logic
 

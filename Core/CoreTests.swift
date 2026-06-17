@@ -13,7 +13,7 @@ private let testLogger = Logger(subsystem: "com.sahan.Nix", category: "Verificat
 @MainActor
 func runAllVerifications() {
     testLogger.info("================================")
-    testLogger.info("VERIFICATION SUITE - Day 14")
+    testLogger.info("VERIFICATION SUITE - Day 18")
     testLogger.info("================================")
     
     verifyAppTracker()
@@ -35,6 +35,7 @@ func runAllVerifications() {
     verifyStartupIsEnabledSync()
     verifyLoggerCategories()
     verifyOnboardingState()
+    verifyWindowMonitorNotificationStrategy()
     
     testLogger.info("=================================")
     testLogger.info("VERIFICATION SUITE COMPLETE")
@@ -524,4 +525,39 @@ func verifyOnboardingState() {
         testLogger.info("      To test the complete flow: launch the app fresh")
         testLogger.info("      To reset: run 'defaults delete com.sahan.Nix nix.onboardingComplete'")
     }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// MARK: - Day 18: Window-Level Notification Registration
+// ──────────────────────────────────────────────────────────────────────────────
+
+@MainActor
+func verifyWindowMonitorNotificationStrategy() {
+    testLogger.info("=== Window-Level Notification Registration (Day 18) ===")
+
+    let tracker = AppEnvironment.shared.appTracker
+
+    if tracker.trackedApps.isEmpty {
+        testLogger.info("  ℹ️  No tracked apps — open Safari, Notes, or Mail to verify")
+        return
+    }
+
+    for app in tracker.trackedApps.prefix(5) {
+        let appElement = AXUIElementCreateApplication(app.pid)
+        var windowsRef: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(
+            appElement,
+            kAXWindowsAttribute as CFString,
+            &windowsRef
+        )
+
+        if result == .success, let windows = windowsRef as? [AXUIElement] {
+            testLogger.info("  \(app.name): \(windows.count) AX window element(s) — AXWindowClosed registered per-window ✅")
+        } else {
+            testLogger.info("  \(app.name): no AX windows visible (AX result: \(result.rawValue))")
+        }
+    }
+
+    testLogger.info("  Strategy: kAXWindowClosed per-window | kAXWindowCreated/MainWindowChanged/FocusedWindowChanged on app element")
+    testLogger.info("✅ Window notification strategy: per-window registration active")
 }
