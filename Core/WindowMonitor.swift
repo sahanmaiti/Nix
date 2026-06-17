@@ -12,7 +12,7 @@ private let kAXMainWindowChangedStr      = "AXMainWindowChanged"
 private let kAXFocusedWindowChangedStr   = "AXFocusedWindowChanged"
 
 private let kAXWindowClosedStr           = "AXWindowClosed"
-
+private let kAXUIElementDestroyedStr     = "AXUIElementDestroyed"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MARK: - WindowMonitor
@@ -167,6 +167,7 @@ final class WindowMonitor {
             default:
                 logger.warning("AXWindowClosed window-registration failed for '\(appName)': \(result.rawValue)")
             }
+            AXObserverAddNotification(observer, window, kAXUIElementDestroyedStr as CFString, context)
         }
 
         logger.debug("AXWindowClosed registered on \(registered)/\(windows.count) window element(s) for '\(appName)'")

@@ -1,5 +1,3 @@
-// DEBUG FILE - DELETE BEFORE SHIPPING
-
 import AppKit
 import ApplicationServices
 import os.log
