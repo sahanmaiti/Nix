@@ -20,4 +20,4 @@ xcuserdata/
 *.tmp
 
 # App storage
-*.sqlite
+*.sqlite.geminiignore
