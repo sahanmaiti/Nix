@@ -48,8 +48,8 @@ struct GeneralTab: View {
             Toggle("Enable Nix", isOn: $env.isEnabled)
 
             Picker("When last window closes", selection: defaultBehavior) {
-                ForEach(AppBehavior.allCases, id: \.self) { behavior in
-                    Text(behavior.displayName).tag(behavior)
+                ForEach(AppBehavior.allCases, id: \.self) { b in
+                    Text(b.displayName).tag(b)
                 }
             }
             .pickerStyle(.menu)
@@ -71,7 +71,6 @@ struct GeneralTab: View {
                 HStack {
                     Text("Grace period")
                     Spacer()
-                    // Plain text — avoid contentTransition on macOS 14 beta edge cases
                     Text(gracePeriodSeconds == 0 ? "Immediate" : "\(gracePeriodSeconds)s")
                         .foregroundStyle(.secondary)
                         .monospacedDigit()

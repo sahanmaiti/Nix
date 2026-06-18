@@ -19,9 +19,9 @@ struct SettingsView: View {
                 }
         }
         .frame(
-                    minWidth:    480, idealWidth:  520, maxWidth:  .infinity,
-                    minHeight:   380, idealHeight: 420, maxHeight: .infinity
-                )
-                .glassWindow()
+            minWidth: 480, idealWidth: 520, maxWidth: .infinity,
+            minHeight: 400, idealHeight: 440, maxHeight: .infinity
+        )
+        .glassWindow(.sidebar)
     }
 }

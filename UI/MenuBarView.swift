@@ -1,8 +1,8 @@
 import SwiftUI
 
-// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // MARK: - MenuBarView
-// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 
 struct MenuBarView: View {
 
@@ -12,40 +12,39 @@ struct MenuBarView: View {
     var body: some View {
         VStack(spacing: 0) {
 
-            // Permission warning — only when AX not granted
             if !env.accessibilityManager.isGranted {
                 accessibilityWarning
-                Divider()
+                Divider().opacity(0.5)
             }
 
             header
 
             if !env.appTracker.trackedApps.isEmpty {
-                Divider()
+                Divider().opacity(0.4)
                 appList
             }
 
-            Divider()
+            Divider().opacity(0.4)
             controlRows
         }
         .frame(width: 280)
     }
 
-    // ─────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
     // MARK: - Accessibility Warning
-    // ─────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
 
     private var accessibilityWarning: some View {
         Button { env.accessibilityManager.requestPermission() } label: {
-            HStack(spacing: 9) {
+            HStack(spacing: 10) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(.orange)
-                    .font(.system(size: 14))
+                    .font(.system(size: 13, weight: .medium))
 
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Accessibility Permission Required")
-                        .font(.system(size: 12, weight: .medium))
-                    Text("Click to open Privacy & Security")
+                    Text("Accessibility Required")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("Tap to open Privacy & Security")
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
@@ -61,28 +60,29 @@ struct MenuBarView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .background(Color.orange.opacity(0.07))
+        .background(Color.orange.opacity(0.08))
     }
 
-    // ─────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
     // MARK: - Header
-    // ─────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
 
     private var header: some View {
         HStack(spacing: 10) {
-            // Icon color reflects active state — no text badge needed
             Image(systemName: "xmark.circle.fill")
                 .font(.system(size: 20, weight: .medium))
                 .foregroundStyle(headerIconColor)
+                .symbolRenderingMode(.hierarchical)
                 .animation(.easeInOut(duration: 0.2), value: env.isEnabled)
                 .animation(.easeInOut(duration: 0.2), value: env.isPaused)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text("Nix")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 13, weight: .bold))
                 Text(headerStatus)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
+                    .animation(.easeInOut(duration: 0.15), value: headerStatus)
             }
 
             Spacer()
@@ -94,7 +94,7 @@ struct MenuBarView: View {
                 .disabled(env.isPaused)
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.vertical, 11)
     }
 
     private var headerIconColor: Color {
@@ -109,15 +109,14 @@ struct MenuBarView: View {
         return n == 0 ? "No apps open" : "Watching \(n) app\(n == 1 ? "" : "s")"
     }
 
-    // ─────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
     // MARK: - App List
-    // ─────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
 
     private var appList: some View {
         buildAppList(env.appTracker.trackedApps.sorted { $0.name < $1.name })
     }
 
-    // Extracted to avoid @ViewBuilder constraints on let-bindings
     private func buildAppList(_ apps: [TrackedApp]) -> some View {
         VStack(spacing: 0) {
             ForEach(Array(apps.prefix(5))) { app in
@@ -143,32 +142,32 @@ struct MenuBarView: View {
 
                     Spacer()
 
-                    // 5px dot: green=active, orange=hidden, dimmed when paused
+                    // Status dot: green = active, orange = hidden
                     Circle()
                         .fill(app.isHidden ? Color.orange : Color.green)
                         .frame(width: 5, height: 5)
                         .opacity(env.isPaused ? 0.35 : 1.0)
                 }
                 .padding(.horizontal, 14)
-                .padding(.vertical, 3)
+                .padding(.vertical, 4)
             }
 
             if apps.count > 5 {
-                Text("and \(apps.count - 5) more")
+                Text("and \(apps.count - 5) more…")
                     .font(.system(size: 11))
                     .foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 14)
                     .padding(.top, 1)
-                    .padding(.bottom, 2)
+                    .padding(.bottom, 3)
             }
         }
         .padding(.vertical, 5)
     }
 
-    // ─────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
     // MARK: - Control Rows
-    // ─────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
 
     private var controlRows: some View {
         VStack(spacing: 0) {
@@ -185,14 +184,14 @@ struct MenuBarView: View {
                 }
             }
 
-            Divider().padding(.horizontal, 4)
+            Divider().padding(.horizontal, 4).opacity(0.4)
 
             MenuRow(icon: "gear", label: "Settings…", action: openSettings)
             MenuRow(icon: "power", label: "Quit Nix") {
                 NSApplication.shared.terminate(nil)
             }
         }
-        .padding(.vertical, 3)
+        .padding(.vertical, 4)
     }
 
     private func openSettings() {
@@ -204,11 +203,10 @@ struct MenuBarView: View {
     }
 }
 
-// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // MARK: - MenuRow
-// Hover behavior replicates native NSMenu row highlighting.
-// isHovered drives both background and foreground color.
-// ─────────────────────────────────────────────────────────────
+// Hover behaviour replicates native NSMenu row highlighting.
+// ─────────────────────────────────────────────────────────────────────────────
 
 private struct MenuRow: View {
     let icon: String
@@ -229,19 +227,17 @@ private struct MenuRow: View {
 
                 Spacer()
             }
-            // White text on accent matches native NSMenu highlight behavior
             .foregroundStyle(isHovered ? Color.white : Color.primary)
             .padding(.horizontal, 10)
-            .padding(.vertical, 5)
+            .padding(.vertical, 6)
             .background(
-                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
                     .fill(isHovered ? Color.accentColor : Color.clear)
             )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 4)
-        // Fast fade mirrors native menu responsiveness
         .animation(.easeInOut(duration: 0.08), value: isHovered)
         .onHover { isHovered = $0 }
     }

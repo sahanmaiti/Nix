@@ -16,21 +16,24 @@ struct OnboardingView: View {
     @AppStorage("nix.onboardingComplete") private var onboardingComplete: Bool = false
 
     private let pageWidth: CGFloat = 520
-    private let totalSteps: Int = 4
+    private let totalSteps: Int    = 4
 
     var body: some View {
         VStack(spacing: 0) {
             stepCarousel
-                .frame(height: 360)
+                .frame(height: 370)
 
+            // Nav bar with a very subtle glass separator
             Divider()
+                .opacity(0.4)
 
             navigationBar
-                .padding(.horizontal, 22)
-                .padding(.vertical, 14)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 16)
+                .background(.ultraThinMaterial.opacity(0.5))
         }
         .frame(width: pageWidth)
-                .glassWindow()
+        .glassWindow(.sidebar)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -56,7 +59,7 @@ struct OnboardingView: View {
                 .offset(x: pageOffset(for: 3))
         }
         .clipped()
-        .animation(.easeInOut(duration: 0.28), value: currentStep)
+        .animation(.spring(response: 0.38, dampingFraction: 0.85), value: currentStep)
     }
 
     private func pageOffset(for step: Int) -> CGFloat {
@@ -75,16 +78,16 @@ struct OnboardingView: View {
         }
     }
 
-    // Animated "pill" indicators — the active step expands into a capsule
+    // Animated pill indicators — active step expands to a capsule
     private var progressIndicator: some View {
         HStack(spacing: 6) {
             ForEach(0..<totalSteps, id: \.self) { index in
                 Capsule()
                     .fill(index == currentStep
                           ? Color.accentColor
-                          : Color.secondary.opacity(0.22))
-                    .frame(width: index == currentStep ? 20 : 7, height: 7)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.75), value: currentStep)
+                          : Color.secondary.opacity(0.20))
+                    .frame(width: index == currentStep ? 22 : 7, height: 7)
+                    .animation(.spring(response: 0.32, dampingFraction: 0.72), value: currentStep)
             }
         }
     }
@@ -93,37 +96,36 @@ struct OnboardingView: View {
     private var navigationButtons: some View {
         switch currentStep {
 
-        case 0: // Welcome — single forward action
+        case 0:
             Button("Get Started") { advance() }
                 .buttonStyle(.borderedProminent)
+                .controlSize(.large)
                 .keyboardShortcut(.return)
 
-        case 1: // How It Works — can go back
+        case 1:
             HStack(spacing: 10) {
-                Button("Back") { retreat() }
-                    .buttonStyle(.bordered)
-                Button("Next") { advance() }
-                    .buttonStyle(.borderedProminent)
+                Button("Back") { retreat() }.buttonStyle(.bordered).controlSize(.large)
+                Button("Next") { advance() }.buttonStyle(.borderedProminent).controlSize(.large)
                     .keyboardShortcut(.return)
             }
 
-        case 2: // Permission — "Continue" works even without permission
+        case 2:
             HStack(spacing: 10) {
-                Button("Back") { retreat() }
-                    .buttonStyle(.bordered)
+                Button("Back") { retreat() }.buttonStyle(.bordered).controlSize(.large)
                 Button(env.accessibilityManager.isGranted ? "Continue" : "Skip for Now") {
                     advance()
                 }
                 .buttonStyle(.borderedProminent)
+                .controlSize(.large)
                 .keyboardShortcut(.return)
             }
 
-        case 3: // Final setup — commit action
+        case 3:
             HStack(spacing: 10) {
-                Button("Back") { retreat() }
-                    .buttonStyle(.bordered)
+                Button("Back") { retreat() }.buttonStyle(.bordered).controlSize(.large)
                 Button("Start Using Nix") { finish() }
                     .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
                     .keyboardShortcut(.return)
             }
 
@@ -136,20 +138,9 @@ struct OnboardingView: View {
     // MARK: - Actions
     // ─────────────────────────────────────────────────────────────────────────
 
-    private func advance() {
-        guard currentStep < totalSteps - 1 else { return }
-        currentStep += 1
-    }
-
-    private func retreat() {
-        guard currentStep > 0 else { return }
-        currentStep -= 1
-    }
-
-    private func finish() {
-        onboardingComplete = true
-        onComplete()
-    }
+    private func advance()  { guard currentStep < totalSteps - 1 else { return }; currentStep += 1 }
+    private func retreat()  { guard currentStep > 0 else { return }; currentStep -= 1 }
+    private func finish()   { onboardingComplete = true; onComplete() }
 }
 
 
@@ -159,34 +150,50 @@ struct OnboardingView: View {
 
 struct WelcomeStep: View {
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 0) {
             Spacer()
 
-            Image(systemName: "xmark.circle.fill")
-                .font(.system(size: 80))
-                .foregroundStyle(.red)
-                .symbolEffect(.pulse.wholeSymbol, options: .repeating)
+            // Icon with soft radial glow — more depth than a flat symbol
+            ZStack {
+                // Outer glow
+                Circle()
+                    .fill(.red.opacity(0.12))
+                    .blur(radius: 28)
+                    .frame(width: 130, height: 130)
 
-            VStack(spacing: 6) {
+                // Inner glow ring
+                Circle()
+                    .fill(.red.opacity(0.08))
+                    .frame(width: 96, height: 96)
+
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 64, weight: .regular))
+                    .foregroundStyle(.red)
+                    .symbolRenderingMode(.hierarchical)
+                    .symbolEffect(.pulse, options: .repeating)
+            }
+            .padding(.bottom, 24)
+
+            VStack(spacing: 7) {
                 Text("Welcome to Nix")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
 
                 Text("Close the window. Quit the app.")
                     .font(.title3)
                     .foregroundStyle(.secondary)
             }
+            .padding(.bottom, 16)
 
             Text("On macOS, closing a window doesn't quit the app. Nix changes that — automatically quitting apps when their last window closes.")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: 380)
+                .frame(maxWidth: 370)
 
             Spacer()
         }
-        .padding(.horizontal, 48)
+        .padding(.horizontal, 52)
     }
 }
 
@@ -201,11 +208,10 @@ struct HowItWorksStep: View {
             Spacer()
 
             Text("How It Works")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .padding(.bottom, 24)
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .padding(.bottom, 28)
 
-            VStack(alignment: .leading, spacing: 22) {
+            VStack(alignment: .leading, spacing: 24) {
                 OnboardingRow(
                     number: "1",
                     title: "You close the last window",
@@ -225,7 +231,7 @@ struct HowItWorksStep: View {
 
             Spacer()
         }
-        .padding(.horizontal, 48)
+        .padding(.horizontal, 52)
     }
 }
 
@@ -238,17 +244,17 @@ private struct OnboardingRow: View {
         HStack(alignment: .top, spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(Color.accentColor.opacity(0.12))
-                    .frame(width: 30, height: 30)
+                    .fill(Color.accentColor.opacity(0.14))
+                    .frame(width: 32, height: 32)
                 Text(number)
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(Color.accentColor)
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.body)
-                    .fontWeight(.medium)
+                    .fontWeight(.semibold)
                 Text(detail)
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -267,20 +273,29 @@ struct PermissionStep: View {
     @EnvironmentObject private var env: AppEnvironment
 
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 0) {
             Spacer()
 
-            Image(systemName: permissionIcon)
-                .font(.system(size: 72))
-                .foregroundStyle(permissionIconColor)
-                .symbolEffect(.bounce, value: env.accessibilityManager.isGranted)
-                .animation(.spring(response: 0.4, dampingFraction: 0.6),
-                           value: env.accessibilityManager.isGranted)
+            // Icon with glow matching current permission state
+            ZStack {
+                Circle()
+                    .fill(permissionIconColor.opacity(0.12))
+                    .blur(radius: 24)
+                    .frame(width: 120, height: 120)
+
+                Image(systemName: permissionIcon)
+                    .font(.system(size: 64))
+                    .foregroundStyle(permissionIconColor)
+                    .symbolRenderingMode(.hierarchical)
+                    .symbolEffect(.bounce, value: env.accessibilityManager.isGranted)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.6),
+                               value: env.accessibilityManager.isGranted)
+            }
+            .padding(.bottom, 20)
 
             VStack(spacing: 8) {
                 Text("Accessibility Permission")
-                    .font(.title2)
-                    .fontWeight(.semibold)
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
 
                 Text("Nix uses the macOS Accessibility API to observe window close events in other apps. This requires your explicit permission — Nix cannot read window content or your data.")
                     .font(.callout)
@@ -289,18 +304,20 @@ struct PermissionStep: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: 390)
             }
+            .padding(.bottom, 24)
 
             if env.accessibilityManager.isGranted {
                 Label("Permission Granted", systemImage: "checkmark.circle.fill")
                     .foregroundStyle(.green)
                     .fontWeight(.semibold)
-                    .transition(.scale.combined(with: .opacity))
+                    .transition(.scale(scale: 0.85).combined(with: .opacity))
             } else {
                 VStack(spacing: 8) {
                     Button("Open Accessibility Settings") {
                         env.accessibilityManager.requestPermission()
                     }
                     .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
 
                     Text("System Settings → Privacy & Security → Accessibility → Enable Nix")
                         .font(.caption)
@@ -312,14 +329,13 @@ struct PermissionStep: View {
 
             Spacer()
         }
-        .padding(.horizontal, 48)
-        .animation(.easeInOut(duration: 0.25), value: env.accessibilityManager.isGranted)
+        .padding(.horizontal, 52)
+        .animation(.easeInOut(duration: 0.22), value: env.accessibilityManager.isGranted)
     }
 
     private var permissionIcon: String {
         env.accessibilityManager.isGranted ? "checkmark.shield.fill" : "lock.shield.fill"
     }
-
     private var permissionIconColor: Color {
         env.accessibilityManager.isGranted ? .green : .orange
     }
@@ -349,14 +365,22 @@ struct SetupStep: View {
         VStack(spacing: 0) {
             Spacer()
 
+            // Header
             VStack(spacing: 8) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 52))
-                    .foregroundStyle(.green)
+                ZStack {
+                    Circle()
+                        .fill(.green.opacity(0.12))
+                        .blur(radius: 18)
+                        .frame(width: 90, height: 90)
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 52))
+                        .foregroundStyle(.green)
+                        .symbolRenderingMode(.hierarchical)
+                }
+                .padding(.bottom, 4)
 
                 Text("Almost Ready")
-                    .font(.title2)
-                    .fontWeight(.semibold)
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
 
                 Text("Set your preferences. You can change these anytime in Settings.")
                     .font(.callout)
@@ -366,9 +390,10 @@ struct SetupStep: View {
 
             Spacer()
 
-            VStack(alignment: .leading, spacing: 14) {
+            // Settings card — Liquid Glass on Tahoe, ultraThinMaterial on Sonoma
+            VStack(alignment: .leading, spacing: 16) {
 
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text("When the last window closes:")
                         .font(.callout)
                         .foregroundStyle(.secondary)
@@ -383,21 +408,18 @@ struct SetupStep: View {
                 }
 
                 Divider()
+                    .opacity(0.5)
 
-                // Routes through LoginItemService — no direct SMAppService calls here.
                 Toggle("Launch Nix automatically at login", isOn: $launchAtLogin)
+                    .toggleStyle(.switch)
                     .onChange(of: launchAtLogin) { _, newValue in
                         let success = LoginItemService.setEnabled(newValue)
-                        if !success {
-                            // SMAppService call failed — revert the toggle to match system reality.
-                            launchAtLogin = LoginItemService.isEnabled
-                        }
+                        if !success { launchAtLogin = LoginItemService.isEnabled }
                     }
             }
-            .padding(16)
-            .background(Color(.controlBackgroundColor))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .padding(.horizontal, 40)
+            .padding(18)
+            .glassCard(cornerRadius: 14)   // ← Liquid Glass on Tahoe, material on Sonoma
+            .padding(.horizontal, 44)
 
             Spacer()
         }
