@@ -56,7 +56,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
 
         window.titlebarAppearsTransparent = true
-
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        
         let rootView = OnboardingView { [weak self] in
             window.close()           // dismiss the window
             self?.onboardingWindow = nil  // release our strong reference → ARC deallocates

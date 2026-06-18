@@ -11,6 +11,7 @@
 		DE2D742A2FDFDAD000B6D3CE /* GeneralTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2D74292FDFDACB00B6D3CE /* GeneralTab.swift */; };
 		DE507F892FE3F3C20013D502 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE507F882FE3F3BB0013D502 /* NotificationService.swift */; };
 		DE507F8B2FE3F4610013D502 /* WhitelistTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE507F8A2FE3F45A0013D502 /* WhitelistTab.swift */; };
+		DE507F8D2FE410680013D502 /* VisualEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE507F8C2FE4105C0013D502 /* VisualEffectView.swift */; };
 		DE5B43512FD08F4C0059F34F /* QuitEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5B43502FD08F430059F34F /* QuitEngine.swift */; };
 		DE5B43562FD31FDD0059F34F /* RuleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5B43542FD317860059F34F /* RuleStore.swift */; };
 		DE5B43572FD31FF00059F34F /* GlobalSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5B43552FD31A9D0059F34F /* GlobalSettings.swift */; };
@@ -34,6 +35,7 @@
 		DE2D74292FDFDACB00B6D3CE /* GeneralTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralTab.swift; sourceTree = "<group>"; };
 		DE507F882FE3F3BB0013D502 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		DE507F8A2FE3F45A0013D502 /* WhitelistTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhitelistTab.swift; sourceTree = "<group>"; };
+		DE507F8C2FE4105C0013D502 /* VisualEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffectView.swift; sourceTree = "<group>"; };
 		DE5B43502FD08F430059F34F /* QuitEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuitEngine.swift; sourceTree = "<group>"; };
 		DE5B43532FD315DA0059F34F /* AppRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRule.swift; sourceTree = "<group>"; };
 		DE5B43542FD317860059F34F /* RuleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleStore.swift; sourceTree = "<group>"; };
@@ -113,6 +115,7 @@
 		DEB830822FC88F2100F886C2 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				DE507F8C2FE4105C0013D502 /* VisualEffectView.swift */,
 				DE507F8A2FE3F45A0013D502 /* WhitelistTab.swift */,
 				DEC9109B2FE164FF00D34F39 /* OnboardingView.swift */,
 				DEC910992FE15C0400D34F39 /* AppsTab.swift */,
@@ -214,6 +217,7 @@
 			files = (
 				DEB8308A2FC8ABDD00F886C2 /* AppEnvironment.swift in Sources */,
 				DE507F8B2FE3F4610013D502 /* WhitelistTab.swift in Sources */,
+				DE507F8D2FE410680013D502 /* VisualEffectView.swift in Sources */,
 				DE5B43582FD31FF40059F34F /* AppRule.swift in Sources */,
 				DEB830862FC8A19300F886C2 /* MenuBarView.swift in Sources */,
 				DEC9109A2FE15C0B00D34F39 /* AppsTab.swift in Sources */,

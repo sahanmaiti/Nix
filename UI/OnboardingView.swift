@@ -30,6 +30,7 @@ struct OnboardingView: View {
                 .padding(.vertical, 14)
         }
         .frame(width: pageWidth)
+                .glassWindow()
     }
 
     // ─────────────────────────────────────────────────────────────────────────
