@@ -9,11 +9,14 @@
 /* Begin PBXBuildFile section */
 		DE2D74282FDFD99600B6D3CE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2D74272FDFD99100B6D3CE /* SettingsView.swift */; };
 		DE2D742A2FDFDAD000B6D3CE /* GeneralTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2D74292FDFDACB00B6D3CE /* GeneralTab.swift */; };
+		DE507F892FE3F3C20013D502 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE507F882FE3F3BB0013D502 /* NotificationService.swift */; };
+		DE507F8B2FE3F4610013D502 /* WhitelistTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE507F8A2FE3F45A0013D502 /* WhitelistTab.swift */; };
 		DE5B43512FD08F4C0059F34F /* QuitEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5B43502FD08F430059F34F /* QuitEngine.swift */; };
 		DE5B43562FD31FDD0059F34F /* RuleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5B43542FD317860059F34F /* RuleStore.swift */; };
 		DE5B43572FD31FF00059F34F /* GlobalSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5B43552FD31A9D0059F34F /* GlobalSettings.swift */; };
 		DE5B43582FD31FF40059F34F /* AppRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5B43532FD315DA0059F34F /* AppRule.swift */; };
 		DE8AB0132FE27DEF007D9219 /* .geminiignore in Resources */ = {isa = PBXBuildFile; fileRef = DE8AB0122FE27DE8007D9219 /* .geminiignore */; };
+		DE8AB0142FE3CB2E007D9219 /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2D74262FDFD7EC00B6D3CE /* LoginItemService.swift */; };
 		DEABF11E2FCAB241009A5C40 /* AccessibilityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEABF11D2FCAB235009A5C40 /* AccessibilityManager.swift */; };
 		DEABF1222FCC0192009A5C40 /* AXWindowReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEABF1212FCC0188009A5C40 /* AXWindowReader.swift */; };
 		DEABF1242FCD5231009A5C40 /* CoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEABF1232FCD522C009A5C40 /* CoreTests.swift */; };
@@ -29,6 +32,8 @@
 		DE2D74262FDFD7EC00B6D3CE /* LoginItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
 		DE2D74272FDFD99100B6D3CE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		DE2D74292FDFDACB00B6D3CE /* GeneralTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralTab.swift; sourceTree = "<group>"; };
+		DE507F882FE3F3BB0013D502 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		DE507F8A2FE3F45A0013D502 /* WhitelistTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhitelistTab.swift; sourceTree = "<group>"; };
 		DE5B43502FD08F430059F34F /* QuitEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuitEngine.swift; sourceTree = "<group>"; };
 		DE5B43532FD315DA0059F34F /* AppRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRule.swift; sourceTree = "<group>"; };
 		DE5B43542FD317860059F34F /* RuleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleStore.swift; sourceTree = "<group>"; };
@@ -68,6 +73,7 @@
 		DE2D74252FDFD7C800B6D3CE /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				DE507F882FE3F3BB0013D502 /* NotificationService.swift */,
 				DE2D74262FDFD7EC00B6D3CE /* LoginItemService.swift */,
 			);
 			path = Services;
@@ -107,6 +113,7 @@
 		DEB830822FC88F2100F886C2 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				DE507F8A2FE3F45A0013D502 /* WhitelistTab.swift */,
 				DEC9109B2FE164FF00D34F39 /* OnboardingView.swift */,
 				DEC910992FE15C0400D34F39 /* AppsTab.swift */,
 				DE2D74292FDFDACB00B6D3CE /* GeneralTab.swift */,
@@ -206,12 +213,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				DEB8308A2FC8ABDD00F886C2 /* AppEnvironment.swift in Sources */,
+				DE507F8B2FE3F4610013D502 /* WhitelistTab.swift in Sources */,
 				DE5B43582FD31FF40059F34F /* AppRule.swift in Sources */,
 				DEB830862FC8A19300F886C2 /* MenuBarView.swift in Sources */,
 				DEC9109A2FE15C0B00D34F39 /* AppsTab.swift in Sources */,
 				DEB8308C2FC9D02800F886C2 /* AppTracker.swift in Sources */,
 				DEABF1222FCC0192009A5C40 /* AXWindowReader.swift in Sources */,
 				DE5B43512FD08F4C0059F34F /* QuitEngine.swift in Sources */,
+				DE507F892FE3F3C20013D502 /* NotificationService.swift in Sources */,
 				DE5B43572FD31FF00059F34F /* GlobalSettings.swift in Sources */,
 				DE2D74282FDFD99600B6D3CE /* SettingsView.swift in Sources */,
 				DE2D742A2FDFDAD000B6D3CE /* GeneralTab.swift in Sources */,
@@ -220,6 +229,7 @@
 				DEABF1242FCD5231009A5C40 /* CoreTests.swift in Sources */,
 				DEC9109C2FE1651100D34F39 /* OnboardingView.swift in Sources */,
 				DE5B43562FD31FDD0059F34F /* RuleStore.swift in Sources */,
+				DE8AB0142FE3CB2E007D9219 /* LoginItemService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
