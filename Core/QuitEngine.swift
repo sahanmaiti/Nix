@@ -152,7 +152,6 @@ final class QuitEngine {
     // ─────────────────────────────────────────────────────────
 
     private func performQuit(app: NSRunningApplication) {
-        // Final safety check — the app could have quit between scheduling and now
         guard !app.isTerminated else { return }
 
         let name = app.localizedName ?? "unknown"
@@ -162,6 +161,11 @@ final class QuitEngine {
 
         if !success {
             logger.warning("terminate() returned false for '\(name)' — app resisted (unsaved data?)")
+        } else if GlobalSettings.shared.showNotifications {
+            NotificationService.show(
+                title: "Nix",
+                body:  "\(name) quit — no windows remaining"
+            )
         }
     }
 
