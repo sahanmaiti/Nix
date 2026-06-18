@@ -1,2 +1,0 @@
-import ApplicationServices
-print(kAXWindowClosedNotification)
