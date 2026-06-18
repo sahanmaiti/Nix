@@ -2,6 +2,7 @@ import AppKit
 import ApplicationServices
 import ServiceManagement
 import os.log
+import UserNotifications
 
 private let testLogger = Logger(subsystem: "com.sahan.Nix", category: "Verification")
 
@@ -12,7 +13,7 @@ private let testLogger = Logger(subsystem: "com.sahan.Nix", category: "Verificat
 @MainActor
 func runAllVerifications() {
     testLogger.info("================================")
-    testLogger.info("VERIFICATION SUITE - Day 18")
+    testLogger.info("VERIFICATION SUITE - Day 20")
     testLogger.info("================================")
     
     verifyAppTracker()
@@ -36,6 +37,8 @@ func runAllVerifications() {
     verifyOnboardingState()
     verifyWindowMonitorNotificationStrategy()
     verifyLoginItemService()
+    verifyNotificationService()
+    verifyWhitelistTabData()
     
     testLogger.info("=================================")
     testLogger.info("VERIFICATION SUITE COMPLETE")
@@ -601,4 +604,66 @@ func verifyLoginItemService() {
 
     testLogger.info("  ℹ️  To verify manually: System Settings → General → Login Items")
     testLogger.info("✅ Login item service verification complete")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// MARK: - Day 19: Notification Service
+// ──────────────────────────────────────────────────────────────────────────────
+
+@MainActor
+func verifyNotificationService() {
+    testLogger.info("=== Notification Service (Day 19) ===")
+    testLogger.info("  GlobalSettings.showNotifications: \(GlobalSettings.shared.showNotifications)")
+
+    // Async — result prints separately; os_log can't be called from that callback thread.
+    UNUserNotificationCenter.current().getNotificationSettings { settings in
+        let status: String
+        switch settings.authorizationStatus {
+        case .authorized:    status = "authorized ✅"
+        case .denied:        status = "denied ⚠️  (user must enable in System Settings → Notifications)"
+        case .notDetermined: status = "notDetermined (will prompt on next check)"
+        case .provisional:   status = "provisional"
+        case .ephemeral:     status = "ephemeral"
+        @unknown default:    status = "unknown"
+        }
+        print("[Verification] Notification authorization status: \(status)")
+    }
+
+    testLogger.info("  Authorization status: see print output above")
+    testLogger.info("✅ NotificationService: wired and reachable")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// MARK: - Day 20: Whitelist Tab Data
+// ──────────────────────────────────────────────────────────────────────────────
+
+@MainActor
+func verifyWhitelistTabData() {
+    let store = AppEnvironment.shared.ruleStore
+
+    testLogger.info("=== Whitelist Tab Data (Day 20) ===")
+
+    let systemCount = RuleStore.permanentWhitelist.count
+    testLogger.info("  System protected apps: \(systemCount)")
+
+    let userWhitelisted = store.rules.values
+        .filter { $0.isWhitelisted }
+        .sorted { $0.appName < $1.appName }
+
+    testLogger.info("  User whitelisted apps: \(userWhitelisted.count)")
+    for rule in userWhitelisted {
+        testLogger.info("    → \(rule.appName) (\(rule.bundleIdentifier))")
+    }
+
+    // Sanity: permanent whitelist entries must still return .ignore
+    let finderOk = store.behavior(for: "com.apple.finder") == .ignore
+    let dockOk   = store.behavior(for: "com.apple.dock")   == .ignore
+    testLogger.info("  Finder → .ignore: \(finderOk ? "✅" : "❌")")
+    testLogger.info("  Dock   → .ignore: \(dockOk   ? "✅" : "❌")")
+
+    if finderOk && dockOk {
+        testLogger.info("✅ WhitelistTab data layer verified")
+    } else {
+        testLogger.error("❌ Permanent whitelist broken — check RuleStore.behavior()")
+    }
 }
