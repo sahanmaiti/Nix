@@ -1,5 +1,6 @@
 import AppKit
 import ApplicationServices
+import ServiceManagement
 import os.log
 
 private let testLogger = Logger(subsystem: "com.sahan.Nix", category: "Verification")
@@ -34,6 +35,7 @@ func runAllVerifications() {
     verifyLoggerCategories()
     verifyOnboardingState()
     verifyWindowMonitorNotificationStrategy()
+    verifyLoginItemService()
     
     testLogger.info("=================================")
     testLogger.info("VERIFICATION SUITE COMPLETE")
@@ -446,32 +448,26 @@ func diagnoseWindowTree(appName: String) {
 
     for (i, window) in windows.enumerated() {
 
-        // Title
         var titleRef: CFTypeRef?
         AXUIElementCopyAttributeValue(window, kAXTitleAttribute as CFString, &titleRef)
         let title = (titleRef as? String) ?? "(no title)"
 
-        // Role (should be AXWindow for most)
         var roleRef: CFTypeRef?
         AXUIElementCopyAttributeValue(window, kAXRoleAttribute as CFString, &roleRef)
         let role = (roleRef as? String) ?? "(no role)"
 
-        // Subrole — THIS IS THE KEY FIELD for phantom identification
         var subroleRef: CFTypeRef?
         AXUIElementCopyAttributeValue(window, kAXSubroleAttribute as CFString, &subroleRef)
         let subrole = (subroleRef as? String) ?? "(no subrole — Nix treats as primary!)"
 
-        // Minimized?
         var minRef: CFTypeRef?
         AXUIElementCopyAttributeValue(window, kAXMinimizedAttribute as CFString, &minRef)
         let minimized = (minRef as? Bool) ?? false
 
-        // Is main window?
         var mainRef: CFTypeRef?
         AXUIElementCopyAttributeValue(window, kAXMainAttribute as CFString, &mainRef)
         let isMain = (mainRef as? Bool) ?? false
 
-        // Would Nix currently count this window?
         let nixCounts = (subrole != "(no subrole — Nix treats as primary!)" &&
                          subrole != "AXSheet" &&
                          subrole != "AXDialog" &&
@@ -494,11 +490,6 @@ func diagnoseWindowTree(appName: String) {
     testLogger.info("╚══")
 }
 
-
-// ──────────────────────────────────────────────────────────────────────────────
-// MARK: - Legacy: verifyWindowDetails (kept for compatibility)
-// ──────────────────────────────────────────────────────────────────────────────
-
 @MainActor
 func verifyWindowDetails(appName: String) {
     diagnoseWindowTree(appName: appName)
@@ -507,7 +498,6 @@ func verifyWindowDetails(appName: String) {
 // ──────────────────────────────────────────────────────────────────────────────
 // MARK: - Day 17: Onboarding State
 // ──────────────────────────────────────────────────────────────────────────────
-/// Verifies the onboarding completion flag is readable and reports its current state.
 
 @MainActor
 func verifyOnboardingState() {
@@ -558,4 +548,57 @@ func verifyWindowMonitorNotificationStrategy() {
 
     testLogger.info("  Strategy: kAXWindowClosed per-window | kAXWindowCreated/MainWindowChanged/FocusedWindowChanged on app element")
     testLogger.info("✅ Window notification strategy: per-window registration active")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// MARK: - Day 18: Login Item Service
+// ──────────────────────────────────────────────────────────────────────────────
+
+/// Verifies LoginItemService state is consistent with system and UserDefaults.
+@MainActor
+func verifyLoginItemService() {
+    testLogger.info("=== Login Item Service (Day 18) ===")
+
+    let systemStatus  = SMAppService.mainApp.status
+    let serviceValue  = LoginItemService.isEnabled
+    let settingsValue = GlobalSettings.shared.launchAtLogin
+
+    // Map the raw status to a readable string for logging
+    let statusName: String
+    switch systemStatus {
+    case .enabled:            statusName = "enabled"
+    case .requiresApproval:   statusName = "requiresApproval"
+    case .notRegistered:      statusName = "notRegistered"
+    case .notFound:           statusName = "notFound"
+    default:                  statusName = "unknown (\(systemStatus.rawValue))"
+    }
+
+    testLogger.info("  SMAppService.mainApp.status:  \(statusName)")
+    testLogger.info("  LoginItemService.isEnabled:   \(serviceValue)")
+    testLogger.info("  GlobalSettings.launchAtLogin: \(settingsValue)")
+
+    // LoginItemService.isEnabled should match system status
+    let systemEnabled = systemStatus == .enabled || systemStatus == .requiresApproval
+    if serviceValue == systemEnabled {
+        testLogger.info("  ✅ LoginItemService.isEnabled matches system status")
+    } else {
+        testLogger.error("  ❌ LoginItemService.isEnabled MISMATCH — check LoginItemService.isEnabled implementation")
+    }
+
+    // GlobalSettings should have been reconciled at startup
+    if settingsValue == serviceValue {
+        testLogger.info("  ✅ GlobalSettings.launchAtLogin in sync with system state")
+    } else {
+        testLogger.warning("  ⚠️  GlobalSettings.launchAtLogin out of sync — syncWithSystemState() may not have been called")
+        testLogger.warning("      Expected: \(serviceValue), Got: \(settingsValue)")
+    }
+
+    // .requiresApproval is a special case worth calling out
+    if systemStatus == .requiresApproval {
+        testLogger.info("  ℹ️  Status is .requiresApproval — user must approve in:")
+        testLogger.info("      System Settings → General → Login Items")
+    }
+
+    testLogger.info("  ℹ️  To verify manually: System Settings → General → Login Items")
+    testLogger.info("✅ Login item service verification complete")
 }

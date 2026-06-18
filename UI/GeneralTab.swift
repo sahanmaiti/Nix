@@ -134,19 +134,12 @@ extension AppBehavior {
         }
     }
 }
+
+// MARK: - Login Item Helper
+
 private func updateLoginItemState(_ enabled: Bool) {
-    do {
-        if enabled {
-            try SMAppService.mainApp.register()
-            Logger(subsystem: "com.sahan.Nix", category: "GeneralTab")
-                .info("Login item registered - Nix will launch at login")
-        } else {
-            try SMAppService.mainApp.unregister()
-            Logger(subsystem: "com.sahan.Nix", category: "GeneralTab")
-                .info("Login item unregistered - Nix will not launch at login")
-        }
-    } catch {
-        Logger(subsystem: "com.sahan.Nix", category: "GeneralTab")
-            .error("Login item update failed: \(error.localizedDescription)")
+    let success = LoginItemService.setEnabled(enabled)
+    if !success {
+        GlobalSettings.shared.launchAtLogin = LoginItemService.isEnabled
     }
 }

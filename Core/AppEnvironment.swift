@@ -9,7 +9,7 @@ final class AppEnvironment: ObservableObject {
     
     // ──────────────────────────────────────────────────
     // MARK: - PUBLISHED STATE
-    // SwiftUI redraws when these change
+    /// SwiftUI redraws when these change
     // ──────────────────────────────────────────────────
     
     @Published var isEnabled: Bool = true {
@@ -28,7 +28,7 @@ final class AppEnvironment: ObservableObject {
     
     // ──────────────────────────────────────────────────
     // MARK: - SERVICES
-    // AppEnvironment OWNS these. They live as long as the app does.
+    /// AppEnvironment OWNS these. They live as long as the app does.
     // ──────────────────────────────────────────────────
     
     let accessibilityManager: AccessibilityManager
@@ -62,8 +62,13 @@ final class AppEnvironment: ObservableObject {
         self.windowMonitor = WindowMonitor()
         self.appTracker    = AppTracker(windowMonitor: windowMonitor)
         
-        // 2. Load persisted settings into engine at startup.
+        // 2. Load persisted settings into the engine at startup.
         loadPersistedSettings()
+        
+        // 2a. Reconcile the launch-at-login toggle with actual system state.
+        //     The user may have removed Nix from Login Items in System Settings
+        //     since the last launch, making UserDefaults stale. This corrects it.
+        LoginItemService.syncWithSystemState()
 
         // 3. Wire the detection → decision pipeline.
         windowMonitor.onZeroWindows = { [weak quitEngine] app in

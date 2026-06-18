@@ -20,13 +20,11 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // The sliding carousel — all steps exist simultaneously, offset horizontally
             stepCarousel
                 .frame(height: 360)
 
             Divider()
 
-            // Navigation dots + context-sensitive buttons
             navigationBar
                 .padding(.horizontal, 22)
                 .padding(.vertical, 14)
@@ -90,8 +88,6 @@ struct OnboardingView: View {
         }
     }
 
-    // Each step gets context-appropriate buttons.
-    // @ViewBuilder lets us return different view types per case.
     @ViewBuilder
     private var navigationButtons: some View {
         switch currentStep {
@@ -150,11 +146,7 @@ struct OnboardingView: View {
     }
 
     private func finish() {
-        // 1. Write the completion flag to UserDefaults.
-        //    Next launch, AppDelegate reads this and skips showOnboarding().
         onboardingComplete = true
-
-        // 2. Fire the closure — AppDelegate closes the NSWindow.
         onComplete()
     }
 }
@@ -236,8 +228,6 @@ struct HowItWorksStep: View {
     }
 }
 
-// Reusable numbered row for the How It Works step.
-// Private to this file — nothing outside OnboardingView needs it.
 private struct OnboardingRow: View {
     let number: String
     let title: String
@@ -245,7 +235,6 @@ private struct OnboardingRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
-            // Numbered badge
             ZStack {
                 Circle()
                     .fill(Color.accentColor.opacity(0.12))
@@ -300,7 +289,6 @@ struct PermissionStep: View {
                     .frame(maxWidth: 390)
             }
 
-            // Conditionally show grant button OR confirmation label
             if env.accessibilityManager.isGranted {
                 Label("Permission Granted", systemImage: "checkmark.circle.fill")
                     .foregroundStyle(.green)
@@ -360,7 +348,6 @@ struct SetupStep: View {
         VStack(spacing: 0) {
             Spacer()
 
-            // Header
             VStack(spacing: 8) {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 52))
@@ -378,10 +365,8 @@ struct SetupStep: View {
 
             Spacer()
 
-            // Preference controls in a rounded card
             VStack(alignment: .leading, spacing: 14) {
 
-                // Default behavior picker
                 VStack(alignment: .leading, spacing: 6) {
                     Text("When the last window closes:")
                         .font(.callout)
@@ -398,17 +383,13 @@ struct SetupStep: View {
 
                 Divider()
 
-                // Launch at login toggle
+                // Routes through LoginItemService — no direct SMAppService calls here.
                 Toggle("Launch Nix automatically at login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, newValue in
-                        do {
-                            if newValue {
-                                try SMAppService.mainApp.register()
-                            } else {
-                                try SMAppService.mainApp.unregister()
-                            }
-                        } catch {
-                            launchAtLogin = SMAppService.mainApp.status == .enabled
+                        let success = LoginItemService.setEnabled(newValue)
+                        if !success {
+                            // SMAppService call failed — revert the toggle to match system reality.
+                            launchAtLogin = LoginItemService.isEnabled
                         }
                     }
             }
