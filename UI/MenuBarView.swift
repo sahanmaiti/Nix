@@ -1,6 +1,8 @@
-// MenuBarView.swift
-
 import SwiftUI
+
+// ─────────────────────────────────────────────────────────────
+// MARK: - MenuBarView
+// ─────────────────────────────────────────────────────────────
 
 struct MenuBarView: View {
 
@@ -8,88 +10,78 @@ struct MenuBarView: View {
     @Environment(\.openWindow) var openWindow
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(spacing: 0) {
 
-            // -- PERMISSION BANNER --
+            // Permission warning — only when AX not granted
             if !env.accessibilityManager.isGranted {
-                permissionBanner
+                accessibilityWarning
                 Divider()
             }
-            
-            // -- HEADER --
-            headerSection
+
+            header
+
+            if !env.appTracker.trackedApps.isEmpty {
+                Divider()
+                appList
+            }
 
             Divider()
-            
-            // -- STATUS --
-            statusSection
-
-            Divider()
-            
-            // --  APP SECTION --
-            appsSection
-
-            Divider()
-
-            // -- PAUSE SECTION --
-            pauseSection
-
-            Divider()
-            
-            // -- FOOTER SECTION --
-            footerSection
+            controlRows
         }
-        .frame(width: 260)
+        .frame(width: 280)
     }
-    
-    // MARK: - Permission Banner
-    
-    private var permissionBanner: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            
-            // Warming icon + title
-            HStack(spacing: 6) {
-                Image(systemName: "exclamationmark.shield.fill")
+
+    // ─────────────────────────────────────────────────────────
+    // MARK: - Accessibility Warning
+    // ─────────────────────────────────────────────────────────
+
+    private var accessibilityWarning: some View {
+        Button { env.accessibilityManager.requestPermission() } label: {
+            HStack(spacing: 9) {
+                Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(.orange)
-                    .font(.callout)
-                
-                Text("Permission Required")
-                    .font(.caption)
-                    .fontWeight(.semibold)
+                    .font(.system(size: 14))
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Accessibility Permission Required")
+                        .font(.system(size: 12, weight: .medium))
+                    Text("Click to open Privacy & Security")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.tertiary)
             }
-            // Explanation :
-            Text("Nix needs Accessibility access to detect when app windows close.")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            
-            //The button that triggers the system permission prompt
-            Button("Grant Permission") {
-                env.accessibilityManager.requestPermission()
-            }
-            .font(.caption)
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .contentShape(Rectangle())
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(Color.orange.opacity(0.08))
+        .buttonStyle(.plain)
+        .background(Color.orange.opacity(0.07))
     }
 
+    // ─────────────────────────────────────────────────────────
     // MARK: - Header
+    // ─────────────────────────────────────────────────────────
 
-    private var headerSection: some View {
-        HStack {
+    private var header: some View {
+        HStack(spacing: 10) {
+            // Icon color reflects active state — no text badge needed
             Image(systemName: "xmark.circle.fill")
-                .foregroundStyle(.red)
-                .font(.title2)
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(headerIconColor)
+                .animation(.easeInOut(duration: 0.2), value: env.isEnabled)
+                .animation(.easeInOut(duration: 0.2), value: env.isPaused)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text("Nix")
-                    .font(.headline)
-
-                Text(env.isPaused ? "Paused" : (env.isEnabled ? "Active" : "Disabled"))
-                    .font(.caption)
+                    .font(.system(size: 13, weight: .semibold))
+                Text(headerStatus)
+                    .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
 
@@ -98,178 +90,159 @@ struct MenuBarView: View {
             Toggle("", isOn: $env.isEnabled)
                 .toggleStyle(.switch)
                 .labelsHidden()
+                .controlSize(.small)
                 .disabled(env.isPaused)
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 14)
         .padding(.vertical, 10)
     }
 
-    // MARK: - Status
-
-    private var statusSection: some View {
-        HStack {
-            Circle()
-                .fill(statusColor)
-                .frame(width: 8, height: 8)
-
-            Text(statusText)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Spacer()
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
+    private var headerIconColor: Color {
+        guard env.isEnabled, !env.isPaused else { return Color(.tertiaryLabelColor) }
+        return .red
     }
 
-    // MARK: - Running Apps
-
-    private var appsSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-
-            Text("RUNNING APPS (\(env.appTracker.trackedApps.count))")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.tertiary)
-                .padding(.horizontal, 12)
-                .padding(.top, 10)
-                .padding(.bottom, 4)
-
-            if env.appTracker.trackedApps.isEmpty {
-
-                Text("No apps running")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 8)
-
-            } else {
-
-                let appsToShow = Array(
-                    env.appTracker.trackedApps
-                        .sorted { $0.name < $1.name }
-                        .prefix(6)
-                )
-
-                ForEach(appsToShow) { app in
-                    appRow(app: app)
-                }
-
-                let remaining = env.appTracker.trackedApps.count - 6
-
-                if remaining > 0 {
-                    Text("+ \(remaining) more")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.tertiary)
-                        .padding(.horizontal, 12)
-                        .padding(.top, 2)
-                        .padding(.bottom, 6)
-                }
-            }
-        }
+    private var headerStatus: String {
+        if env.isPaused   { return "Monitoring paused" }
+        if !env.isEnabled { return "Monitoring disabled" }
+        let n = env.appTracker.trackedApps.count
+        return n == 0 ? "No apps open" : "Watching \(n) app\(n == 1 ? "" : "s")"
     }
 
-    private func appRow(app: TrackedApp) -> some View {
-        HStack(spacing: 8) {
+    // ─────────────────────────────────────────────────────────
+    // MARK: - App List
+    // ─────────────────────────────────────────────────────────
 
-            if let icon = app.icon {
-                Image(nsImage: icon)
-                    .resizable()
-                    .interpolation(.high)
-                    .frame(width: 16, height: 16)
-            } else {
-                Image(systemName: "app.fill")
-                    .frame(width: 16, height: 16)
-                    .foregroundStyle(.secondary)
+    private var appList: some View {
+        buildAppList(env.appTracker.trackedApps.sorted { $0.name < $1.name })
+    }
+
+    // Extracted to avoid @ViewBuilder constraints on let-bindings
+    private func buildAppList(_ apps: [TrackedApp]) -> some View {
+        VStack(spacing: 0) {
+            ForEach(Array(apps.prefix(5))) { app in
+                HStack(spacing: 8) {
+                    Group {
+                        if let icon = app.icon {
+                            Image(nsImage: icon)
+                                .resizable()
+                                .interpolation(.high)
+                                .frame(width: 14, height: 14)
+                        } else {
+                            Image(systemName: "app.fill")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 14, height: 14)
+                        }
+                    }
+
+                    Text(app.name)
+                        .font(.system(size: 12))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+
+                    Spacer()
+
+                    // 5px dot: green=active, orange=hidden, dimmed when paused
+                    Circle()
+                        .fill(app.isHidden ? Color.orange : Color.green)
+                        .frame(width: 5, height: 5)
+                        .opacity(env.isPaused ? 0.35 : 1.0)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 3)
             }
 
-            Text(app.name)
-                .font(.system(size: 12))
-                .lineLimit(1)
-                .truncationMode(.tail)
-
-            Spacer()
-
-            Circle()
-                .fill(app.isHidden ? Color.yellow : Color.green)
-                .frame(width: 6, height: 6)
+            if apps.count > 5 {
+                Text("and \(apps.count - 5) more")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.tertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 14)
+                    .padding(.top, 1)
+                    .padding(.bottom, 2)
+            }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 3)
-        .contentShape(Rectangle())
+        .padding(.vertical, 5)
     }
 
-    // MARK: - Pause
+    // ─────────────────────────────────────────────────────────
+    // MARK: - Control Rows
+    // ─────────────────────────────────────────────────────────
 
-    private var pauseSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
+    private var controlRows: some View {
+        VStack(spacing: 0) {
             if env.isPaused {
-                menuRow(icon: "play.circle", label: "Resume Monitoring") {
+                MenuRow(icon: "play.circle", label: "Resume Monitoring") {
                     env.resume()
                 }
             } else {
-                menuRow(icon: "pause.circle", label: "Pause for 30 minutes") {
+                MenuRow(icon: "pause.circle", label: "Pause for 30 Minutes") {
                     env.pause(minutes: 30)
                 }
-                menuRow(icon: "pause.circle", label: "Pause for 2 hours") {
+                MenuRow(icon: "pause.circle", label: "Pause for 2 Hours") {
                     env.pause(minutes: 120)
                 }
             }
-        }
-    }
 
-    // MARK: - Footer
+            Divider().padding(.horizontal, 4)
 
-    private var footerSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            menuRow(icon: "gear", label: "Settings...") {
-                openWindow(id: "settings")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    NSApp.activate(ignoringOtherApps: true)
-                    NSApp.windows
-                        .first(where: { $0.title == "Settings" })
-                        .map { $0.makeKeyAndOrderFront(nil) }
-                }
-            }
-
-            menuRow(icon: "power", label: "Quit Nix") {
+            MenuRow(icon: "gear", label: "Settings…", action: openSettings)
+            MenuRow(icon: "power", label: "Quit Nix") {
                 NSApplication.shared.terminate(nil)
             }
         }
+        .padding(.vertical, 3)
     }
-    // MARK: - Row Helper
 
-    private func menuRow(
-        icon: String,
-        label: String,
-        action: @escaping () -> Void
-    ) -> some View {
+    private func openSettings() {
+        openWindow(id: "settings")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            NSApp.activate(ignoringOtherApps: true)
+            NSApp.windows.first(where: { $0.title == "Settings" })?.makeKeyAndOrderFront(nil)
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// MARK: - MenuRow
+// Hover behavior replicates native NSMenu row highlighting.
+// isHovered drives both background and foreground color.
+// ─────────────────────────────────────────────────────────────
+
+private struct MenuRow: View {
+    let icon: String
+    let label: String
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
-                    .frame(width: 16)
+                    .font(.system(size: 12, weight: .medium))
+                    .frame(width: 16, alignment: .center)
 
                 Text(label)
+                    .font(.system(size: 13))
 
                 Spacer()
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
+            // White text on accent matches native NSMenu highlight behavior
+            .foregroundStyle(isHovered ? Color.white : Color.primary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(isHovered ? Color.accentColor : Color.clear)
+            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .padding(.horizontal, 4)
+        // Fast fade mirrors native menu responsiveness
+        .animation(.easeInOut(duration: 0.08), value: isHovered)
+        .onHover { isHovered = $0 }
     }
-
-    // MARK: - Helpers
-
-    private var statusColor: Color {
-        if env.isPaused { return .yellow }
-        if env.isEnabled { return .green }
-        return .gray
-    }
-
-    private var statusText: String {
-        if env.isPaused { return "Monitoring paused" }
-        if env.isEnabled { return "Monitoring active" }
-        return "Monitoring disabled"
-    }
-} 
+}

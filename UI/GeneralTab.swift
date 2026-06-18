@@ -4,11 +4,7 @@ import os.log
 
 struct GeneralTab: View {
 
-    // MARK: - Live State (via AppEnvironment)
-    
     @EnvironmentObject private var env: AppEnvironment
-
-    // MARK: - Persisted Settings (via @AppStorage)
 
     @AppStorage(SettingsKey.defaultBehavior)
     private var defaultBehaviorRaw: String = AppBehavior.quit.rawValue
@@ -21,8 +17,6 @@ struct GeneralTab: View {
 
     @AppStorage(SettingsKey.showNotifications)
     private var showNotifications: Bool = true
-
-    // MARK: - Bridging Bindings
 
     private var defaultBehavior: Binding<AppBehavior> {
         Binding(
@@ -38,8 +32,6 @@ struct GeneralTab: View {
         )
     }
 
-    // MARK: - Body
-
     var body: some View {
         Form {
             behaviorSection
@@ -49,18 +41,15 @@ struct GeneralTab: View {
         .formStyle(.grouped)
     }
 
-    // MARK: - Sections
+    // MARK: - Behavior
 
     private var behaviorSection: some View {
         Section {
-            // THE MAIN TOGGLE
             Toggle("Enable Nix", isOn: $env.isEnabled)
 
-            // DEFAULT BEHAVIOR PICKER
             Picker("When last window closes", selection: defaultBehavior) {
                 ForEach(AppBehavior.allCases, id: \.self) { behavior in
-                    Text(behavior.displayName)
-                        .tag(behavior)
+                    Text(behavior.displayName).tag(behavior)
                 }
             }
             .pickerStyle(.menu)
@@ -69,18 +58,20 @@ struct GeneralTab: View {
         } header: {
             Text("Behavior")
         } footer: {
-            Text("Per-app overrides can be set in the Apps tab.")
+            Text("Set per-app overrides in the Apps tab.")
                 .foregroundStyle(.secondary)
         }
     }
 
+    // MARK: - Timing
+
     private var timingSection: some View {
         Section {
             VStack(alignment: .leading, spacing: 8) {
-
                 HStack {
                     Text("Grace period")
                     Spacer()
+                    // Plain text — avoid contentTransition on macOS 14 beta edge cases
                     Text(gracePeriodSeconds == 0 ? "Immediate" : "\(gracePeriodSeconds)s")
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
@@ -91,26 +82,26 @@ struct GeneralTab: View {
                 Slider(value: gracePeriodDouble, in: 0...30, step: 1)
                     .disabled(!env.isEnabled)
 
-                Text("How long to wait before quitting after the last window closes. Open a new window during this period to cancel.")
+                Text("Nix waits this long before quitting. Reopening a window during the grace period cancels the quit.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-
         } header: {
             Text("Timing")
         }
     }
 
+    // MARK: - System
+
     private var systemSection: some View {
         Section {
-            // LAUNCH AT LOGIN TOGGLE
             Toggle("Launch Nix at login", isOn: $launchAtLogin)
                 .onChange(of: launchAtLogin) { _, newValue in
-                    updateLoginItemState(newValue)
+                    let ok = LoginItemService.setEnabled(newValue)
+                    if !ok { launchAtLogin = LoginItemService.isEnabled }
                 }
 
-            // NOTIFICATION TOGGLE
             Toggle("Notify when an app is quit", isOn: $showNotifications)
 
         } header: {
@@ -135,11 +126,7 @@ extension AppBehavior {
     }
 }
 
-// MARK: - Login Item Helper
-
 private func updateLoginItemState(_ enabled: Bool) {
     let success = LoginItemService.setEnabled(enabled)
-    if !success {
-        GlobalSettings.shared.launchAtLogin = LoginItemService.isEnabled
-    }
+    if !success { GlobalSettings.shared.launchAtLogin = LoginItemService.isEnabled }
 }
