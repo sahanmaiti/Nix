@@ -223,10 +223,8 @@ struct MenuBarView: View {
         VStack(alignment: .leading, spacing: 0) {
             menuRow(icon: "gear", label: "Settings...") {
                 openWindow(id: "settings")
-
-                DispatchQueue.main.async {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     NSApp.activate(ignoringOtherApps: true)
-
                     NSApp.windows
                         .first(where: { $0.title == "Settings" })
                         .map { $0.makeKeyAndOrderFront(nil) }
