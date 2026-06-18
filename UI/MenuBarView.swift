@@ -223,13 +223,21 @@ struct MenuBarView: View {
         VStack(alignment: .leading, spacing: 0) {
             menuRow(icon: "gear", label: "Settings...") {
                 openWindow(id: "settings")
+
+                DispatchQueue.main.async {
+                    NSApp.activate(ignoringOtherApps: true)
+
+                    NSApp.windows
+                        .first(where: { $0.title == "Settings" })
+                        .map { $0.makeKeyAndOrderFront(nil) }
+                }
             }
+
             menuRow(icon: "power", label: "Quit Nix") {
                 NSApplication.shared.terminate(nil)
             }
         }
     }
-
     // MARK: - Row Helper
 
     private func menuRow(
