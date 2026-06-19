@@ -94,6 +94,8 @@ final class WindowMonitor {
 
     /// NSWorkspace fallback: apps reliably lose OS focus when their last window closes.
     /// Triggered by AppTracker when didDeactivateApplicationNotification fires.
+    /// This is an indirect/ambiguous signal (also fires on plain app/Space switches),
+    /// so it always routes through Phase 2 confirmation — never decides on one reading.
     func checkOnDeactivation(for pid: pid_t) {
         guard observers[pid] != nil else { return }
         logger.debug("Deactivation check for PID \(pid)")
@@ -102,7 +104,7 @@ final class WindowMonitor {
         let item = DispatchWorkItem { [weak self] in
             guard let self else { return }
             pendingPhase1Checks.removeValue(forKey: pid)
-            phaseOneCheck(pid: pid)
+            phaseOneCheck(pid: pid, isWeakSignal: true)
         }
         pendingPhase1Checks[pid] = item
         DispatchQueue.main.asyncAfter(deadline: .now() + debounceInterval, execute: item)
@@ -138,7 +140,8 @@ final class WindowMonitor {
         CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
 
         observers[pid]       = observer
-        lastWindowCount[pid] = currentWindowCount(for: pid)
+        // Best-effort baseline only — an inconclusive read here just means 0 to start with.
+        lastWindowCount[pid] = currentWindowCount(for: pid) ?? 0
 
         logger.info("✅ Monitoring '\(name)' (PID \(pid)) — \(self.lastWindowCount[pid] ?? 0) window(s)")
     }
@@ -223,10 +226,16 @@ final class WindowMonitor {
 
         pendingPhase1Checks[pid]?.cancel()
 
+        // Only AXWindowClosed / AXUIElementDestroyed are direct evidence a window closed.
+        // WindowCreated / MainWindowChanged / FocusedWindowChanged ALSO fire on minimize,
+        // refocus, and app/Space switches — those must be treated as weak signals too,
+        // same as the deactivation fallback, or they bypass Phase 2 confirmation.
+        let isStrongCloseSignal = (notification == kAXWindowClosedStr || notification == kAXUIElementDestroyedStr)
+
         let item = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
             self.pendingPhase1Checks.removeValue(forKey: pid)
-            self.phaseOneCheck(pid: pid)
+            self.phaseOneCheck(pid: pid, isWeakSignal: !isStrongCloseSignal)
         }
 
         pendingPhase1Checks[pid] = item
@@ -238,7 +247,7 @@ final class WindowMonitor {
     // MARK: - Phase 1: Count Check
     // ─────────────────────────────────────────────────────────────────
 
-    private func phaseOneCheck(pid: pid_t) {
+    private func phaseOneCheck(pid: pid_t, isWeakSignal: Bool = false) {
         guard let app = NSWorkspace.shared.runningApplications
             .first(where: { $0.processIdentifier == pid }),
               !app.isTerminated else {
@@ -251,7 +260,14 @@ final class WindowMonitor {
             return
         }
 
-        let count    = currentWindowCount(for: pid)
+        guard let count = currentWindowCount(for: pid) else {
+            // AX query failed (busy/transitioning — common right after minimize + app/Space switch).
+            // Never treat a failed read as zero. Defer to Phase 2 for a clean re-read.
+            logger.debug("Phase 1: inconclusive AX read for '\(app.localizedName ?? "?")' — deferring to Phase 2")
+            schedulePhaseTwoCheck(pid: pid)
+            return
+        }
+
         let previous = lastWindowCount[pid] ?? 0
         lastWindowCount[pid] = count
 
@@ -266,8 +282,8 @@ final class WindowMonitor {
         let bundleID     = app.bundleIdentifier ?? ""
         let isKnownHider = knownHiders.contains(bundleID)
 
-        if isKnownHider {
-            logger.debug("Phase 1: '\(app.localizedName ?? "?")' is a known hider — deferring to Phase 2")
+        if isKnownHider || isWeakSignal {
+            logger.debug("Phase 1: deferring to Phase 2 (weakSignal=\(isWeakSignal), knownHider=\(isKnownHider)) for '\(app.localizedName ?? "?")'")
             schedulePhaseTwoCheck(pid: pid)
         } else {
             logger.info("🎯 Phase 1 confirmed: zero windows — firing onZeroWindows for '\(app.localizedName ?? "?")'")
@@ -277,7 +293,7 @@ final class WindowMonitor {
 
 
     // ─────────────────────────────────────────────────────────────────
-    // MARK: - Phase 2 (Known Hiders Only)
+    // MARK: - Phase 2 (Known Hiders + Weak-Signal Confirmation)
     // ─────────────────────────────────────────────────────────────────
 
     private func schedulePhaseTwoCheck(pid: pid_t) {
@@ -308,7 +324,13 @@ final class WindowMonitor {
             return
         }
 
-        let count = currentWindowCount(for: pid)
+        guard let count = currentWindowCount(for: pid) else {
+            // Still inconclusive — do NOT quit on a failed read. The next real AX event
+            // (focus change, activation, close) will re-trigger evaluation.
+            logger.debug("Phase 2: inconclusive AX read for '\(app.localizedName ?? "?")' — skipping quit")
+            return
+        }
+
         logger.info("'\(app.localizedName ?? "?")': \(count) window(s) at Phase 2 (800ms total from event)")
 
         guard count == 0 else {
@@ -325,7 +347,10 @@ final class WindowMonitor {
     // MARK: - Window Count Query
     // ─────────────────────────────────────────────────────────────────
 
-    private func currentWindowCount(for pid: pid_t) -> Int {
+    /// Returns nil if the AX query could not be completed (app busy/transitioning/backgrounded
+    /// mid-transition). Callers MUST treat nil as "unknown," never as "zero windows" — conflating
+    /// the two is what causes apps to be incorrectly quit right after minimize + app/Space switch.
+    private func currentWindowCount(for pid: pid_t) -> Int? {
         let appElement = AXUIElementCreateApplication(pid)
 
         var windowsRef: CFTypeRef?
@@ -335,8 +360,12 @@ final class WindowMonitor {
             &windowsRef
         )
 
-        guard result == .success,
-              let windows = windowsRef as? [AXUIElement] else {
+        guard result == .success else {
+            logger.debug("AX windows query failed (error \(result.rawValue)) for PID \(pid) — inconclusive, not zero")
+            return nil
+        }
+
+        guard let windows = windowsRef as? [AXUIElement] else {
             return 0
         }
 
@@ -344,13 +373,6 @@ final class WindowMonitor {
     }
 
     private func isNonPrimaryWindow(_ window: AXUIElement) -> Bool {
-        var minimizedRef: CFTypeRef?
-        if AXUIElementCopyAttributeValue(window, kAXMinimizedAttribute as CFString, &minimizedRef) == .success,
-           let isMinimized = minimizedRef as? Bool,
-           isMinimized {
-            return true
-        }
-
         var subroleRef: CFTypeRef?
         guard AXUIElementCopyAttributeValue(window, kAXSubroleAttribute as CFString, &subroleRef) == .success,
               let subrole = subroleRef as? String else {
@@ -384,8 +406,6 @@ private func axWindowEventCallback(
     let monitor = Unmanaged<WindowMonitor>.fromOpaque(refcon).takeUnretainedValue()
 
     var pid: pid_t = 0
-    // AXUIElementGetPid works on both app elements AND window elements,
-    // so this callback handles both app-level and window-level notifications correctly.
     guard AXUIElementGetPid(element, &pid) == .success, pid != 0 else { return }
 
     let notifName = notificationName as String
