@@ -26,6 +26,7 @@ struct MenuBarView: View {
 
             Divider().opacity(0.4)
             controlRows
+            versionFooter
         }
         .frame(width: 280)
     }
@@ -94,7 +95,7 @@ struct MenuBarView: View {
                 .disabled(env.isPaused)
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 11)
+        .padding(.vertical, 12)
     }
 
     private var headerIconColor: Color {
@@ -120,36 +121,35 @@ struct MenuBarView: View {
     private func buildAppList(_ apps: [TrackedApp]) -> some View {
         VStack(spacing: 0) {
             ForEach(Array(apps.prefix(5))) { app in
-                HStack(spacing: 8) {
+                HStack(spacing: 9) {
                     Group {
                         if let icon = app.icon {
                             Image(nsImage: icon)
                                 .resizable()
                                 .interpolation(.high)
-                                .frame(width: 14, height: 14)
+                                .frame(width: 16, height: 16)
                         } else {
                             Image(systemName: "app.fill")
-                                .font(.system(size: 11))
+                                .font(.system(size: 12))
                                 .foregroundStyle(.secondary)
-                                .frame(width: 14, height: 14)
+                                .frame(width: 16, height: 16)
                         }
                     }
 
                     Text(app.name)
-                        .font(.system(size: 12))
+                        .font(.system(size: 13, weight: .medium))
                         .lineLimit(1)
                         .truncationMode(.tail)
 
                     Spacer()
 
-                    // Status dot: green = active, orange = hidden
                     Circle()
                         .fill(app.isHidden ? Color.orange : Color.green)
-                        .frame(width: 5, height: 5)
-                        .opacity(env.isPaused ? 0.35 : 1.0)
+                        .frame(width: 6, height: 6)
+                        .opacity(env.isPaused ? 0.3 : 0.85)
                 }
                 .padding(.horizontal, 14)
-                .padding(.vertical, 4)
+                .padding(.vertical, 5)
             }
 
             if apps.count > 5 {
@@ -201,11 +201,22 @@ struct MenuBarView: View {
             NSApp.windows.first(where: { $0.title == "Settings" })?.makeKeyAndOrderFront(nil)
         }
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Version Footer
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var versionFooter: some View {
+        Text("Nix · v1.0")
+            .font(.system(size: 10))
+            .foregroundStyle(Color(.quaternaryLabelColor))
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.vertical, 5)
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MARK: - MenuRow
-// Hover behaviour replicates native NSMenu row highlighting.
 // ─────────────────────────────────────────────────────────────────────────────
 
 private struct MenuRow: View {

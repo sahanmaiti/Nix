@@ -20,7 +20,7 @@ struct NixApp: App {
                 .environmentObject(env)
         }
         .windowResizability(.contentMinSize)
-        .defaultSize(width: 520, height: 420)
+        .defaultSize(width: 700, height: 480)
     }
 
     private var menuBarIcon: String {
