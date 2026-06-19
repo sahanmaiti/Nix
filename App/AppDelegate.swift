@@ -44,31 +44,40 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showOnboarding() {
         let window = NSWindow(
-            contentRect: NSRect(origin: .zero, size: NSSize(width: 520, height: 440)),
-            styleMask: [.titled, .closable],
+            contentRect: NSRect(origin: .zero, size: NSSize(width: 520, height: 460)),
+            styleMask: [
+                .titled,
+                .closable,
+                .fullSizeContentView,   // Content extends under the titlebar area
+            ],
             backing: .buffered,
             defer: false
         )
 
-        window.title = "Welcome to Nix"
-        window.center()
+        // Hide the "Welcome to Nix" title text — we show our own header in SwiftUI
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+
+        // Allow the user to drag the window by clicking anywhere in the content
+        window.isMovableByWindowBackground = true
 
         window.isReleasedWhenClosed = false
-
-        window.titlebarAppearsTransparent = true
         window.isOpaque = false
         window.backgroundColor = .clear
-        
-        let rootView = OnboardingView { [weak self] in
-            window.close()           // dismiss the window
-            self?.onboardingWindow = nil  // release our strong reference → ARC deallocates
+
+        // Center before showing
+        window.center()
+
+        let rootView = OnboardingView { [weak self, weak window] in
+            window?.close()
+            self?.onboardingWindow = nil
             self?.logger.info("Onboarding completed — window closed")
         }
         .environmentObject(AppEnvironment.shared)
+
         window.contentView = NSHostingView(rootView: rootView)
 
         window.makeKeyAndOrderFront(nil)
-
         NSApp.activate(ignoringOtherApps: true)
 
         onboardingWindow = window

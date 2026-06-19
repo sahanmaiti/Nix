@@ -21,9 +21,8 @@ struct OnboardingView: View {
     var body: some View {
         VStack(spacing: 0) {
             stepCarousel
-                .frame(height: 370)
+                .frame(height: 390)   // slightly taller — window is now 460 (was 440)
 
-            // Nav bar with a very subtle glass separator
             Divider()
                 .opacity(0.4)
 
@@ -33,6 +32,9 @@ struct OnboardingView: View {
                 .background(.ultraThinMaterial.opacity(0.5))
         }
         .frame(width: pageWidth)
+        // ↓ Top padding clears the traffic-light buttons (fullSizeContentView puts content
+        //   under the ~28pt titlebar area). Without this the icon overlaps the close button.
+        .padding(.top, 28)
         .glassWindow(.sidebar)
     }
 
@@ -78,7 +80,6 @@ struct OnboardingView: View {
         }
     }
 
-    // Animated pill indicators — active step expands to a capsule
     private var progressIndicator: some View {
         HStack(spacing: 6) {
             ForEach(0..<totalSteps, id: \.self) { index in
@@ -153,24 +154,19 @@ struct WelcomeStep: View {
         VStack(spacing: 0) {
             Spacer()
 
-            // Icon with soft radial glow — more depth than a flat symbol
             ZStack {
-                // Outer glow
                 Circle()
-                    .fill(.red.opacity(0.12))
+                    .fill(.primary.opacity(0.08))
                     .blur(radius: 28)
                     .frame(width: 130, height: 130)
 
-                // Inner glow ring
-                Circle()
-                    .fill(.red.opacity(0.08))
+                Image("NixIcon")
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
                     .frame(width: 96, height: 96)
-
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 64, weight: .regular))
-                    .foregroundStyle(.red)
-                    .symbolRenderingMode(.hierarchical)
-                    .symbolEffect(.pulse, options: .repeating)
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .shadow(color: .black.opacity(0.25), radius: 12, y: 4)
             }
             .padding(.bottom, 24)
 
@@ -276,7 +272,6 @@ struct PermissionStep: View {
         VStack(spacing: 0) {
             Spacer()
 
-            // Icon with glow matching current permission state
             ZStack {
                 Circle()
                     .fill(permissionIconColor.opacity(0.12))
@@ -365,7 +360,6 @@ struct SetupStep: View {
         VStack(spacing: 0) {
             Spacer()
 
-            // Header
             VStack(spacing: 8) {
                 ZStack {
                     Circle()
@@ -390,7 +384,6 @@ struct SetupStep: View {
 
             Spacer()
 
-            // Settings card — Liquid Glass on Tahoe, ultraThinMaterial on Sonoma
             VStack(alignment: .leading, spacing: 16) {
 
                 VStack(alignment: .leading, spacing: 8) {
@@ -418,7 +411,7 @@ struct SetupStep: View {
                     }
             }
             .padding(18)
-            .glassCard(cornerRadius: 14)   // ← Liquid Glass on Tahoe, material on Sonoma
+            .glassCard(cornerRadius: 14)
             .padding(.horizontal, 44)
 
             Spacer()

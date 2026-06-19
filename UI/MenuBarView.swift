@@ -70,10 +70,13 @@ struct MenuBarView: View {
 
     private var header: some View {
         HStack(spacing: 10) {
-            Image(systemName: "xmark.circle.fill")
-                .font(.system(size: 20, weight: .medium))
-                .foregroundStyle(headerIconColor)
-                .symbolRenderingMode(.hierarchical)
+            Image("NixIcon")
+                .resizable()
+                .interpolation(.high)
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 24, height: 24)
+                .clipShape(RoundedRectangle(cornerRadius: 5.5, style: .continuous))
+                .opacity(env.isEnabled && !env.isPaused ? 1.0 : 0.45)
                 .animation(.easeInOut(duration: 0.2), value: env.isEnabled)
                 .animation(.easeInOut(duration: 0.2), value: env.isPaused)
 
@@ -96,11 +99,6 @@ struct MenuBarView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-    }
-
-    private var headerIconColor: Color {
-        guard env.isEnabled, !env.isPaused else { return Color(.tertiaryLabelColor) }
-        return .red
     }
 
     private var headerStatus: String {
