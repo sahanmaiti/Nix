@@ -1,5 +1,6 @@
 import ApplicationServices
 import AppKit
+import CoreGraphics
 import os.log
 
 
@@ -324,21 +325,19 @@ final class WindowMonitor {
             return
         }
 
-        guard let count = currentWindowCount(for: pid) else {
-            // Still inconclusive — do NOT quit on a failed read. The next real AX event
-            // (focus change, activation, close) will re-trigger evaluation.
-            logger.debug("Phase 2: inconclusive AX read for '\(app.localizedName ?? "?")' — skipping quit")
+        guard let count = crossSpaceWindowCount(for: pid) else {
+            logger.debug("Phase 2: inconclusive CGWindowList read for '\(app.localizedName ?? "?")' — skipping quit")
             return
         }
 
-        logger.info("'\(app.localizedName ?? "?")': \(count) window(s) at Phase 2 (800ms total from event)")
+        logger.info("'\(app.localizedName ?? "?")': \(count) window(s) at Phase 2 [cross-space] (800ms total from event)")
 
         guard count == 0 else {
-            logger.debug("Phase 2: '\(app.localizedName ?? "?")' has windows now — skipping quit")
+            logger.debug("Phase 2: '\(app.localizedName ?? "?")' has window(s) on another Space — skipping quit")
             return
         }
 
-        logger.info("🎯 Phase 2 confirmed: zero windows — firing onZeroWindows for '\(app.localizedName ?? "?")'")
+        logger.info("🎯 Phase 2 confirmed: zero windows (cross-space) — firing onZeroWindows for '\(app.localizedName ?? "?")'")
         onZeroWindows?(app)
     }
 
@@ -372,6 +371,33 @@ final class WindowMonitor {
         return windows.filter { !isNonPrimaryWindow($0) }.count
     }
 
+    // ─────────────────────────────────────────────────────────────────
+    // MARK: - Cross-Space Window Count (Phase 2 confirmation)
+    // ─────────────────────────────────────────────────────────────────
+
+    /// kAXWindowsAttribute is scoped to the CURRENTLY DISPLAYED Space — querying an
+    /// app whose window lives on a different Space can legitimately return a success
+    /// result with an empty array. CGWindowListCopyWindowInfo is not Space-scoped,
+    /// so it's used here specifically to confirm ambiguous signals (deactivation,
+    /// Space switches, known hiders) without being fooled by that AX limitation.
+    private func crossSpaceWindowCount(for pid: pid_t) -> Int? {
+        guard let infoList = CGWindowListCopyWindowInfo(.optionAll, kCGNullWindowID)
+                as NSArray? as? [[String: AnyObject]] else {
+            return nil
+        }
+
+        return infoList.filter { info in
+            guard let ownerPID = info[kCGWindowOwnerPID as String] as? Int, ownerPID == Int(pid) else {
+                return false
+            }
+            guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0 else {
+                return false   // normal app windows are layer 0; status items/helpers are not
+            }
+            return true
+        }.count
+    }
+    
+    
     private func isNonPrimaryWindow(_ window: AXUIElement) -> Bool {
         var subroleRef: CFTypeRef?
         guard AXUIElementCopyAttributeValue(window, kAXSubroleAttribute as CFString, &subroleRef) == .success,
