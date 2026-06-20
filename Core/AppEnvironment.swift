@@ -14,8 +14,8 @@ final class AppEnvironment: ObservableObject {
     
     @Published var isEnabled: Bool = true {
         didSet {
-            quitEngine.isEnabled = isEnabled
             GlobalSettings.shared.isEnabled = isEnabled
+            updateEngineEnabledState()
             logger.info("isEnabled → \(self.isEnabled)")
         }
     }
@@ -37,7 +37,15 @@ final class AppEnvironment: ObservableObject {
     let quitEngine:           QuitEngine
     let ruleStore:            RuleStore
 
-    let settings: GlobalSettings = GlobalSettings.shared
+    let settings:       GlobalSettings = GlobalSettings.shared
+    let licenseManager: LicenseManager = LicenseManager.shared
+    let trialManager:   TrialManager   = TrialManager.shared
+
+    /// True when the trial has ended and no valid license is present.
+    /// AppDelegate watches this to decide whether to show the paywall window.
+    var requiresPaywall: Bool {
+        trialManager.isExpired && !licenseManager.isLicensed
+    }
     
     // ──────────────────────────────────────────────────
     // MARK: - Private
@@ -89,12 +97,31 @@ final class AppEnvironment: ObservableObject {
         accessibilityManager.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
+
+        // 4a. License/trial state changes must also re-evaluate whether the
+        //     engine should be gated, in addition to triggering a UI redraw.
+        licenseManager.objectWillChange
+            .sink { [weak self] _ in
+                self?.updateEngineEnabledState()
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+        trialManager.objectWillChange
+            .sink { [weak self] _ in
+                self?.updateEngineEnabledState()
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
         
         // 5. Watch GlobalSettings for runtime changes → sync into engine.
         GlobalSettings.shared.objectWillChange
             .debounce(for: .milliseconds(150), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in self?.syncSettingsToEngine() }
             .store(in: &cancellables)
+
+        // 6. Apply initial gate state (covers the case where the trial has
+        //    already expired by the time AppEnvironment is first constructed).
+        updateEngineEnabledState()
         
         logger.info("AppEnvironment initialised — all services wired")
     }
@@ -131,6 +158,13 @@ final class AppEnvironment: ObservableObject {
             behavior=\(s.defaultBehaviorRaw), \
             grace=\(s.gracePeriodSeconds)s
             """)
+    }
+
+    private func updateEngineEnabledState() {
+        quitEngine.isEnabled = isEnabled && !requiresPaywall
+        if requiresPaywall {
+            logger.info("Engine gated — trial expired, no valid license")
+        }
     }
     
     // ──────────────────────────────────────────────────

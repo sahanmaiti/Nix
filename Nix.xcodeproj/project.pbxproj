@@ -12,6 +12,10 @@
 		DE507F892FE3F3C20013D502 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE507F882FE3F3BB0013D502 /* NotificationService.swift */; };
 		DE507F8B2FE3F4610013D502 /* WhitelistTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE507F8A2FE3F45A0013D502 /* WhitelistTab.swift */; };
 		DE507F8D2FE410680013D502 /* VisualEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE507F8C2FE4105C0013D502 /* VisualEffectView.swift */; };
+		DE507F8F2FE66B8B0013D502 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE507F8E2FE66B7D0013D502 /* KeychainHelper.swift */; };
+		DE507F912FE66BB10013D502 /* TrialManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE507F902FE66BAD0013D502 /* TrialManager.swift */; };
+		DE507F932FE66BFB0013D502 /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE507F922FE66BF60013D502 /* LicenseManager.swift */; };
+		DE507F952FE66C300013D502 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE507F942FE66C2A0013D502 /* PaywallView.swift */; };
 		DE5B43512FD08F4C0059F34F /* QuitEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5B43502FD08F430059F34F /* QuitEngine.swift */; };
 		DE5B43562FD31FDD0059F34F /* RuleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5B43542FD317860059F34F /* RuleStore.swift */; };
 		DE5B43572FD31FF00059F34F /* GlobalSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5B43552FD31A9D0059F34F /* GlobalSettings.swift */; };
@@ -36,6 +40,10 @@
 		DE507F882FE3F3BB0013D502 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		DE507F8A2FE3F45A0013D502 /* WhitelistTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhitelistTab.swift; sourceTree = "<group>"; };
 		DE507F8C2FE4105C0013D502 /* VisualEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffectView.swift; sourceTree = "<group>"; };
+		DE507F8E2FE66B7D0013D502 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+		DE507F902FE66BAD0013D502 /* TrialManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrialManager.swift; sourceTree = "<group>"; };
+		DE507F922FE66BF60013D502 /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
+		DE507F942FE66C2A0013D502 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		DE5B43502FD08F430059F34F /* QuitEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuitEngine.swift; sourceTree = "<group>"; };
 		DE5B43532FD315DA0059F34F /* AppRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRule.swift; sourceTree = "<group>"; };
 		DE5B43542FD317860059F34F /* RuleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleStore.swift; sourceTree = "<group>"; };
@@ -75,6 +83,9 @@
 		DE2D74252FDFD7C800B6D3CE /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				DE507F922FE66BF60013D502 /* LicenseManager.swift */,
+				DE507F902FE66BAD0013D502 /* TrialManager.swift */,
+				DE507F8E2FE66B7D0013D502 /* KeychainHelper.swift */,
 				DE507F882FE3F3BB0013D502 /* NotificationService.swift */,
 				DE2D74262FDFD7EC00B6D3CE /* LoginItemService.swift */,
 			);
@@ -115,6 +126,7 @@
 		DEB830822FC88F2100F886C2 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				DE507F942FE66C2A0013D502 /* PaywallView.swift */,
 				DE507F8C2FE4105C0013D502 /* VisualEffectView.swift */,
 				DE507F8A2FE3F45A0013D502 /* WhitelistTab.swift */,
 				DEC9109B2FE164FF00D34F39 /* OnboardingView.swift */,
@@ -220,13 +232,17 @@
 				DE507F8D2FE410680013D502 /* VisualEffectView.swift in Sources */,
 				DE5B43582FD31FF40059F34F /* AppRule.swift in Sources */,
 				DEB830862FC8A19300F886C2 /* MenuBarView.swift in Sources */,
+				DE507F8F2FE66B8B0013D502 /* KeychainHelper.swift in Sources */,
 				DEC9109A2FE15C0B00D34F39 /* AppsTab.swift in Sources */,
 				DEB8308C2FC9D02800F886C2 /* AppTracker.swift in Sources */,
 				DEABF1222FCC0192009A5C40 /* AXWindowReader.swift in Sources */,
 				DE5B43512FD08F4C0059F34F /* QuitEngine.swift in Sources */,
 				DE507F892FE3F3C20013D502 /* NotificationService.swift in Sources */,
 				DE5B43572FD31FF00059F34F /* GlobalSettings.swift in Sources */,
+				DE507F912FE66BB10013D502 /* TrialManager.swift in Sources */,
+				DE507F932FE66BFB0013D502 /* LicenseManager.swift in Sources */,
 				DE2D74282FDFD99600B6D3CE /* SettingsView.swift in Sources */,
+				DE507F952FE66C300013D502 /* PaywallView.swift in Sources */,
 				DE2D742A2FDFDAD000B6D3CE /* GeneralTab.swift in Sources */,
 				DED5B7082FCEBDCC00735E04 /* WindowMonitor.swift in Sources */,
 				DEABF11E2FCAB241009A5C40 /* AccessibilityManager.swift in Sources */,
