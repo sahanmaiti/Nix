@@ -39,6 +39,8 @@ func runAllVerifications() {
     verifyLoginItemService()
     verifyNotificationService()
     verifyWhitelistTabData()
+    verifyTrialState()
+    verifyLicenseGate()
     
     testLogger.info("=================================")
     testLogger.info("VERIFICATION SUITE COMPLETE")
@@ -665,5 +667,44 @@ func verifyWhitelistTabData() {
         testLogger.info("✅ WhitelistTab data layer verified")
     } else {
         testLogger.error("❌ Permanent whitelist broken — check RuleStore.behavior()")
+    }
+}
+
+/// Verifies TrialManager state is internally consistent.
+@MainActor
+func verifyTrialState() {
+    let trial = TrialManager.shared
+    testLogger.info("=== Trial State ===")
+    testLogger.info("  daysRemaining: \(trial.daysRemaining)")
+    testLogger.info("  isExpired:     \(trial.isExpired)")
+
+    let consistent = (trial.isExpired && trial.daysRemaining == 0) ||
+                      (!trial.isExpired && trial.daysRemaining > 0)
+    if consistent {
+        testLogger.info("✅ Trial state internally consistent")
+    } else {
+        testLogger.info("❌ Trial state mismatch")
+    }
+}
+
+/// Verifies the license gate correctly drives QuitEngine.isEnabled.
+@MainActor
+func verifyLicenseGate() {
+    let env = AppEnvironment.shared
+    testLogger.info("=== License Gate ===")
+    testLogger.info("  licenseManager.isLicensed: \(env.licenseManager.isLicensed)")
+    testLogger.info("  trialManager.isExpired:    \(env.trialManager.isExpired)")
+    testLogger.info("  requiresPaywall:           \(env.requiresPaywall)")
+    testLogger.info("  quitEngine.isEnabled:      \(env.quitEngine.isEnabled)")
+
+    if env.requiresPaywall {
+        let correctlyGated = !env.quitEngine.isEnabled
+        if correctlyGated {
+            testLogger.info("✅ Engine correctly gated off while paywall required")
+        } else {
+            testLogger.info("❌ BUG: requiresPaywall=true but engine is still enabled")
+        }
+    } else {
+        testLogger.info("ℹ️  Paywall not required — gate check not applicable")
     }
 }
