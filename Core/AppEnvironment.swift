@@ -98,6 +98,24 @@ final class AppEnvironment: ObservableObject {
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
 
+        // 4b. When AX permission is granted, retry startMonitoring for apps that
+        //     were tracked before permission was available (no observers yet).
+        accessibilityManager.$isGranted
+            .removeDuplicates()
+            .filter { $0 }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                let running = NSWorkspace.shared.runningApplications
+                for tracked in appTracker.trackedApps {
+                    if let app = running.first(where: { $0.processIdentifier == tracked.pid }) {
+                        windowMonitor.startMonitoring(app: app)
+                    }
+                }
+                logger.info("AX permission granted — retried startMonitoring for \(appTracker.trackedApps.count) app(s)")
+            }
+            .store(in: &cancellables)
+
         // 4a. License/trial state changes must also re-evaluate whether the
         //     engine should be gated, in addition to triggering a UI redraw.
         licenseManager.objectWillChange
@@ -161,7 +179,11 @@ final class AppEnvironment: ObservableObject {
     }
 
     private func updateEngineEnabledState() {
+        #if DEBUG
+        quitEngine.isEnabled = isEnabled   // never gate in dev builds
+        #else
         quitEngine.isEnabled = isEnabled && !requiresPaywall
+        #endif
         if requiresPaywall {
             logger.info("Engine gated — trial expired, no valid license")
         }
