@@ -19,9 +19,11 @@ struct PaywallView: View {
     // Append ?embed=1 for the cleaner overlay style (strips LS page chrome).
     // In the LS dashboard → Product → Checkout → Redirect, set the
     // "Redirect after purchase" URL to: nix://activate?key=[license_key]
-    private let checkoutURL = URL(
-        string: "https://YOURSTORE.lemonsqueezy.com/checkout/buy/YOUR_VARIANT_ID?embed=1"
-    )!
+    private let checkoutURL: URL = {
+        let urlString = "https://YOURSTORE.lemonsqueezy.com/checkout/buy/YOUR_VARIANT_ID?embed=1"
+        assert(!urlString.contains("YOURSTORE"), "Replace placeholder Lemon Squeezy checkout URL before shipping")
+        return URL(string: urlString)!
+    }()
 
     var body: some View {
         VStack(spacing: 0) {

@@ -8,8 +8,8 @@ Nix is a lightweight macOS menu bar utility that automatically quits application
 
 <br>
 
-![macOS](https://img.shields.io/badge/macOS-13%2B-black?style=flat-square&logo=apple)
-![Swift](https://img.shields.io/badge/Swift-5.9%2B-F05138?style=flat-square&logo=swift)
+![macOS](https://img.shields.io/badge/macOS-14.6%2B-black?style=flat-square&logo=apple)
+![Swift](https://img.shields.io/badge/Swift-6-F05138?style=flat-square&logo=swift)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 ![Status](https://img.shields.io/badge/status-active%20development-green?style=flat-square)
 ![Architecture](https://img.shields.io/badge/architecture-event--driven-purple?style=flat-square)
@@ -234,7 +234,7 @@ The entire pipeline is event-driven. No timers poll for window state. CPU usage 
 
 ## Requirements
 
-- **macOS 13 Ventura** or later (macOS 14 Sonoma recommended)
+- **macOS 14.6 Sonoma** or later
 - Xcode 15 or later (for building from source)
 - Accessibility permission — required for window monitoring
 
@@ -299,7 +299,7 @@ The app launches without a Dock icon. Look for the icon in your menu bar.
 
 - macOS will prompt you to grant Accessibility permission the first time
 - The app won't appear in the Dock — this is intentional (`.accessory` activation policy)
-- To see logs, open **Console.app** and filter by subsystem: `com.yourname.nix`
+- To see logs, open **Console.app** and filter by subsystem: `com.sahan.Nix`
 
 ### Code signing
 
@@ -379,7 +379,7 @@ Nix/
 
 ## Privacy
 
-Nix has no server, no analytics, no telemetry, and no network requests of any kind.
+Nix contacts Lemon Squeezy only to activate/validate a license key, with no telemetry, analytics, or app-usage data ever transmitted.
 
 | Data | Collected? |
 |---|---|
@@ -389,11 +389,11 @@ Nix has no server, no analytics, no telemetry, and no network requests of any ki
 | Screen recording | No |
 | Usage analytics | No |
 | Crash reports | No (manual reporting only) |
-| Internet access | Never |
+| Internet access | Yes — license activation/validation only |
 
 **Accessibility permission** is used exclusively to receive `kAXWindowClosedNotification` events from `AXObserver`. Nix never reads the content of any window, field, document, or screen. The Accessibility API is used in read-only, structural mode — it sees that a window *exists*, not what's *inside* it.
 
-Per-app rules are stored locally in `UserDefaults` (`~/Library/Preferences/com.yourname.Nix.plist`). Nothing leaves your machine.
+Per-app rules are stored locally in `UserDefaults` (`~/Library/Preferences/com.sahan.Nix.plist`). Nothing leaves your machine.
 
 ---
 
@@ -479,6 +479,6 @@ You're free to use, modify, and distribute this code. If you build something wit
 
 Built on a Mac, for Mac.
 
-*Nix — v0.9.0 — macOS 13+*
+*Nix — v0.9.0 — macOS 14.6+*
 
 </div>

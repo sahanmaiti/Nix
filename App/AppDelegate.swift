@@ -31,11 +31,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         // ── Verification Suite (debug only) ─────────────────────────────────
+        #if DEBUG
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             Task { @MainActor in
                 runAllVerifications()
             }
         }
+        #endif
     }
 
     func applicationWillTerminate(_ notification: Notification) {

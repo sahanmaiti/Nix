@@ -125,7 +125,4 @@ extension AppBehavior {
     }
 }
 
-private func updateLoginItemState(_ enabled: Bool) {
-    let success = LoginItemService.setEnabled(enabled)
-    if !success { GlobalSettings.shared.launchAtLogin = LoginItemService.isEnabled }
-}
+
