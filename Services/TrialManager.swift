@@ -9,7 +9,17 @@ enum TrialKey {
 @MainActor
 final class TrialManager: ObservableObject {
 
-    static let trialDurationDays = 7
+    // ── Duration constants ────────────────────────────────────────────────────
+    // DEBUG: 1 unit = 1 minute  →  trial expires after 1 minute
+    // RELEASE: 1 unit = 1 day   →  trial expires after 7 days
+    // Switching back to production requires zero code changes — just build Release.
+    #if DEBUG
+    static let trialDurationDays = 1            // 1 unit in debug
+    private static let trialUnitSeconds: Double = 60   // 1 minute per unit
+    #else
+    static let trialDurationDays = 7            // 7 units in release
+    private static let trialUnitSeconds: Double = 86_400  // 1 day per unit
+    #endif
 
     @Published private(set) var daysRemaining: Int = TrialManager.trialDurationDays
     @Published private(set) var isExpired: Bool = false
@@ -21,7 +31,7 @@ final class TrialManager: ObservableObject {
     private init() {
         stampFirstLaunchIfNeeded()
         refresh()
-        logger.info("TrialManager initialized — \(self.daysRemaining)d remaining, expired: \(self.isExpired)")
+        logger.info("TrialManager initialized — \(self.daysRemaining) unit(s) remaining, expired: \(self.isExpired)")
     }
 
     private func stampFirstLaunchIfNeeded() {
@@ -30,27 +40,24 @@ final class TrialManager: ObservableObject {
         logger.info("Trial started — first launch stamped")
     }
 
-    /// Call on launch and on app activation — cheap, no I/O beyond UserDefaults.
     func refresh() {
         guard let firstLaunch = UserDefaults.standard.object(forKey: TrialKey.firstLaunchDate) as? Date else {
-            // Should be unreachable post-init, but fail OPEN — never lock a user
-            // out of a feature because a stamp went missing.
             daysRemaining = Self.trialDurationDays
             isExpired = false
             return
         }
 
-        let elapsedDays = Int(Date().timeIntervalSince(firstLaunch) / 86400)
-        let remaining = Self.trialDurationDays - elapsedDays
+        // Uses Self.trialUnitSeconds: 60s in Debug, 86400s in Release
+        let elapsed  = Int(Date().timeIntervalSince(firstLaunch) / Self.trialUnitSeconds)
+        let remaining = Self.trialDurationDays - elapsed
 
         daysRemaining = max(0, remaining)
-        isExpired = remaining <= 0
+        isExpired     = remaining <= 0
     }
 
     #if DEBUG
-    /// QA helper — force the paywall to appear without waiting 7 days.
     func debugForceExpire() {
-        let expired = Date().addingTimeInterval(-Double(Self.trialDurationDays + 1) * 86400)
+        let expired = Date().addingTimeInterval(-(Double(Self.trialDurationDays + 1) * Self.trialUnitSeconds))
         UserDefaults.standard.set(expired, forKey: TrialKey.firstLaunchDate)
         refresh()
         logger.warning("DEBUG: trial force-expired")

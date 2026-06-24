@@ -15,16 +15,22 @@ struct PaywallView: View {
     @State private var manualKey = ""
     @State private var manualEntryError: String?
 
-    // ⚠️ REPLACE before shipping: your Lemon Squeezy checkout URL.
-    // Append ?embed=1 for the cleaner overlay style (strips LS page chrome).
-    // In the LS dashboard → Product → Checkout → Redirect, set the
-    // "Redirect after purchase" URL to: nix://activate?key=[license_key]
+    // ⚠️ REPLACE before shipping: your real Lemon Squeezy checkout URL.
+    // Get it from: LS Dashboard → Your Product → Share → Checkout URL
+    // Append ?embed=1 for cleaner overlay (strips LS page chrome).
+    // Set redirect after purchase to: nix://activate?key=[license_key]
     private let checkoutURL: URL = {
-        let urlString = "https://YOURSTORE.lemonsqueezy.com/checkout/buy/YOUR_VARIANT_ID?embed=1"
-        assert(!urlString.contains("YOURSTORE"), "Replace placeholder Lemon Squeezy checkout URL before shipping")
-        return URL(string: urlString)!
+        let urlString = "https://nixapp.lemonsqueezy.com/checkout/buy/9bd06aa9-0c32-4c46-b4d6-64fa6323ec6a"
+        // Only hard-crash in Release builds — in Debug, the WKWebView just shows
+        // a failed load, which is fine for testing the trial expiry flow.
+        #if !DEBUG
+        precondition(
+            !urlString.contains("YOURSTORE"),
+            "🚨 Replace placeholder Lemon Squeezy checkout URL before shipping a Release build"
+        )
+        #endif
+        return URL(string: urlString) ?? URL(string: "https://lemonsqueezy.com")!
     }()
-
     var body: some View {
         VStack(spacing: 0) {
             header
