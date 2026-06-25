@@ -130,11 +130,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func showPaywall() {
-        if let existing = paywallWindow {
-            NSApp.activate(ignoringOtherApps: true)
+        // Reuse only if the window is actually still visible on screen
+        if let existing = paywallWindow, existing.isVisible {
             existing.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
             return
         }
+        
+        // Clear any stale closed-window reference before creating a new one
+        paywallWindow = nil
         
         let window = NSWindow(
             contentRect: NSRect(origin: .zero, size: NSSize(width: 640, height: 620)),
@@ -152,6 +156,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.minSize = NSSize(width: 540, height: 500)
         window.center()
         
+        // Nil out the reference when user closes via X
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] _ in
+            self?.paywallWindow = nil
+        }
+        
         let rootView = PaywallView { [weak self, weak window] in
             window?.close()
             self?.paywallWindow = nil
@@ -161,10 +174,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         window.contentView = NSHostingView(rootView: rootView)
         
-        NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
         
         paywallWindow = window
-        logger.info("Paywall window shown — trial expired, no valid license")
+        logger.info("Paywall window shown")
     }
 }

@@ -14,8 +14,8 @@ final class TrialManager: ObservableObject {
     // RELEASE: 1 unit = 1 day   →  trial expires after 7 days
     // Switching back to production requires zero code changes — just build Release.
     #if DEBUG
-    static let trialDurationDays = 1            // 1 unit in debug
-    private static let trialUnitSeconds: Double = 60   // 1 minute per unit
+    static let trialDurationDays = 7
+    private static let trialUnitSeconds: Double = 86_400
     #else
     static let trialDurationDays = 7            // 7 units in release
     private static let trialUnitSeconds: Double = 86_400  // 1 day per unit
