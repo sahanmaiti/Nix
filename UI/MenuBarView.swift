@@ -194,8 +194,8 @@ struct MenuBarView: View {
 
     private func openSettings() {
         openWindow(id: "settings")
+        NSApp.activate(ignoringOtherApps: true)  
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            NSApp.activate(ignoringOtherApps: true)
             NSApp.windows.first(where: { $0.title == "Settings" })?.makeKeyAndOrderFront(nil)
         }
     }

@@ -12,17 +12,11 @@ struct PaywallView: View {
     @StateObject private var license = LicenseManager.shared
 
     @State private var showManualEntry = false
-    @State private var manualKey = ""
+    @State private var manualKey       = ""
     @State private var manualEntryError: String?
 
-    // ⚠️ REPLACE before shipping: your real Lemon Squeezy checkout URL.
-    // Get it from: LS Dashboard → Your Product → Share → Checkout URL
-    // Append ?embed=1 for cleaner overlay (strips LS page chrome).
-    // Set redirect after purchase to: nix://activate?key=[license_key]
     private let checkoutURL: URL = {
-        let urlString = "https://nixapp.lemonsqueezy.com/checkout/buy/9bd06aa9-0c32-4c46-b4d6-64fa6323ec6a"
-        // Only hard-crash in Release builds — in Debug, the WKWebView just shows
-        // a failed load, which is fine for testing the trial expiry flow.
+        let urlString = "https://nixapp.lemonsqueezy.com/checkout/buy/9bd06aa9-0c32-4c46-b4d6-64fa6323ec6a?embed=1"
         #if !DEBUG
         precondition(
             !urlString.contains("YOURSTORE"),
@@ -31,102 +25,153 @@ struct PaywallView: View {
         #endif
         return URL(string: urlString) ?? URL(string: "https://lemonsqueezy.com")!
     }()
+
     var body: some View {
         VStack(spacing: 0) {
             header
-            Divider().opacity(0.4)
+            Divider().opacity(0.35)
 
-            if showManualEntry {
-                manualEntryForm
-            } else {
+            ZStack {
                 CheckoutWebView(url: checkoutURL, onLicenseKeyReceived: handleReceivedKey)
-            }
+                    .opacity(showManualEntry ? 0 : 1)
+                    .allowsHitTesting(!showManualEntry)
 
-            Divider().opacity(0.4)
+                if showManualEntry {
+                    manualEntryForm
+                        .transition(.opacity)
+                }
+            }
+            .animation(.easeInOut(duration: 0.15), value: showManualEntry)
+
+            Divider().opacity(0.35)
             footer
         }
-        .frame(width: 480, height: 560)
+        .frame(minWidth: 540, maxWidth: .infinity)
+        .padding(.top, 28)
+        .glassWindow(.sidebar)
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
     // MARK: - Header
+    // ─────────────────────────────────────────────────────────────────────────
 
     private var header: some View {
-        VStack(spacing: 6) {
+        HStack(spacing: 12) {
             Image("NixIcon")
                 .resizable()
                 .interpolation(.high)
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 48, height: 48)
-                .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+                .frame(width: 36, height: 36)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .shadow(color: .black.opacity(0.18), radius: 4, y: 2)
 
-            Text(trial.isExpired ? "Your Trial Has Ended" : "Unlock Nix")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(trial.isExpired ? "Your Trial Has Ended" : "Unlock Nix")
+                    .font(.system(size: 14, weight: .semibold))
 
-            Text("One-time purchase · $9.99 · No subscription")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .padding(.top, 20)
-        .padding(.bottom, 14)
-    }
-
-    // MARK: - Manual Entry Fallback
-
-    private var manualEntryForm: some View {
-        VStack(spacing: 14) {
-            Spacer()
-
-            Text("Enter the license key from your purchase email")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 30)
-
-            TextField("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX", text: $manualKey)
-                .textFieldStyle(.roundedBorder)
-                .frame(width: 320)
-                .disableAutocorrection(true)
-
-            if let error = manualEntryError {
-                Text(error)
-                    .font(.caption)
-                    .foregroundStyle(.red)
+                Text("One-time purchase · $9.99 · No subscription")
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(.secondary)
             }
-
-            Button(license.isValidating ? "Validating…" : "Activate") {
-                activateManualKey()
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(manualKey.trimmingCharacters(in: .whitespaces).isEmpty || license.isValidating)
-
-            Spacer()
-        }
-    }
-
-    // MARK: - Footer
-
-    private var footer: some View {
-        HStack {
-            Button(showManualEntry ? "Back to Checkout" : "Already have a key?") {
-                showManualEntry.toggle()
-                manualEntryError = nil
-            }
-            .buttonStyle(.link)
-            .font(.caption)
 
             Spacer()
 
             if !trial.isExpired {
-                Text("\(trial.daysRemaining) day\(trial.daysRemaining == 1 ? "" : "s") left in trial")
-                    .font(.caption)
+                Text("\(trial.daysRemaining) day\(trial.daysRemaining == 1 ? "" : "s") left")
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4)
+                    .background(Color.secondary.opacity(0.10),
+                                in: Capsule())
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
     }
 
-    // MARK: - Activation
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Manual Entry Form
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var manualEntryForm: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            VStack(spacing: 24) {
+                VStack(spacing: 8) {
+                    Image(systemName: "key.fill")
+                        .font(.system(size: 28))
+                        .foregroundStyle(.secondary)
+
+                    Text("Enter your license key")
+                        .font(.system(size: 16, weight: .semibold))
+
+                    Text("Find it in your purchase confirmation email.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    TextField("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX", text: $manualKey)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(size: 13, design: .monospaced))
+                        .disableAutocorrection(true)
+                        .frame(width: 380)
+
+                    if let error = manualEntryError {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+                }
+
+                Button(license.isValidating ? "Validating…" : "Activate License") {
+                    activateManualKey()
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .disabled(
+                    manualKey.trimmingCharacters(in: .whitespaces).isEmpty ||
+                    license.isValidating
+                )
+            }
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.windowBackgroundColor).opacity(0.5))
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Footer
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var footer: some View {
+        HStack {
+            Button(showManualEntry ? "← Back to Checkout" : "Already have a key?") {
+                withAnimation { showManualEntry.toggle() }
+                manualEntryError = nil
+            }
+            .buttonStyle(.link)
+            .font(.system(size: 12))
+
+            Spacer()
+
+            if !trial.isExpired && !showManualEntry {
+                Text("\(trial.daysRemaining) day\(trial.daysRemaining == 1 ? "" : "s") remaining in trial")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Actions
+    // ─────────────────────────────────────────────────────────────────────────
 
     private func handleReceivedKey(_ key: String) {
         Task {
@@ -137,7 +182,7 @@ struct PaywallView: View {
             } else {
                 paywallLogger.warning("Activation failed via redirect — \(license.lastError ?? "unknown")")
                 manualEntryError = license.lastError
-                showManualEntry = true
+                withAnimation { showManualEntry = true }
             }
         }
     }
@@ -145,7 +190,6 @@ struct PaywallView: View {
     private func activateManualKey() {
         let trimmed = manualKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-
         Task {
             let success = await license.activate(licenseKey: trimmed)
             if success {
@@ -179,8 +223,6 @@ private struct CheckoutWebView: NSViewRepresentable {
 
     func updateNSView(_ nsView: WKWebView, context: Context) { }
 
-    /// Intercepts the nix:// redirect BEFORE WKWebView tries (and fails) to
-    /// load it as a real navigation — avoids any OS-level round trip.
     final class Coordinator: NSObject, WKNavigationDelegate {
 
         private let onLicenseKeyReceived: (String) -> Void

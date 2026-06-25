@@ -34,11 +34,96 @@ struct GeneralTab: View {
 
     var body: some View {
         Form {
+            if !env.licenseManager.isLicensed {
+                licenseSection
+            }
             behaviorSection
             timingSection
             systemSection
         }
         .formStyle(.grouped)
+    }
+
+    // MARK: - License / Trial
+
+    private var licenseSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 10) {
+
+                // Title row
+                HStack(alignment: .center) {
+                    Image(systemName: trialIcon)
+                        .foregroundStyle(trialColor)
+                        .font(.system(size: 13, weight: .medium))
+                    Text(trialTitle)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(trialColor)
+                    Spacer()
+                    Text(trialBadge)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(trialColor)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(trialColor.opacity(0.10), in: Capsule())
+                }
+
+                // Progress bar
+                ProgressView(value: trialProgress)
+                    .tint(trialColor)
+
+                // Subtitle + CTA
+                HStack(alignment: .center) {
+                    Text(trialSubtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Upgrade · $9.99") {
+                        (NSApp.delegate as? AppDelegate)?.showPaywall()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                }
+            }
+            .padding(.vertical, 4)
+        } header: {
+            Text("License")
+        }
+    }
+
+    // MARK: - Trial helpers
+
+    private var trial: TrialManager { env.trialManager }
+
+    private var trialProgress: Double {
+        let total = Double(TrialManager.trialDurationDays)
+        let used  = total - Double(trial.daysRemaining)
+        return min(max(used / total, 0), 1)
+    }
+
+    private var trialColor: Color {
+        if trial.isExpired          { return .red }
+        if trial.daysRemaining <= 2 { return .orange }
+        return .green
+    }
+
+    private var trialIcon: String {
+        trial.isExpired ? "exclamationmark.circle.fill" : "clock.fill"
+    }
+
+    private var trialTitle: String {
+        trial.isExpired ? "Free Trial Ended" : "Free Trial"
+    }
+
+    private var trialBadge: String {
+        trial.isExpired
+            ? "Expired"
+            : "\(trial.daysRemaining) day\(trial.daysRemaining == 1 ? "" : "s") left"
+    }
+
+    private var trialSubtitle: String {
+        trial.isExpired
+            ? "Upgrade to keep using Nix."
+            : "Full access during trial. Upgrade anytime to continue after it ends."
     }
 
     // MARK: - Behavior
@@ -124,5 +209,3 @@ extension AppBehavior {
         }
     }
 }
-
-
