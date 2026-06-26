@@ -2,13 +2,22 @@ import AppKit
 import ApplicationServices
 import os.log
 import SwiftUI
+import Sparkle
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+    
+    private(set) static var shared: AppDelegate!
     
     private let logger = Logger(subsystem: "com.sahan.Nix", category: "AppDelegate")
     
     private var onboardingWindow: NSWindow?
     private var paywallWindow: NSWindow?
+    private var updaterController: SPUStandardUpdaterController?
+    
+    override init() {
+        super.init()
+        AppDelegate.shared = self
+    }
     
     // MARK: - Lifecycle
     
@@ -17,6 +26,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationService.requestAuthorization()
         logger.info("Nix launched. AX permission: \(AXIsProcessTrusted())")
         
+        // ADD: Start Sparkle
+        updaterController = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
+        
         // ── Onboarding ──────────────────────────────────────────────────────
         if !UserDefaults.standard.bool(forKey: "nix.onboardingComplete") {
             showOnboarding()
@@ -24,13 +40,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             checkPaywallGate()
         }
         
-        // ── License re-validation (catches refunds/chargebacks since last launch)
         Task { @MainActor in
             await LicenseManager.shared.validateStoredLicense()
             checkPaywallGate()
         }
         
-        // ── Verification Suite (debug only) ─────────────────────────────────
 #if DEBUG
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             Task { @MainActor in
@@ -38,6 +52,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 #endif
+    }
+    
+    // ADD: Called from MenuBarView
+    func checkForUpdates() {
+        updaterController?.updater.checkForUpdates()
+    }
+    
+    // ADD: For binding canCheckForUpdates into SwiftUI
+    var canCheckForUpdates: Bool {
+        updaterController?.updater.canCheckForUpdates ?? false
     }
     
     func applicationWillTerminate(_ notification: Notification) {
@@ -68,57 +92,50 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     
-    // ─────────────────────────────────────────────────────────────────────────
     // MARK: - Onboarding Window
-    // ─────────────────────────────────────────────────────────────────────────
     
     private func showOnboarding() {
         let window = NSWindow(
             contentRect: NSRect(origin: .zero, size: NSSize(width: 520, height: 460)),
-            styleMask: [
-                .titled,
-                .closable,
-                .fullSizeContentView,
-            ],
+            styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
-        
-        // Hide the "Welcome to Nix" title text — we show our own header in SwiftUI
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        
-        // Allow the user to drag the window by clicking anywhere in the content
         window.isMovableByWindowBackground = true
-        
         window.isReleasedWhenClosed = false
         window.isOpaque = false
         window.backgroundColor = .clear
-        
-        // Center before showing
         window.center()
+        
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] _ in
+            self?.onboardingWindow = nil
+            self?.revertToAccessoryIfNeeded()
+        }
         
         let rootView = OnboardingView { [weak self, weak window] in
             window?.close()
             self?.onboardingWindow = nil
             self?.logger.info("Onboarding completed — window closed")
             self?.checkPaywallGate()
+            self?.revertToAccessoryIfNeeded()
         }
-            .environmentObject(AppEnvironment.shared)
+        .environmentObject(AppEnvironment.shared)
         
         window.contentView = NSHostingView(rootView: rootView)
-        
+        NSApp.setActivationPolicy(.regular)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-        
         onboardingWindow = window
-        
         logger.info("Onboarding window shown (first launch)")
     }
     
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: - Paywall Window
-    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Paywall Window (unchanged)
     
     @MainActor
     private func checkPaywallGate() {
@@ -130,14 +147,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func showPaywall() {
-        // Reuse only if the window is actually still visible on screen
         if let existing = paywallWindow, existing.isVisible {
             existing.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             return
         }
-        
-        // Clear any stale closed-window reference before creating a new one
         paywallWindow = nil
         
         let window = NSWindow(
@@ -146,7 +160,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
-        
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.isMovableByWindowBackground = true
@@ -156,28 +169,46 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.minSize = NSSize(width: 540, height: 500)
         window.center()
         
-        // Nil out the reference when user closes via X
         NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification,
             object: window,
             queue: .main
         ) { [weak self] _ in
             self?.paywallWindow = nil
+            self?.revertToAccessoryIfNeeded()
         }
         
         let rootView = PaywallView { [weak self, weak window] in
             window?.close()
             self?.paywallWindow = nil
             self?.logger.info("Paywall dismissed — license activated")
+            self?.revertToAccessoryIfNeeded()
         }
-            .environmentObject(AppEnvironment.shared)
+        .environmentObject(AppEnvironment.shared)
         
         window.contentView = NSHostingView(rootView: rootView)
-        
+        NSApp.setActivationPolicy(.regular)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-        
         paywallWindow = window
         logger.info("Paywall window shown")
+    }
+    
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Activation Policy Management
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    /// Reverts Nix to a background (accessory) app when no custom windows remain
+    /// open. This hides the Dock icon and returns to pure menu-bar-only mode.
+    func revertToAccessoryIfNeeded() {
+        let hasOnboarding = onboardingWindow?.isVisible == true
+        let hasPaywall    = paywallWindow?.isVisible == true
+        let hasSettings   = NSApp.windows.contains { $0.title == "Settings" && $0.isVisible }
+        
+        if !hasOnboarding && !hasPaywall && !hasSettings {
+            DispatchQueue.main.async {
+                NSApp.setActivationPolicy(.accessory)
+            }
+        }
     }
 }

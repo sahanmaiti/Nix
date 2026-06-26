@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		DE2D74282FDFD99600B6D3CE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2D74272FDFD99100B6D3CE /* SettingsView.swift */; };
 		DE2D742A2FDFDAD000B6D3CE /* GeneralTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2D74292FDFDACB00B6D3CE /* GeneralTab.swift */; };
+		DE4E262D2FEEF4720003C708 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = DE4E262C2FEEF4720003C708 /* Sparkle */; };
 		DE507F892FE3F3C20013D502 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE507F882FE3F3BB0013D502 /* NotificationService.swift */; };
 		DE507F8B2FE3F4610013D502 /* WhitelistTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE507F8A2FE3F45A0013D502 /* WhitelistTab.swift */; };
 		DE507F8D2FE410680013D502 /* VisualEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE507F8C2FE4105C0013D502 /* VisualEffectView.swift */; };
@@ -37,6 +38,7 @@
 		DE2D74262FDFD7EC00B6D3CE /* LoginItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
 		DE2D74272FDFD99100B6D3CE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		DE2D74292FDFDACB00B6D3CE /* GeneralTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralTab.swift; sourceTree = "<group>"; };
+		DE4E262E2FEEF4F40003C708 /* Nix-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Nix-Info.plist"; sourceTree = "<group>"; };
 		DE507F882FE3F3BB0013D502 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		DE507F8A2FE3F45A0013D502 /* WhitelistTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhitelistTab.swift; sourceTree = "<group>"; };
 		DE507F8C2FE4105C0013D502 /* VisualEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffectView.swift; sourceTree = "<group>"; };
@@ -74,6 +76,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DE4E262D2FEEF4720003C708 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -105,6 +108,7 @@
 		DEB830632FC5774100F886C2 = {
 			isa = PBXGroup;
 			children = (
+				DE4E262E2FEEF4F40003C708 /* Nix-Info.plist */,
 				DE8AB0122FE27DE8007D9219 /* .geminiignore */,
 				DEB8306E2FC5774100F886C2 /* App */,
 				DEB830892FC8ABDD00F886C2 /* Core */,
@@ -172,6 +176,7 @@
 			);
 			name = Nix;
 			packageProductDependencies = (
+				DE4E262C2FEEF4720003C708 /* Sparkle */,
 			);
 			productName = Nix;
 			productReference = DEB8306C2FC5774100F886C2 /* Nix.app */;
@@ -201,6 +206,9 @@
 			);
 			mainGroup = DEB830632FC5774100F886C2;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				DE4E262B2FEEF4720003C708 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DEB8306D2FC5774100F886C2 /* Products */;
 			projectDirPath = "";
@@ -389,15 +397,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleURLTypes = (
-					{
-						CFBundleTypeRole = Editor;
-						CFBundleURLName = com.sahan.Nix;
-						CFBundleURLSchemes = (
-							nix,
-						);
-					},
-				);
+				INFOPLIST_FILE = "Nix-Info.plist";
+				INFOPLIST_KEY_CFBundleURLTypes = "{\n    CFBundleTypeRole = Editor;\n    CFBundleURLName = \"com.sahan.Nix\";\n    CFBundleURLSchemes =     (\n        nix\n    );\n}";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -430,15 +431,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleURLTypes = (
-					{
-						CFBundleTypeRole = Editor;
-						CFBundleURLName = com.sahan.Nix;
-						CFBundleURLSchemes = (
-							nix,
-						);
-					},
-				);
+				INFOPLIST_FILE = "Nix-Info.plist";
+				INFOPLIST_KEY_CFBundleURLTypes = "{\n    CFBundleTypeRole = Editor;\n    CFBundleURLName = \"com.sahan.Nix\";\n    CFBundleURLSchemes =     (\n        nix\n    );\n}";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -480,6 +474,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DE4E262B2FEEF4720003C708 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.9.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DE4E262C2FEEF4720003C708 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DE4E262B2FEEF4720003C708 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = DEB830642FC5774100F886C2 /* Project object */;
 }

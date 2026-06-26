@@ -78,7 +78,7 @@ struct GeneralTab: View {
                         .foregroundStyle(.secondary)
                     Spacer()
                     Button("Upgrade · $9.99") {
-                        (NSApp.delegate as? AppDelegate)?.showPaywall()
+                        AppDelegate.shared.showPaywall()
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
