@@ -133,7 +133,7 @@ final class RuleStore: ObservableObject {
             let array = try JSONDecoder().decode([AppRule].self, from: data)
 
             // Step 3: Rebuild the dictionary from the array.
-            rules = Dictionary(uniqueKeysWithValues: array.map { ($0.bundleIdentifier, $0) })
+            rules = Dictionary(array.map { ($0.bundleIdentifier, $0) }, uniquingKeysWith: { _, latest in latest })
             logger.info("Loaded \(array.count) rule(s) from UserDefaults")
         } catch {
             logger.error("Failed to decode rules: \(error.localizedDescription) — resetting to empty")

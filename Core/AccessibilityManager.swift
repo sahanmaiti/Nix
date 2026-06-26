@@ -3,6 +3,7 @@ import AppKit
 import Combine
 import os.log
 
+@MainActor
 final class AccessibilityManager: ObservableObject {
     
     @Published private(set) var isGranted: Bool = false
@@ -32,16 +33,12 @@ final class AccessibilityManager: ObservableObject {
         AXIsProcessTrusted()
     }
     func checkPermission() {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            
-            let newValue = AXIsProcessTrusted()
-            
-            //OPTIMIZATION: Only update ( and trigger SwiftUI redraw) if the value changed.
-            if self.isGranted != newValue {
-                self.isGranted = newValue
-                self.logger.info("Permission state changed -> \(newValue)")
-            }
+        let newValue = AXIsProcessTrusted()
+        
+        //OPTIMIZATION: Only update ( and trigger SwiftUI redraw) if the value changed.
+        if self.isGranted != newValue {
+            self.isGranted = newValue
+            self.logger.info("Permission state changed -> \(newValue)")
         }
     }
     

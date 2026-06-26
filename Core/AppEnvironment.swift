@@ -52,6 +52,7 @@ final class AppEnvironment: ObservableObject {
     // ──────────────────────────────────────────────────
     
     private var cancellables = Set<AnyCancellable>()
+    private var pauseTimer: DispatchWorkItem?
     private let logger = Logger(subsystem: "com.sahan.Nix", category: "AppEnvironment")
     
     // ──────────────────────────────────────────────────
@@ -196,11 +197,16 @@ final class AppEnvironment: ObservableObject {
     func toggleEnabled() { isEnabled.toggle() }
     
     func pause(minutes: Int) {
+        pauseTimer?.cancel()
         isPaused = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(minutes * 60)) { [weak self] in
-            self?.isPaused = false
-        }
+        let item = DispatchWorkItem { [weak self] in self?.isPaused = false }
+        pauseTimer = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(minutes * 60), execute: item)
     }
     
-    func resume() { isPaused = false }
+    func resume() {
+        pauseTimer?.cancel()
+        pauseTimer = nil
+        isPaused = false
+    }
 }

@@ -18,6 +18,7 @@ enum AppBehavior: String, Codable, CaseIterable {
 // MARK: - QuitEngine
 // ------------------------------------------------
 
+@MainActor
 final class QuitEngine {
 
     // --- Configuration -----------------------------------

@@ -429,6 +429,7 @@ private func axWindowEventCallback(
 ) {
     guard let refcon = refcon else { return }
 
+    // SAFETY: WindowMonitor is a singleton owned by AppEnvironment — guaranteed to outlive all observers.
     let monitor = Unmanaged<WindowMonitor>.fromOpaque(refcon).takeUnretainedValue()
 
     var pid: pid_t = 0

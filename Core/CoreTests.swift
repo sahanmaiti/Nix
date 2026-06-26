@@ -1,3 +1,4 @@
+#if DEBUG
 import AppKit
 import ApplicationServices
 import ServiceManagement
@@ -708,3 +709,4 @@ func verifyLicenseGate() {
         testLogger.info("ℹ️  Paywall not required — gate check not applicable")
     }
 }
+#endif

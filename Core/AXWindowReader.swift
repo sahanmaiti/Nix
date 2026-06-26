@@ -1,6 +1,7 @@
 // PURPOSE: Pure functions for reading the Accessibility tree.
 /// These functions answer ONE question: "How many real, visible windows does this process have right now ?"
 
+#if DEBUG
 import ApplicationServices
 import AppKit
 import os.log
@@ -176,3 +177,4 @@ func printWindowReport(for app: NSRunningApplication) {
     axLogger.info("║  ► APP HIDDEN:    \(isApplicationHidden(pid: pid))")
     axLogger.info("╚══")
 }
+#endif

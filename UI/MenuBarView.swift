@@ -185,7 +185,7 @@ struct MenuBarView: View {
             Divider().padding(.horizontal, 4).opacity(0.4)
 
             MenuRow(icon: "arrow.down.circle", label: "Check for Updates…") {
-                AppDelegate.shared.checkForUpdates()
+                AppDelegate.shared?.checkForUpdates()
             }
             MenuRow(icon: "gear", label: "Settings…", action: openSettings)
             MenuRow(icon: "power", label: "Quit Nix") {
@@ -203,12 +203,14 @@ struct MenuBarView: View {
             if let window = NSApp.windows.first(where: { $0.title == "Settings" }) {
                 window.makeKeyAndOrderFront(nil)
                 // Revert to accessory (menu-bar-only) when Settings closes
-                NotificationCenter.default.addObserver(
+                var observer: NSObjectProtocol?
+                observer = NotificationCenter.default.addObserver(
                     forName: NSWindow.willCloseNotification,
                     object: window,
                     queue: .main
                 ) { _ in
                     AppDelegate.shared?.revertToAccessoryIfNeeded()
+                    if let observer { NotificationCenter.default.removeObserver(observer) }
                 }
             }
         }
@@ -218,8 +220,12 @@ struct MenuBarView: View {
     // MARK: - Version Footer
     // ─────────────────────────────────────────────────────────────────────────
 
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    }
+
     private var versionFooter: some View {
-        Text("Nix · v1.0")
+        Text("Nix · v\(appVersion)")
             .font(.system(size: 10))
             .foregroundStyle(Color(.quaternaryLabelColor))
             .frame(maxWidth: .infinity, alignment: .center)
