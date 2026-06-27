@@ -27,11 +27,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationService.requestAuthorization()
         logger.info("Nix launched. AX permission: \(AXIsProcessTrusted())")
         
-        updaterController = SPUStandardUpdaterController(
-            startingUpdater: true,
-            updaterDelegate: nil,
-            userDriverDelegate: nil
-        )
+#if !DEBUG
+updaterController = SPUStandardUpdaterController(
+    startingUpdater: true,
+    updaterDelegate: nil,
+    userDriverDelegate: nil
+)
+#endif
         
         if !UserDefaults.standard.bool(forKey: "nix.onboardingComplete") {
             showOnboarding()
@@ -100,14 +102,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         settingsWindow = nil
         
         let window = NSWindow(
-            contentRect: NSRect(origin: .zero, size: NSSize(width: 700, height: 480)),
+            contentRect: NSRect(origin: .zero, size: NSSize(width: 700, height: 680)),
             styleMask: [.titled, .closable, .resizable, .miniaturizable],
             backing: .buffered,
             defer: false
         )
         window.title = "Settings"
         window.isReleasedWhenClosed = false
-        window.minSize = NSSize(width: 600, height: 420)
+        window.minSize = NSSize(width: 600, height: 620)
         window.center()
         
         NotificationCenter.default.addObserver(

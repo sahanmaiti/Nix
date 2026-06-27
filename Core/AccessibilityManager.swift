@@ -70,7 +70,9 @@ final class AccessibilityManager: ObservableObject {
     private func startPolling() {
         
         pollTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.checkPermission()
+            MainActor.assumeIsolated {
+                self?.checkPermission()
+            }
         }
         logger.debug( "Permission polling started ( 1s interval)")
     }

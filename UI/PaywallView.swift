@@ -11,9 +11,10 @@ struct PaywallView: View {
     @StateObject private var trial   = TrialManager.shared
     @StateObject private var license = LicenseManager.shared
 
-    @State private var showManualEntry = false
-    @State private var manualKey       = ""
+    @State private var showManualEntry     = false
+    @State private var manualKey           = ""
     @State private var manualEntryError: String?
+    @State private var isCheckoutLoading   = true   // ← new: tracks WebView load state
 
     private let checkoutURL: URL = {
         let urlString = "https://nixapp.lemonsqueezy.com/checkout/buy/9bd06aa9-0c32-4c46-b4d6-64fa6323ec6a?embed=1"
@@ -32,16 +33,29 @@ struct PaywallView: View {
             Divider().opacity(0.35)
 
             ZStack {
-                CheckoutWebView(url: checkoutURL, onLicenseKeyReceived: handleReceivedKey)
-                    .opacity(showManualEntry ? 0 : 1)
-                    .allowsHitTesting(!showManualEntry)
+                // ── Checkout WebView ──────────────────────────────────────────
+                CheckoutWebView(
+                    url: checkoutURL,
+                    isLoading: $isCheckoutLoading,
+                    onLicenseKeyReceived: handleReceivedKey
+                )
+                .opacity(showManualEntry ? 0 : 1)
+                .allowsHitTesting(!showManualEntry)
 
+                // ── Loading spinner — shown until WebView reports didFinishNavigation ──
+                if isCheckoutLoading && !showManualEntry {
+                    checkoutLoadingView
+                        .transition(.opacity)
+                }
+
+                // ── Manual key entry form ─────────────────────────────────────
                 if showManualEntry {
                     manualEntryForm
                         .transition(.opacity)
                 }
             }
             .animation(.easeInOut(duration: 0.15), value: showManualEntry)
+            .animation(.easeInOut(duration: 0.20), value: isCheckoutLoading)
 
             Divider().opacity(0.35)
             footer
@@ -88,6 +102,24 @@ struct PaywallView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 14)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Checkout Loading View
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var checkoutLoadingView: some View {
+        VStack(spacing: 14) {
+            ProgressView()
+                .scaleEffect(1.3)
+                .progressViewStyle(.circular)
+
+            Text("Loading checkout…")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.windowBackgroundColor).opacity(0.85))
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -208,28 +240,59 @@ struct PaywallView: View {
 private struct CheckoutWebView: NSViewRepresentable {
 
     let url: URL
+    @Binding var isLoading: Bool
     let onLicenseKeyReceived: (String) -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onLicenseKeyReceived: onLicenseKeyReceived)
+        Coordinator(parent: self)
     }
 
     func makeNSView(context: Context) -> WKWebView {
-        let webView = WKWebView()
+        let config = WKWebViewConfiguration()
+        let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.load(URLRequest(url: url))
         return webView
     }
 
-    func updateNSView(_ nsView: WKWebView, context: Context) { }
+    func updateNSView(_ nsView: WKWebView, context: Context) {
+        // Keep coordinator's parent reference current so binding writes land correctly.
+        context.coordinator.parent = self
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Coordinator
+    // ─────────────────────────────────────────────────────────────────────────
 
     final class Coordinator: NSObject, WKNavigationDelegate {
 
-        private let onLicenseKeyReceived: (String) -> Void
+        var parent: CheckoutWebView
 
-        init(onLicenseKeyReceived: @escaping (String) -> Void) {
-            self.onLicenseKeyReceived = onLicenseKeyReceived
+        init(parent: CheckoutWebView) {
+            self.parent = parent
         }
+
+        // ── Loading state callbacks ───────────────────────────────────────────
+
+        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+            parent.isLoading = true
+        }
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            parent.isLoading = false
+        }
+
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            parent.isLoading = false
+            paywallLogger.warning("WebView navigation failed: \(error.localizedDescription)")
+        }
+
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            parent.isLoading = false
+            paywallLogger.warning("WebView provisional navigation failed: \(error.localizedDescription)")
+        }
+
+        // ── URL scheme intercept for license key ──────────────────────────────
 
         func webView(
             _ webView: WKWebView,
@@ -247,7 +310,7 @@ private struct CheckoutWebView: NSViewRepresentable {
 
                 if let key {
                     paywallLogger.info("Intercepted license key from checkout redirect")
-                    onLicenseKeyReceived(key)
+                    parent.onLicenseKeyReceived(key)
                 } else {
                     paywallLogger.warning("nix://activate redirect with no 'key' param")
                 }

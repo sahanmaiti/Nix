@@ -34,8 +34,9 @@ struct SettingsView: View {
             contentView
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(minWidth: 600, idealWidth: 700, minHeight: 420, idealHeight: 480)
-    }
+        .toolbar(removing: .sidebarToggle)
+            .frame(minWidth: 600, idealWidth: 700, minHeight: 620, idealHeight: 680)
+        }
 
     @ViewBuilder
     private var contentView: some View {
