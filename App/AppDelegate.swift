@@ -126,8 +126,8 @@ updaterController = SPUStandardUpdaterController(
         
         window.contentView = NSHostingView(rootView: rootView)
         NSApp.setActivationPolicy(.regular)
-        NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
         settingsWindow = window
         logger.info("Settings window shown")
     }
