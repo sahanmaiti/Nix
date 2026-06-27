@@ -1,12 +1,9 @@
-// NixApp.swift
-
 import SwiftUI
 
 @main
 struct NixApp: App {
 
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-
     @StateObject private var env = AppEnvironment.shared
 
     var body: some Scene {
@@ -15,12 +12,6 @@ struct NixApp: App {
                 .environmentObject(env)
         }
         .menuBarExtraStyle(.window)
-        Window("Settings", id: "settings") {
-            SettingsView()
-                .environmentObject(env)
-        }
-        .windowResizability(.contentMinSize)
-        .defaultSize(width: 700, height: 480)
     }
 
     private var menuBarIcon: String {

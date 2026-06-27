@@ -196,24 +196,7 @@ struct MenuBarView: View {
     }
 
     private func openSettings() {
-        NSApp.setActivationPolicy(.regular)
-        openWindow(id: "settings")
-        NSApp.activate(ignoringOtherApps: true)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            if let window = NSApp.windows.first(where: { $0.title == "Settings" }) {
-                window.makeKeyAndOrderFront(nil)
-                // Revert to accessory (menu-bar-only) when Settings closes
-                var observer: NSObjectProtocol?
-                observer = NotificationCenter.default.addObserver(
-                    forName: NSWindow.willCloseNotification,
-                    object: window,
-                    queue: .main
-                ) { _ in
-                    AppDelegate.shared?.revertToAccessoryIfNeeded()
-                    if let observer { NotificationCenter.default.removeObserver(observer) }
-                }
-            }
-        }
+        AppDelegate.shared?.showSettings()
     }
 
     // ─────────────────────────────────────────────────────────────────────────

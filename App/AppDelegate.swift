@@ -12,6 +12,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private var onboardingWindow: NSWindow?
     private var paywallWindow: NSWindow?
+    private var settingsWindow: NSWindow? 
     private var updaterController: SPUStandardUpdaterController?
     
     override init() {
@@ -26,14 +27,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationService.requestAuthorization()
         logger.info("Nix launched. AX permission: \(AXIsProcessTrusted())")
         
-        // ADD: Start Sparkle
         updaterController = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: nil,
             userDriverDelegate: nil
         )
         
-        // ── Onboarding ──────────────────────────────────────────────────────
         if !UserDefaults.standard.bool(forKey: "nix.onboardingComplete") {
             showOnboarding()
         } else {
@@ -54,12 +53,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 #endif
     }
     
-    // ADD: Called from MenuBarView
     func checkForUpdates() {
         updaterController?.updater.checkForUpdates()
     }
     
-    // ADD: For binding canCheckForUpdates into SwiftUI
     var canCheckForUpdates: Bool {
         updaterController?.updater.canCheckForUpdates ?? false
     }
@@ -90,6 +87,47 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
+    }
+    
+    // MARK: - Settings Window
+    
+    func showSettings() {
+        if let existing = settingsWindow, existing.isVisible {
+            existing.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        settingsWindow = nil
+        
+        let window = NSWindow(
+            contentRect: NSRect(origin: .zero, size: NSSize(width: 700, height: 480)),
+            styleMask: [.titled, .closable, .resizable, .miniaturizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "Settings"
+        window.isReleasedWhenClosed = false
+        window.minSize = NSSize(width: 600, height: 420)
+        window.center()
+        
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] _ in
+            self?.settingsWindow = nil
+            self?.revertToAccessoryIfNeeded()
+        }
+        
+        let rootView = SettingsView()
+            .environmentObject(AppEnvironment.shared)
+        
+        window.contentView = NSHostingView(rootView: rootView)
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        settingsWindow = window
+        logger.info("Settings window shown")
     }
     
     // MARK: - Onboarding Window
@@ -135,7 +173,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         logger.info("Onboarding window shown (first launch)")
     }
     
-    // MARK: - Paywall Window (unchanged)
+    // MARK: - Paywall Window
     
     @MainActor
     private func checkPaywallGate() {
@@ -194,16 +232,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         logger.info("Paywall window shown")
     }
     
-    // ─────────────────────────────────────────────────────────────────────────
     // MARK: - Activation Policy Management
-    // ─────────────────────────────────────────────────────────────────────────
     
-    /// Reverts Nix to a background (accessory) app when no custom windows remain
-    /// open. This hides the Dock icon and returns to pure menu-bar-only mode.
     func revertToAccessoryIfNeeded() {
         let hasOnboarding = onboardingWindow?.isVisible == true
         let hasPaywall    = paywallWindow?.isVisible == true
-        let hasSettings   = NSApp.windows.contains { $0.title == "Settings" && $0.isVisible }
+        let hasSettings   = settingsWindow?.isVisible == true   // ← direct reference, no string match
         
         if !hasOnboarding && !hasPaywall && !hasSettings {
             DispatchQueue.main.async {
