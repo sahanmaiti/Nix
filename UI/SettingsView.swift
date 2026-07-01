@@ -1,7 +1,5 @@
 import SwiftUI
 
-// MARK: - SettingsPage
-
 enum SettingsPage: String, Hashable, CaseIterable {
     case general   = "General"
     case apps      = "Apps"
@@ -15,8 +13,6 @@ enum SettingsPage: String, Hashable, CaseIterable {
         }
     }
 }
-
-// MARK: - SettingsView
 
 struct SettingsView: View {
     @EnvironmentObject private var env: AppEnvironment
@@ -34,9 +30,8 @@ struct SettingsView: View {
             contentView
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .toolbar(removing: .sidebarToggle)
-            .frame(minWidth: 600, idealWidth: 700, minHeight: 620, idealHeight: 680)
-        }
+        .frame(minWidth: 600, idealWidth: 700, minHeight: 620, idealHeight: 680)
+    }
 
     @ViewBuilder
     private var contentView: some View {

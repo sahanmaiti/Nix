@@ -110,6 +110,7 @@ updaterController = SPUStandardUpdaterController(
         window.title = "Settings"
         window.isReleasedWhenClosed = false
         window.minSize = NSSize(width: 600, height: 620)
+        window.toolbarStyle = .unified
         window.center()
         
         NotificationCenter.default.addObserver(
