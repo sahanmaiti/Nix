@@ -103,14 +103,23 @@ updaterController = SPUStandardUpdaterController(
         
         let window = NSWindow(
             contentRect: NSRect(origin: .zero, size: NSSize(width: 700, height: 680)),
-            styleMask: [.titled, .closable, .resizable, .miniaturizable],
+            styleMask: [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
         window.title = "Settings"
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
         window.isReleasedWhenClosed = false
         window.minSize = NSSize(width: 600, height: 620)
         window.toolbarStyle = .unified
+
+        // Attach an empty toolbar so the sidebar toggle button from SwiftUI's
+        // .toolbar modifier has a place to live in the titlebar area.
+        let toolbar = NSToolbar(identifier: "SettingsToolbar")
+        toolbar.showsBaselineSeparator = false
+        window.toolbar = toolbar
+
         window.center()
         
         NotificationCenter.default.addObserver(
