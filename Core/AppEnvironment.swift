@@ -91,11 +91,14 @@ final class AppEnvironment: ObservableObject {
         }
         
         // 4. Forward child changes so SwiftUI views that observe AppEnvironment
-        //    redraw when appTracker or accessibilityManager publish changes.
+        //    redraw when child services publish changes.
         appTracker.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
         accessibilityManager.objectWillChange
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+        ruleStore.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
 
