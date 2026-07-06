@@ -109,9 +109,11 @@ final class AppEnvironment: ObservableObject {
                 guard let self else { return }
                 let running = NSWorkspace.shared.runningApplications
                 for tracked in appTracker.trackedApps {
-                    if let app = running.first(where: { $0.processIdentifier == tracked.pid }) {
-                        windowMonitor.startMonitoring(app: app)
-                    }
+                    guard let app = running.first(where: { $0.processIdentifier == tracked.pid }) else { continue }
+                    // startMonitoring no-ops if an observer already exists for this PID;
+                    // refreshRegistrations is the fallback so this retry can't be a silent no-op.
+                    windowMonitor.startMonitoring(app: app)
+                    windowMonitor.refreshRegistrations(for: tracked.pid)
                 }
                 logger.info("AX permission granted — retried startMonitoring for \(appTracker.trackedApps.count) app(s)")
             }
