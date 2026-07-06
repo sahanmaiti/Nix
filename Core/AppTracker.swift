@@ -133,6 +133,11 @@ final class AppTracker: ObservableObject {
         guard trackedApps.contains(where: { $0.pid == app.processIdentifier }) else { return }
         logger.debug("▶️ App activated: \(app.localizedName ?? "?") — cancelling any pending quit")
         onCancelPendingQuit?(app.processIdentifier)
+
+        // Reliable, non-AX signal that always fires before a user could close this app's last
+        // window — including apps already running on a background Space at Nix launch, whose
+        // windows never trigger an AX-level retry.
+        windowMonitor.refreshRegistrations(for: app.processIdentifier)
     }
     
 

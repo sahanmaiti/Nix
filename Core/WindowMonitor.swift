@@ -144,7 +144,29 @@ final class WindowMonitor {
         // Best-effort baseline only — an inconclusive read here just means 0 to start with.
         lastWindowCount[pid] = currentWindowCount(for: pid) ?? 0
 
+        // Pre-existing windows (already running before Nix started, or living on a background
+        // Space) can read back empty here — AX queries are Space-scoped and/or the AX tree isn't
+        // warm yet. Such windows never fire kAXWindowCreated again, so this delayed retry is
+        // their only automatic chance. Idempotent — safe even if the first pass succeeded.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.refreshRegistrations(for: pid)
+        }
+
         logger.info("✅ Monitoring '\(name)' (PID \(pid)) — \(self.lastWindowCount[pid] ?? 0) window(s)")
+    }
+
+    /// Re-attempts window-level close-notification registration for an app already being
+    /// monitored. Idempotent (.notificationAlreadyRegistered counts as success). This is the
+    /// retry path for windows that predate Nix's monitoring and therefore never trigger
+    /// AXWindowCreated — called on a delay after createObserver, and again from AppTracker when
+    /// NSWorkspace reports the app becoming active.
+    func refreshRegistrations(for pid: pid_t) {
+        guard let observer = observers[pid] else { return }
+        let selfPtr = Unmanaged.passUnretained(self).toOpaque()
+        let appName = NSWorkspace.shared.runningApplications
+            .first(where: { $0.processIdentifier == pid })?
+            .localizedName ?? "unknown"
+        registerWindowClosedOnAllCurrentWindows(pid: pid, observer: observer, context: selfPtr, appName: appName)
     }
 
     private func registerWindowClosedOnAllCurrentWindows(
@@ -217,12 +239,10 @@ final class WindowMonitor {
     func handlePossibleWindowChange(pid: pid_t, notification: String) {
         logger.debug("AX event '\(notification)' for PID \(pid) — debounce reset")
 
-        if notification == kAXWindowCreatedStr, let observer = observers[pid] {
-            let selfPtr = Unmanaged.passUnretained(self).toOpaque()
-            let appName = NSWorkspace.shared.runningApplications
-                .first(where: { $0.processIdentifier == pid })?
-                .localizedName ?? "unknown"
-            registerWindowClosedOnAllCurrentWindows(pid: pid, observer: observer, context: selfPtr, appName: appName)
+        if notification == kAXWindowCreatedStr ||
+           notification == kAXMainWindowChangedStr ||
+           notification == kAXFocusedWindowChangedStr {
+            refreshRegistrations(for: pid)
         }
 
         pendingPhase1Checks[pid]?.cancel()
