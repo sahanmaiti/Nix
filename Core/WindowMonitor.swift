@@ -19,6 +19,7 @@ private let kAXUIElementDestroyedStr     = "AXUIElementDestroyed"
 // MARK: - WindowMonitor
 // ─────────────────────────────────────────────────────────────────────────────
 
+@MainActor
 final class WindowMonitor {
 
     // ─────────────────────────────────────────────────────────────────
@@ -93,11 +94,7 @@ final class WindowMonitor {
         logger.info("Stopped monitoring '\(app.localizedName ?? "?")'")
     }
 
-    /// NSWorkspace fallback: apps reliably lose OS focus when their last window closes.
-    /// Triggered by AppTracker when didDeactivateApplicationNotification fires.
-    /// This is an indirect/ambiguous signal (also fires on plain app/Space switches),
-    /// so it always routes through Phase 2 confirmation — never decides on one reading.
-    func checkOnDeactivation(for pid: pid_t) {
+        func checkOnDeactivation(for pid: pid_t) {
         guard observers[pid] != nil else { return }
         logger.debug("Deactivation check for PID \(pid)")
 
@@ -144,10 +141,6 @@ final class WindowMonitor {
         // Best-effort baseline only — an inconclusive read here just means 0 to start with.
         lastWindowCount[pid] = currentWindowCount(for: pid) ?? 0
 
-        // Pre-existing windows (already running before Nix started, or living on a background
-        // Space) can read back empty here — AX queries are Space-scoped and/or the AX tree isn't
-        // warm yet. Such windows never fire kAXWindowCreated again, so this delayed retry is
-        // their only automatic chance. Idempotent — safe even if the first pass succeeded.
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             self?.refreshRegistrations(for: pid)
         }
@@ -155,11 +148,7 @@ final class WindowMonitor {
         logger.info("✅ Monitoring '\(name)' (PID \(pid)) — \(self.lastWindowCount[pid] ?? 0) window(s)")
     }
 
-    /// Re-attempts window-level close-notification registration for an app already being
-    /// monitored. Idempotent (.notificationAlreadyRegistered counts as success). This is the
-    /// retry path for windows that predate Nix's monitoring and therefore never trigger
-    /// AXWindowCreated — called on a delay after createObserver, and again from AppTracker when
-    /// NSWorkspace reports the app becoming active.
+   
     func refreshRegistrations(for pid: pid_t) {
         guard let observer = observers[pid] else { return }
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
@@ -247,10 +236,6 @@ final class WindowMonitor {
 
         pendingPhase1Checks[pid]?.cancel()
 
-        // Only AXWindowClosed / AXUIElementDestroyed are direct evidence a window closed.
-        // WindowCreated / MainWindowChanged / FocusedWindowChanged ALSO fire on minimize,
-        // refocus, and app/Space switches — those must be treated as weak signals too,
-        // same as the deactivation fallback, or they bypass Phase 2 confirmation.
         let isStrongCloseSignal = (notification == kAXWindowClosedStr || notification == kAXUIElementDestroyedStr)
 
         let item = DispatchWorkItem { [weak self] in
@@ -282,8 +267,6 @@ final class WindowMonitor {
         }
 
         guard let count = currentWindowCount(for: pid) else {
-            // AX query failed (busy/transitioning — common right after minimize + app/Space switch).
-            // Never treat a failed read as zero. Defer to Phase 2 for a clean re-read.
             logger.debug("Phase 1: inconclusive AX read for '\(app.localizedName ?? "?")' — deferring to Phase 2")
             schedulePhaseTwoCheck(pid: pid)
             return
@@ -366,9 +349,6 @@ final class WindowMonitor {
     // MARK: - Window Count Query
     // ─────────────────────────────────────────────────────────────────
 
-    /// Returns nil if the AX query could not be completed (app busy/transitioning/backgrounded
-    /// mid-transition). Callers MUST treat nil as "unknown," never as "zero windows" — conflating
-    /// the two is what causes apps to be incorrectly quit right after minimize + app/Space switch.
     private func currentWindowCount(for pid: pid_t) -> Int? {
         let appElement = AXUIElementCreateApplication(pid)
 
@@ -395,11 +375,6 @@ final class WindowMonitor {
     // MARK: - Cross-Space Window Count (Phase 2 confirmation)
     // ─────────────────────────────────────────────────────────────────
 
-    /// kAXWindowsAttribute is scoped to the CURRENTLY DISPLAYED Space — querying an
-    /// app whose window lives on a different Space can legitimately return a success
-    /// result with an empty array. CGWindowListCopyWindowInfo is not Space-scoped,
-    /// so it's used here specifically to confirm ambiguous signals (deactivation,
-    /// Space switches, known hiders) without being fooled by that AX limitation.
     private func crossSpaceWindowCount(for pid: pid_t) -> Int? {
         guard let infoList = CGWindowListCopyWindowInfo(.optionAll, kCGNullWindowID)
                 as NSArray? as? [[String: AnyObject]] else {
@@ -441,23 +416,25 @@ final class WindowMonitor {
 // MARK: - C Callback
 // ─────────────────────────────────────────────────────────────────────────────
 
-private func axWindowEventCallback(
+nonisolated private func axWindowEventCallback(
     observer:         AXObserver,
     element:          AXUIElement,
     notificationName: CFString,
     refcon:           UnsafeMutableRawPointer?
 ) {
     guard let refcon = refcon else { return }
-
+    
     // SAFETY: WindowMonitor is a singleton owned by AppEnvironment — guaranteed to outlive all observers.
     let monitor = Unmanaged<WindowMonitor>.fromOpaque(refcon).takeUnretainedValue()
-
+    
     var pid: pid_t = 0
     guard AXUIElementGetPid(element, &pid) == .success, pid != 0 else { return }
-
+    
     let notifName = notificationName as String
-
+    
     DispatchQueue.main.async {
-        monitor.handlePossibleWindowChange(pid: pid, notification: notifName)
+        MainActor.assumeIsolated {
+            monitor.handlePossibleWindowChange(pid: pid, notification: notifName)
+        }
     }
 }
