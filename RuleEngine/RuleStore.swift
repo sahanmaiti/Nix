@@ -2,6 +2,7 @@ import Foundation
 import Combine
 import os.log
 
+@MainActor
 final class RuleStore: ObservableObject {
     
     // MARK: - Published State
