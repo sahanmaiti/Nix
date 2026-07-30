@@ -24,7 +24,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-        NotificationService.requestAuthorization()
         logger.info("Nix launched. AX permission: \(AXIsProcessTrusted())")
         
 #if !DEBUG
@@ -72,6 +71,7 @@ updaterController = SPUStandardUpdaterController(
         AppEnvironment.shared.accessibilityManager.checkPermission()
         TrialManager.shared.refresh()
         checkPaywallGate()
+        NotificationService.requestAuthorization()
     }
     
     func application(_ application: NSApplication, open urls: [URL]) {

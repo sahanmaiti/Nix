@@ -15,6 +15,7 @@ enum NotificationService {
                 if let error {
                     print("[NotificationService] Authorization error: \(error.localizedDescription)")
                 }
+                print("[NotificationService] Authorization granted: \(granted)")
             }
     }
 
