@@ -137,16 +137,28 @@ final class WindowMonitor {
 
         CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
 
+        // With:
         observers[pid]       = observer
-        // Best-effort baseline only — an inconclusive read here just means 0 to start with.
         lastWindowCount[pid] = currentWindowCount(for: pid) ?? 0
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            self?.refreshRegistrations(for: pid)
-        }
+        scheduleRegistrationRetries(for: pid)
 
         logger.info("✅ Monitoring '\(name)' (PID \(pid)) — \(self.lastWindowCount[pid] ?? 0) window(s)")
-    }
+        }
+
+        private func scheduleRegistrationRetries(for pid: pid_t, attempt: Int = 0) {
+            let delays: [TimeInterval] = [0.15, 0.4, 0.8, 1.5]
+            guard attempt < delays.count else { return }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + delays[attempt]) { [weak self] in
+                guard let self, self.observers[pid] != nil else { return }
+                self.refreshRegistrations(for: pid)
+
+                if (self.currentWindowCount(for: pid) ?? 0) == 0 {
+                    self.scheduleRegistrationRetries(for: pid, attempt: attempt + 1)
+                }
+            }
+        }
 
    
     func refreshRegistrations(for pid: pid_t) {
