@@ -137,7 +137,6 @@ final class WindowMonitor {
 
         CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
 
-        // With:
         observers[pid]       = observer
         lastWindowCount[pid] = currentWindowCount(for: pid) ?? 0
 
