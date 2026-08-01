@@ -34,10 +34,11 @@ final class WindowMonitor {
     // MARK: - Internal State
     // ─────────────────────────────────────────────────────────────────
 
-    private var observers:           [pid_t: AXObserver]      = [:]
-    private var lastWindowCount:     [pid_t: Int]              = [:]
-    private var pendingPhase1Checks: [pid_t: DispatchWorkItem] = [:]
-    private var pendingPhase2PIDs:   Set<pid_t>                = []
+    private var observers:             [pid_t: AXObserver]      = [:]
+    private var lastWindowCount:       [pid_t: Int]              = [:]
+    private var pendingPhase1Checks:   [pid_t: DispatchWorkItem] = [:]
+    private var pendingPhase1IsStrong: [pid_t: Bool]             = [:]   // Finding 3 latch
+    private var pendingPhase2PIDs:     Set<pid_t>                = []
 
     private let debounceInterval: TimeInterval = 0.30
 
@@ -87,6 +88,7 @@ final class WindowMonitor {
 
         pendingPhase1Checks[pid]?.cancel()
         pendingPhase1Checks.removeValue(forKey: pid)
+        pendingPhase1IsStrong.removeValue(forKey: pid)   // Finding 3: clear latch on teardown
         pendingPhase2PIDs.remove(pid)
         removeObserver(for: pid)
         lastWindowCount.removeValue(forKey: pid)
@@ -245,14 +247,20 @@ final class WindowMonitor {
             refreshRegistrations(for: pid)
         }
 
-        pendingPhase1Checks[pid]?.cancel()
-
         let isStrongCloseSignal = (notification == kAXWindowClosedStr || notification == kAXUIElementDestroyedStr)
+
+        // Finding 3: latch strong signals for this debounce window. A later weak signal
+        // (e.g. AXMainWindowChanged firing right after AXWindowClosed) must NOT downgrade
+        // a pending strong close — only strengthen, never weaken.
+        pendingPhase1IsStrong[pid] = isStrongCloseSignal || (pendingPhase1IsStrong[pid] ?? false)
+
+        pendingPhase1Checks[pid]?.cancel()
 
         let item = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
             self.pendingPhase1Checks.removeValue(forKey: pid)
-            self.phaseOneCheck(pid: pid, isWeakSignal: !isStrongCloseSignal)
+            let strong = self.pendingPhase1IsStrong.removeValue(forKey: pid) ?? false
+            self.phaseOneCheck(pid: pid, isWeakSignal: !strong)
         }
 
         pendingPhase1Checks[pid] = item
