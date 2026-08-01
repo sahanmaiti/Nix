@@ -9,15 +9,9 @@ final class AppTracker: ObservableObject {
     @Published private(set) var trackedApps: [TrackedApp] = []
 
     private var cancellables = Set<AnyCancellable>()
+    private var permanentWhitelist: Set<String> { RuleStore.permanentWhitelist }
 
-    private let permanentWhitelist: Set<String> = [
-        "com.apple.finder",
-        "com.apple.dock",
-        "com.apple.SystemUIServer",
-        "com.apple.NotificationCenter"
-    ]
-
-    // MARK: - NEW: Cancel Callback (Day 12)
+    // MARK: - Cancel Callback
     var onCancelPendingQuit: ((pid_t) -> Void)?
 
     // MARK: - Dependencies
