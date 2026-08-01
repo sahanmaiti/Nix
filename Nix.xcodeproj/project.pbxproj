@@ -24,7 +24,6 @@
 		DE8AB0132FE27DEF007D9219 /* .geminiignore in Resources */ = {isa = PBXBuildFile; fileRef = DE8AB0122FE27DE8007D9219 /* .geminiignore */; };
 		DE8AB0142FE3CB2E007D9219 /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2D74262FDFD7EC00B6D3CE /* LoginItemService.swift */; };
 		DEABF11E2FCAB241009A5C40 /* AccessibilityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEABF11D2FCAB235009A5C40 /* AccessibilityManager.swift */; };
-		DEABF1222FCC0192009A5C40 /* AXWindowReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEABF1212FCC0188009A5C40 /* AXWindowReader.swift */; };
 		DEABF1242FCD5231009A5C40 /* CoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEABF1232FCD522C009A5C40 /* CoreTests.swift */; };
 		DEB830862FC8A19300F886C2 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB830842FC890A300F886C2 /* MenuBarView.swift */; };
 		DEB8308A2FC8ABDD00F886C2 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB830882FC8ABDD00F886C2 /* AppEnvironment.swift */; };
@@ -52,7 +51,6 @@
 		DE5B43552FD31A9D0059F34F /* GlobalSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSettings.swift; sourceTree = "<group>"; };
 		DE8AB0122FE27DE8007D9219 /* .geminiignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .geminiignore; sourceTree = "<group>"; };
 		DEABF11D2FCAB235009A5C40 /* AccessibilityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityManager.swift; sourceTree = "<group>"; };
-		DEABF1212FCC0188009A5C40 /* AXWindowReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXWindowReader.swift; sourceTree = "<group>"; };
 		DEABF1232FCD522C009A5C40 /* CoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreTests.swift; sourceTree = "<group>"; };
 		DEB8306C2FC5774100F886C2 /* Nix.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nix.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DEB830842FC890A300F886C2 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
@@ -148,7 +146,6 @@
 				DE5B43502FD08F430059F34F /* QuitEngine.swift */,
 				DED5B7072FCEBDC200735E04 /* WindowMonitor.swift */,
 				DEABF1232FCD522C009A5C40 /* CoreTests.swift */,
-				DEABF1212FCC0188009A5C40 /* AXWindowReader.swift */,
 				DEABF11D2FCAB235009A5C40 /* AccessibilityManager.swift */,
 				DEB8308B2FC9D02000F886C2 /* AppTracker.swift */,
 				DEB830882FC8ABDD00F886C2 /* AppEnvironment.swift */,
@@ -243,7 +240,6 @@
 				DE507F8F2FE66B8B0013D502 /* KeychainHelper.swift in Sources */,
 				DEC9109A2FE15C0B00D34F39 /* AppsTab.swift in Sources */,
 				DEB8308C2FC9D02800F886C2 /* AppTracker.swift in Sources */,
-				DEABF1222FCC0192009A5C40 /* AXWindowReader.swift in Sources */,
 				DE5B43512FD08F4C0059F34F /* QuitEngine.swift in Sources */,
 				DE507F892FE3F3C20013D502 /* NotificationService.swift in Sources */,
 				DE5B43572FD31FF00059F34F /* GlobalSettings.swift in Sources */,
