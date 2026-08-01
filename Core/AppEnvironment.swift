@@ -157,12 +157,13 @@ final class AppEnvironment: ObservableObject {
     private func loadPersistedSettings() {
         let s = GlobalSettings.shared
         
-        quitEngine.isEnabled                = s.isEnabled
         quitEngine.defaultBehavior          = s.defaultBehavior
         quitEngine.globalGracePeriodSeconds = s.gracePeriodSeconds
         
-        // Align the @Published property with the persisted value.
-        _isEnabled = Published(initialValue: s.isEnabled)
+        // Align via the normal setter — didSet syncs GlobalSettings.isEnabled
+        // (redundant self-write, same value) and calls updateEngineEnabledState(),
+        // which is safe here because quitEngine already exists (see step 1 in init()).
+        isEnabled = s.isEnabled
         
         logger.info("""
             Startup settings loaded: \
