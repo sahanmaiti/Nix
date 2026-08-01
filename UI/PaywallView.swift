@@ -17,7 +17,7 @@ struct PaywallView: View {
     @State private var isCheckoutLoading   = true   // ← new: tracks WebView load state
 
     private let checkoutURL: URL = {
-        let urlString = "https://nixapp.lemonsqueezy.com/checkout/buy/9bd06aa9-0c32-4c46-b4d6-64fa6323ec6a?embed=1"
+        let urlString = "https://nixapp.lemonsqueezy.com/checkout/buy/c5b82404-dcd0-4bb8-b478-b36991c1e3b2"
         #if !DEBUG
         precondition(
             !urlString.contains("YOURSTORE"),
