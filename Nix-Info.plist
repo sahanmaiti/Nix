@@ -6,5 +6,18 @@
 	<string>https://nixapp.lemonsqueezy.com/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>p5nZlLajLI+NlArkQb41Cds0IQMQPIngXY1huHXQ3bc</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.sahan.Nix</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>nix</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
