@@ -399,6 +399,11 @@ final class WindowMonitor {
             guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0 else {
                 return false   // normal app windows are layer 0; status items/helpers are not
             }
+            guard let bounds = info[kCGWindowBounds as String] as? [String: CGFloat],
+                  let width  = bounds["Width"], let height = bounds["Height"],
+                  width >= 1, height >= 1 else {
+                return false
+            }
             return true
         }.count
     }
