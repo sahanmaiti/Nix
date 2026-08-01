@@ -12,8 +12,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private var onboardingWindow: NSWindow?
     private var paywallWindow: NSWindow?
-    private var settingsWindow: NSWindow? 
+    private var settingsWindow: NSWindow?
     private var updaterController: SPUStandardUpdaterController?
+    private var onboardingCloseObserver: NSObjectProtocol?
+    private var paywallCloseObserver: NSObjectProtocol?
+    private var settingsCloseObserver: NSObjectProtocol?
     
     override init() {
         super.init()
@@ -114,21 +117,28 @@ updaterController = SPUStandardUpdaterController(
         window.minSize = NSSize(width: 600, height: 620)
         window.toolbarStyle = .unified
 
-        // Attach an empty toolbar so the sidebar toggle button from SwiftUI's
-        // .toolbar modifier has a place to live in the titlebar area.
         let toolbar = NSToolbar(identifier: "SettingsToolbar")
         toolbar.showsBaselineSeparator = false
         window.toolbar = toolbar
 
         window.center()
-        
-        NotificationCenter.default.addObserver(
+
+        if let token = settingsCloseObserver {
+            NotificationCenter.default.removeObserver(token)
+            settingsCloseObserver = nil
+        }
+        settingsCloseObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification,
             object: window,
             queue: .main
         ) { [weak self] _ in
-            self?.settingsWindow = nil
-            self?.revertToAccessoryIfNeeded()
+            guard let self else { return }
+            if let token = self.settingsCloseObserver {
+                NotificationCenter.default.removeObserver(token)
+                self.settingsCloseObserver = nil
+            }
+            self.settingsWindow = nil
+            self.revertToAccessoryIfNeeded()
         }
         
         let rootView = SettingsView()
@@ -158,14 +168,23 @@ updaterController = SPUStandardUpdaterController(
         window.isOpaque = false
         window.backgroundColor = .clear
         window.center()
-        
-        NotificationCenter.default.addObserver(
+
+        if let token = onboardingCloseObserver {
+            NotificationCenter.default.removeObserver(token)
+            onboardingCloseObserver = nil
+        }
+        onboardingCloseObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification,
             object: window,
             queue: .main
         ) { [weak self] _ in
-            self?.onboardingWindow = nil
-            self?.revertToAccessoryIfNeeded()
+            guard let self else { return }
+            if let token = self.onboardingCloseObserver {
+                NotificationCenter.default.removeObserver(token)
+                self.onboardingCloseObserver = nil
+            }
+            self.onboardingWindow = nil
+            self.revertToAccessoryIfNeeded()
         }
         
         let rootView = OnboardingView { [weak self, weak window] in
@@ -218,14 +237,23 @@ updaterController = SPUStandardUpdaterController(
         window.backgroundColor = .clear
         window.minSize = NSSize(width: 540, height: 500)
         window.center()
-        
-        NotificationCenter.default.addObserver(
+
+        if let token = paywallCloseObserver {
+            NotificationCenter.default.removeObserver(token)
+            paywallCloseObserver = nil
+        }
+        paywallCloseObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification,
             object: window,
             queue: .main
         ) { [weak self] _ in
-            self?.paywallWindow = nil
-            self?.revertToAccessoryIfNeeded()
+            guard let self else { return }
+            if let token = self.paywallCloseObserver {
+                NotificationCenter.default.removeObserver(token)
+                self.paywallCloseObserver = nil
+            }
+            self.paywallWindow = nil
+            self.revertToAccessoryIfNeeded()
         }
         
         let rootView = PaywallView { [weak self, weak window] in
@@ -249,7 +277,7 @@ updaterController = SPUStandardUpdaterController(
     func revertToAccessoryIfNeeded() {
         let hasOnboarding = onboardingWindow?.isVisible == true
         let hasPaywall    = paywallWindow?.isVisible == true
-        let hasSettings   = settingsWindow?.isVisible == true   // ← direct reference, no string match
+        let hasSettings   = settingsWindow?.isVisible == true
         
         if !hasOnboarding && !hasPaywall && !hasSettings {
             DispatchQueue.main.async {
