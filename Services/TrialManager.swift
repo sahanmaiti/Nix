@@ -10,15 +10,12 @@ enum TrialKey {
 final class TrialManager: ObservableObject {
 
     // ── Duration constants ────────────────────────────────────────────────────
-    // DEBUG: 1 unit = 1 minute  →  trial expires after 1 minute
-    // RELEASE: 1 unit = 1 day   →  trial expires after 7 days
-    // Switching back to production requires zero code changes — just build Release.
     #if DEBUG
     static let trialDurationDays = 7
-    private static let trialUnitSeconds: Double = 86_400
+    private static let trialUnitSeconds: Double = 60
     #else
-    static let trialDurationDays = 7            // 7 units in release
-    private static let trialUnitSeconds: Double = 86_400  // 1 day per unit
+    static let trialDurationDays = 7
+    private static let trialUnitSeconds: Double = 86_400
     #endif
 
     @Published private(set) var daysRemaining: Int = TrialManager.trialDurationDays
@@ -47,7 +44,6 @@ final class TrialManager: ObservableObject {
             return
         }
 
-        // Uses Self.trialUnitSeconds: 60s in Debug, 86400s in Release
         let elapsed  = Int(Date().timeIntervalSince(firstLaunch) / Self.trialUnitSeconds)
         let remaining = Self.trialDurationDays - elapsed
 
