@@ -63,6 +63,7 @@ updaterController = SPUStandardUpdaterController(
     }
     
     func checkForUpdates() {
+        NSApp.activate(ignoringOtherApps: true)
         updaterController?.updater.checkForUpdates()
     }
     
