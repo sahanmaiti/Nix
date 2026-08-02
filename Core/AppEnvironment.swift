@@ -1,5 +1,3 @@
-// The dependency container for the entire Nix application.
-
 import SwiftUI
 import Combine
 import OSLog
@@ -41,8 +39,6 @@ final class AppEnvironment: ObservableObject {
     let licenseManager: LicenseManager = LicenseManager.shared
     let trialManager:   TrialManager   = TrialManager.shared
 
-    /// True when the trial has ended and no valid license is present.
-    /// AppDelegate watches this to decide whether to show the paywall window.
     var requiresPaywall: Bool {
         trialManager.isExpired && !licenseManager.isLicensed
     }
@@ -75,8 +71,6 @@ final class AppEnvironment: ObservableObject {
         loadPersistedSettings()
         
         // 2a. Reconcile the launch-at-login toggle with actual system state.
-        //     The user may have removed Nix from Login Items in System Settings
-        //     since the last launch, making UserDefaults stale. This corrects it.
         LoginItemService.syncWithSystemState()
 
         // 3. Wire the detection → decision pipeline.
@@ -89,9 +83,11 @@ final class AppEnvironment: ObservableObject {
         appTracker.onCancelPendingQuit = { [weak quitEngine] pid in
             quitEngine?.cancelPendingQuit(for: pid)
         }
+        appTracker.onAppDidTerminate = { [weak quitEngine] pid in
+            quitEngine?.confirmedTermination(pid: pid)
+        }
         
         // 4. Forward child changes so SwiftUI views that observe AppEnvironment
-        //    redraw when child services publish changes.
         appTracker.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
@@ -101,9 +97,6 @@ final class AppEnvironment: ObservableObject {
         ruleStore.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
-
-        // 4b. When AX permission is granted, retry startMonitoring for apps that
-        //     were tracked before permission was available (no observers yet).
         accessibilityManager.$isGranted
             .removeDuplicates()
             .filter { $0 }
@@ -113,17 +106,13 @@ final class AppEnvironment: ObservableObject {
                 let running = NSWorkspace.shared.runningApplications
                 for tracked in appTracker.trackedApps {
                     guard let app = running.first(where: { $0.processIdentifier == tracked.pid }) else { continue }
-                    // startMonitoring no-ops if an observer already exists for this PID;
-                    // refreshRegistrations is the fallback so this retry can't be a silent no-op.
                     windowMonitor.startMonitoring(app: app)
                     windowMonitor.refreshRegistrations(for: tracked.pid)
                 }
                 logger.info("AX permission granted — retried startMonitoring for \(appTracker.trackedApps.count) app(s)")
             }
             .store(in: &cancellables)
-
-        // 4a. License/trial state changes must also re-evaluate whether the
-        //     engine should be gated, in addition to triggering a UI redraw.
+        
         licenseManager.objectWillChange
             .sink { [weak self] _ in
                 self?.updateEngineEnabledState()
@@ -160,9 +149,6 @@ final class AppEnvironment: ObservableObject {
         quitEngine.defaultBehavior          = s.defaultBehavior
         quitEngine.globalGracePeriodSeconds = s.gracePeriodSeconds
         
-        // Align via the normal setter — didSet syncs GlobalSettings.isEnabled
-        // (redundant self-write, same value) and calls updateEngineEnabledState(),
-        // which is safe here because quitEngine already exists (see step 1 in init()).
         isEnabled = s.isEnabled
         
         logger.info("""
@@ -187,7 +173,7 @@ final class AppEnvironment: ObservableObject {
 
     private func updateEngineEnabledState() {
         #if DEBUG
-        quitEngine.isEnabled = isEnabled   // never gate in dev builds
+        quitEngine.isEnabled = isEnabled
         #else
         quitEngine.isEnabled = isEnabled && !requiresPaywall
         #endif

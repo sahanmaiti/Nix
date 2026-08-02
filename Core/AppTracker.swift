@@ -12,7 +12,9 @@ final class AppTracker: ObservableObject {
     private var permanentWhitelist: Set<String> { RuleStore.permanentWhitelist }
 
     // MARK: - Cancel Callback
-    var onCancelPendingQuit: ((pid_t) -> Void)?
+         var onCancelPendingQuit: ((pid_t) -> Void)?
+    
+         var onAppDidTerminate: ((pid_t) -> Void)?
 
     // MARK: - Dependencies
 
@@ -95,10 +97,12 @@ final class AppTracker: ObservableObject {
     }
 
     private func appDidTerminate(_ app: NSRunningApplication) {
-        trackedApps.removeAll { $0.pid == app.processIdentifier }
-        windowMonitor.stopMonitoring(app: app)
-        logger.info("💀 Stopped tracking: \(app.localizedName ?? "unknown")")
-    }
+            let pid = app.processIdentifier
+             trackedApps.removeAll { $0.pid == pid }
+             windowMonitor.stopMonitoring(app: app)
+             onAppDidTerminate?(pid)
+             logger.info("💀 Stopped tracking: \(app.localizedName ?? "unknown")")
+         }
 
     private func appDidHide(_ app: NSRunningApplication) {
         if let index = trackedApps.firstIndex(where: { $0.pid == app.processIdentifier }) {

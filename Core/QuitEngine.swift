@@ -1,5 +1,3 @@
-// QuitEngine is the DECISION layer of Nix.
-
 import AppKit
 import os.log
 
@@ -22,8 +20,6 @@ enum AppBehavior: String, Codable, CaseIterable {
 final class QuitEngine {
 
     // --- Configuration -----------------------------------
-    /// These are set by AppEnvironment when the user changes settings.
-    
     var isEnabled: Bool = true
     var isPaused: Bool = false
     var defaultBehavior: AppBehavior = .quit
@@ -31,65 +27,54 @@ final class QuitEngine {
 
     // MARK: - Dependencies
     private let ruleStore: RuleStore
-    
+
     // MARK: - Internal State
     private var pendingQuits: [pid_t: DispatchWorkItem] = [:]
+    
+    private var pendingNotifications: [pid_t: String] = [:]
+
     private let logger = Logger(subsystem: "com.sahan.Nix", category: "QuitEngine")
 
     // MARK: - Init
     init(ruleStore: RuleStore) {
         self.ruleStore = ruleStore
     }
-    
+
     // ─────────────────────────────────────────────────────────
     // MARK: - Main Entry Point
-    /// Called by AppEnvironment when WindowMonitor fires onZeroWindows.
     // ─────────────────────────────────────────────────────────
 
     func evaluate(app: NSRunningApplication) {
 
-        // --- Safety Guard 1: Is the engine even active? ---------------
-        // Check this FIRST — cheapest check, most common path during pause.
         guard isEnabled && !isPaused else {
             logger.debug("Engine inactive — skipping \(app.localizedName ?? "?")")
             return
         }
 
-        // --- Safety Guard 2: Is the app still running? -----------------
-        /// There's a race condition: the app could quit on its own between
         guard !app.isTerminated else {
             logger.debug("\(app.localizedName ?? "?") already terminated — skipping")
             return
         }
 
-        // --- Safety Guard 3: Did the user Cmd+H the app? -----------------
-        /// A hidden app has zero VISIBLE windows but the user intentionally hid it.
         guard !app.isHidden else {
             logger.debug("\(app.localizedName ?? "?") is hidden — skipping")
             return
         }
 
-        // --- Lookup: What behavior applies to this app? ---------------
         let bundleID = app.bundleIdentifier ?? ""
         let behavior = ruleStore.behavior(for: bundleID) ?? defaultBehavior
-
-        // --- Lookup: What grace period applies? ---------------------
         let gracePeriod = ruleStore.gracePeriod(for: bundleID) ?? globalGracePeriodSeconds
 
         logger.info("Evaluating '\(app.localizedName ?? bundleID)': behavior=\(behavior.rawValue), grace=\(gracePeriod)s")
 
-        // --- Decision Switch ----------------------
         switch behavior {
         case .quit:
             scheduleQuit(app: app, afterSeconds: gracePeriod)
-
         case .hide:
             logger.info("Hiding '\(app.localizedName ?? "")'")
             app.hide()
-
         case .ignore:
             logger.info("Ignoring '\(app.localizedName ?? "")' — behavior is .ignore")
-
         case .prompt:
             showQuitPrompt(for: app)
         }
@@ -102,31 +87,27 @@ final class QuitEngine {
     private func scheduleQuit(app: NSRunningApplication, afterSeconds: Int) {
         let pid = app.processIdentifier
 
-        // Always cancel any previously scheduled quit for this PID first.
         pendingQuits[pid]?.cancel()
         pendingQuits.removeValue(forKey: pid)
 
-        // Immediate quit (grace period = 0)
         if afterSeconds == 0 {
             performQuit(app: app)
             return
         }
 
-        // --- Delayed Quit -------------------------------
-
         let item = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
-            
+
             guard !app.isTerminated else {
                 self.logger.debug("'\(app.localizedName ?? "?")' terminated on its own during grace period")
                 return
             }
-            guard !app.isHidden else {                                         // ← NEW
+            guard !app.isHidden else {
                 self.logger.debug("'\(app.localizedName ?? "?")' was hidden during grace period — skipping quit")
                 self.pendingQuits.removeValue(forKey: pid)
                 return
             }
-            
+
             self.performQuit(app: app)
             self.pendingQuits.removeValue(forKey: pid)
         }
@@ -156,18 +137,37 @@ final class QuitEngine {
         guard !app.isTerminated else { return }
 
         let name = app.localizedName ?? "unknown"
-        logger.info("🔴 Quitting '\(name)' (PID \(app.processIdentifier))")
+        let pid  = app.processIdentifier
+        logger.info("🔴 Quitting '\(name)' (PID \(pid))")
 
         let success = app.terminate()
 
         if !success {
             logger.warning("terminate() returned false for '\(name)' — app resisted (unsaved data?)")
-        } else if GlobalSettings.shared.showNotifications {
-            NotificationService.show(
-                title: "Nix",
-                body:  "\(name) quit — no windows remaining"
-            )
+            return
         }
+
+        pendingNotifications[pid] = name
+        logger.debug("Notification queued for '\(name)' — awaiting confirmed termination")
+    }
+
+    func confirmedTermination(pid: pid_t) {
+        guard let name = pendingNotifications.removeValue(forKey: pid) else { return }
+
+        logger.info("Confirmed termination for '\(name)' (PID \(pid))")
+
+        let notifyEnabled = GlobalSettings.shared.showNotifications
+        logger.debug("GlobalSettings.showNotifications = \(notifyEnabled)")
+
+        guard notifyEnabled else {
+            logger.debug("Notifications disabled in settings — skipping for '\(name)'")
+            return
+        }
+
+        NotificationService.show(
+            title: "Nix",
+            body:  "\(name) quit — no windows remaining"
+        )
     }
 
     // ─────────────────────────────────────────────────────────

@@ -14,7 +14,7 @@ struct PaywallView: View {
     @State private var showManualEntry     = false
     @State private var manualKey           = ""
     @State private var manualEntryError: String?
-    @State private var isCheckoutLoading   = true   // ← new: tracks WebView load state
+    @State private var isCheckoutLoading   = true 
 
     private let checkoutURL: URL = {
         let urlString = "https://nixapp.lemonsqueezy.com/checkout/buy/c5b82404-dcd0-4bb8-b478-b36991c1e3b2"

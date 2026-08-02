@@ -3,8 +3,9 @@ import ApplicationServices
 import os.log
 import SwiftUI
 import Sparkle
+import UserNotifications
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     
     private(set) static var shared: AppDelegate!
     
@@ -28,6 +29,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         logger.info("Nix launched. AX permission: \(AXIsProcessTrusted())")
+
+        UNUserNotificationCenter.current().delegate = self
+        NotificationService.logCurrentStatus(context: "launch")
+        NotificationService.requestAuthorization()
         
 #if !DEBUG
 updaterController = SPUStandardUpdaterController(
@@ -92,6 +97,16 @@ updaterController = SPUStandardUpdaterController(
                 }
             }
         }
+    }
+
+    // MARK: - UNUserNotificationCenterDelegate
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound])
     }
     
     // MARK: - Settings Window
