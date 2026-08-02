@@ -1,0 +1,400 @@
+2026-08-02 16:27:19 +0000 [MT] Initial pipeline context: <IDEDistributionProcessingPipelineContext: 0x7bc61a400; archive(resolved)="<IDEArchive: 0x7bc6ac150>", distributionTask(resolved)="2", distributionDestination(resolved)="1", distributionMethod(resolved)="<IDEDistributionMethodDeveloperID: 0x7b9c1d500>", team(resolved)="<IDEProvisioningBasicTeam: 0x7bc753e40; teamID='X7MF3C43X6', teamName='(null)'>">
+	Chain (12, self inclusive):
+	<IDEDistributionProcessingPipelineContext: 0x7bc61a400; archive = "<IDEArchive: 0x7bc6ac150>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x7b9c1d500>", team="<IDEProvisioningBasicTeam: 0x7bc753e40; teamID='X7MF3C43X6', teamName='(null)'>">
+	<IDEDistributionProcessingPipelineContext: 0x7bc61ad00; archive = "<IDEArchive: 0x7bc6ac150>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x7b9c1d500>", team="<IDEProvisioningBasicTeam: 0x7bc753e40; teamID='X7MF3C43X6', teamName='(null)'>">
+	<IDEDistributionContext: 0x7ba3c5e00; archive = "<IDEArchive: 0x7bc6ac150>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x7b9c1d500>", team="<IDEProvisioningBasicTeam: 0x7bc753e40; teamID='X7MF3C43X6', teamName='(null)'>">
+	<IDEDistributionContext: 0x7ba3c5b80; archive = "<IDEArchive: 0x7bc6ac150>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x7b9c1d500>", team="<IDEProvisioningBasicTeam: 0x7bc753e40; teamID='X7MF3C43X6', teamName='(null)'>">
+	<IDEDistributionContext: 0x7ba3c5900; archive = "<IDEArchive: 0x7bc6ac150>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x7b9c1d500>", team="<IDEProvisioningBasicTeam: 0x7bc753e40; teamID='X7MF3C43X6', teamName='(null)'>">
+	<IDEDistributionContext: 0x7ba3c5680; archive = "<IDEArchive: 0x7bc6ac150>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x7b9c1d500>", team="<IDEProvisioningBasicTeam: 0x7bc753e40; teamID='X7MF3C43X6', teamName='(null)'>">
+	<IDEDistributionContext: 0x7ba3c4780; archive = "<IDEArchive: 0x7bc6ac150>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x7b9c1d500>", team="<IDEProvisioningBasicTeam: 0x7bc753e40; teamID='X7MF3C43X6', teamName='(null)'>">
+	<IDEDistributionContext: 0x7ba3c4500; archive = "<IDEArchive: 0x7bc6ac150>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x7b9c1d500>", team="<IDEProvisioningBasicTeam: 0x7bc753e40; teamID='X7MF3C43X6', teamName='(null)'>">
+	<IDEDistributionContext: 0x7ba3c4280; archive = "<IDEArchive: 0x7bc6ac150>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x7b9c1d500>", team="<IDEProvisioningBasicTeam: 0x7bc753e40; teamID='X7MF3C43X6', teamName='(null)'>">
+	<IDEDistributionContext: 0x7ba3c4000; archive = "<IDEArchive: 0x7bc6ac150>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x7b9c1d500>", team="(null)">
+	<IDEDistributionContext: 0x100bff310; archive = "<IDEArchive: 0x7bc6ac150>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x7b9c1d500>", team="(null)">
+	<IDEDistributionContext: 0x100c354b0; archive = "<IDEArchive: 0x7bc6ac150>", distributionMethod="(null)", team="(null)">
+</IDEDistributionProcessingPipelineContext: 0x7bc61a400>
+2026-08-02 16:27:19 +0000 [MT] Processing step: IDEDistributionCreateDestRootStep
+2026-08-02 16:27:19 +0000 [MT] Processing step: IDEDistributionCopyItemStep
+2026-08-02 16:27:19 +0000 [MT] Running /usr/bin/ditto '-V' '/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app' '/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app'
+2026-08-02 16:27:19 +0000  >>> Copying /Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app 
+2026-08-02 16:27:19 +0000  copying file ./Contents/_CodeSignature/CodeResources ... 
+2026-08-02 16:27:19 +0000  3295 bytes for ./Contents/_CodeSignature/CodeResources
+2026-08-02 16:27:19 +0000  copying file ./Contents/MacOS/Nix ... 
+2026-08-02 16:27:19 +0000  1459632 bytes for ./Contents/MacOS/Nix
+2026-08-02 16:27:19 +0000  copying file ./Contents/Resources/.geminiignore ... 
+2026-08-02 16:27:19 +0000  61 bytes for ./Contents/Resources/.geminiignore
+2026-08-02 16:27:19 +0000  copying file ./Contents/Resources/AppIcon.icns ... 
+2026-08-02 16:27:19 +0000  17431 bytes for ./Contents/Resources/AppIcon.icns
+2026-08-02 16:27:19 +0000  copying file ./Contents/Resources/Assets.car ... 
+2026-08-02 16:27:19 +0000  114520 bytes for ./Contents/Resources/Assets.car
+2026-08-02 16:27:19 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/Resources ... 
+2026-08-02 16:27:19 +0000  linked ./Contents/Frameworks/Sparkle.framework/Resources
+2026-08-02 16:27:19 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/Versions/Current ... 
+2026-08-02 16:27:19 +0000  linked ./Contents/Frameworks/Sparkle.framework/Versions/Current
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/_CodeSignature/CodeResources ... 
+2026-08-02 16:27:19 +0000  17887 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/_CodeSignature/CodeResources
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/de.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  11559 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/de.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/he.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  9657 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/he.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ar.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  3554 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ar.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/el.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  5934 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/el.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ja.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  8697 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ja.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fa.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  5716 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fa.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/uk.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  5842 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/uk.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_CN.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  7475 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_CN.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nb.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  5539 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nb.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/es.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  7026 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/es.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/is.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  3954 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/is.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sl.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  5646 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sl.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/da.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  4882 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/da.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/it.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  10956 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/it.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sk.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  5675 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sk.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sv.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  5160 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sv.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ReleaseNotesColorStyle.css ... 
+2026-08-02 16:27:19 +0000  231 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ReleaseNotesColorStyle.css
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/cs.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  10774 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/cs.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ko.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  7797 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ko.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/Base.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  6249 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/Base.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/hu.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  4449 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/hu.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_HK.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  6469 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_HK.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/tr.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  6183 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/tr.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pl.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  5453 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pl.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_TW.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  7625 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_TW.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pt-BR.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  9976 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pt-BR.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/vi.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  12418 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/vi.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ru.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  5784 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ru.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdatePermissionPrompt.nib/keyedobjects-110000.nib ... 
+2026-08-02 16:27:19 +0000  25407 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdatePermissionPrompt.nib/keyedobjects-110000.nib
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdatePermissionPrompt.nib/keyedobjects-101300.nib ... 
+2026-08-02 16:27:19 +0000  25419 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdatePermissionPrompt.nib/keyedobjects-101300.nib
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUStatus.nib ... 
+2026-08-02 16:27:19 +0000  13016 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUStatus.nib
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdateAlert.nib ... 
+2026-08-02 16:27:19 +0000  18490 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdateAlert.nib
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fr.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  7855 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fr.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fi.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  3252 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fi.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nl.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  9574 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nl.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/th.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  5339 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/th.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nn.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  5671 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nn.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pt-PT.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  5984 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pt-PT.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ro.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  6115 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ro.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/Info.plist ... 
+2026-08-02 16:27:19 +0000  1341 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/Info.plist
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/hr.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  6367 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/hr.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ca.lproj/Sparkle.strings ... 
+2026-08-02 16:27:19 +0000  3501 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ca.lproj/Sparkle.strings
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate ... 
+2026-08-02 16:27:19 +0000  726000 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/_CodeSignature/CodeResources ... 
+2026-08-02 16:27:19 +0000  2446 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/_CodeSignature/CodeResources
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater ... 
+2026-08-02 16:27:19 +0000  290560 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/Resources/SUStatus.nib ... 
+2026-08-02 16:27:19 +0000  13016 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/Resources/SUStatus.nib
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/Info.plist ... 
+2026-08-02 16:27:19 +0000  2400 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/Info.plist
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/PkgInfo ... 
+2026-08-02 16:27:19 +0000  8 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/PkgInfo
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/_CodeSignature/CodeResources ... 
+2026-08-02 16:27:19 +0000  2200 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/_CodeSignature/CodeResources
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader ... 
+2026-08-02 16:27:19 +0000  188672 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/Info.plist ... 
+2026-08-02 16:27:19 +0000  1717 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/Info.plist
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/_CodeSignature/CodeResources ... 
+2026-08-02 16:27:19 +0000  2200 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/_CodeSignature/CodeResources
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer ... 
+2026-08-02 16:27:19 +0000  223472 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/Info.plist ... 
+2026-08-02 16:27:19 +0000  1605 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/Info.plist
+2026-08-02 16:27:19 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle ... 
+2026-08-02 16:27:19 +0000  977808 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle
+2026-08-02 16:27:19 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/Autoupdate ... 
+2026-08-02 16:27:19 +0000  linked ./Contents/Frameworks/Sparkle.framework/Autoupdate
+2026-08-02 16:27:19 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/Updater.app ... 
+2026-08-02 16:27:19 +0000  linked ./Contents/Frameworks/Sparkle.framework/Updater.app
+2026-08-02 16:27:19 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/XPCServices ... 
+2026-08-02 16:27:19 +0000  linked ./Contents/Frameworks/Sparkle.framework/XPCServices
+2026-08-02 16:27:19 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/Sparkle ... 
+2026-08-02 16:27:19 +0000  linked ./Contents/Frameworks/Sparkle.framework/Sparkle
+2026-08-02 16:27:19 +0000  copying file ./Contents/Info.plist ... 
+2026-08-02 16:27:19 +0000  1812 bytes for ./Contents/Info.plist
+2026-08-02 16:27:19 +0000  copying file ./Contents/PkgInfo ... 
+2026-08-02 16:27:19 +0000  8 bytes for ./Contents/PkgInfo
+2026-08-02 16:27:19 +0000 [MT] /usr/bin/ditto exited with 0
+2026-08-02 16:27:19 +0000 [MT] Processing step: IDEDistributionEmbedProfileStep
+2026-08-02 16:27:19 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0x7ba3ba220; bundleID='org.sparkle-project.DownloaderService', path='<DVTFilePath:0x7ba3b8a80:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba1c0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.DownloaderService', executablePath='<DVTFilePath:0x7ba3b8ea0:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader'>', hardenedRuntime='1'>'>
+2026-08-02 16:27:19 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0x7ba3ba3a0; bundleID='org.sparkle-project.InstallerLauncher', path='<DVTFilePath:0x7ba3b9140:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba340; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.InstallerLauncher', executablePath='<DVTFilePath:0x7ba3b9560:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer'>', hardenedRuntime='1'>'>
+2026-08-02 16:27:19 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0x7ba3ba2e0; bundleID='(null)', path='<DVTFilePath:0x7b9c07f60:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba280; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+    "com.apple.application-identifier" = "org.sparkle-project.Sparkle.Autoupdate";
+}', teamID='(null)', identifier='Autoupdate-555549442401fd215d503466a26c3d081e5a8443', executablePath='<DVTFilePath:0x7b9c07f60:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', hardenedRuntime='1'>'>
+2026-08-02 16:27:19 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0x7ba3ba160; bundleID='org.sparkle-project.Sparkle.Updater', path='<DVTFilePath:0x7ba3b8060:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba100; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.Sparkle.Updater', executablePath='<DVTFilePath:0x7ba3b8480:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater'>', hardenedRuntime='1'>'>
+2026-08-02 16:27:19 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0x7ba3ba460; bundleID='org.sparkle-project.Sparkle', path='<DVTFilePath:0x7ba2d3480:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba400; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7bc6f8480; name='Apple Development: Sahan Maiti (LXK7R8RV2M)', hash='179751DAB210C4E534091BEA8DB995685EFEB116', serialNumber='5147AC9A93C5C94352431E0124CD8DD0', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-08-02 16:01:09 +0000''>', entitlements='(null)', teamID='X7MF3C43X6', identifier='org.sparkle-project.Sparkle', executablePath='<DVTFilePath:0x7ba3b9860:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle'>', hardenedRuntime='1'>'>
+2026-08-02 16:27:19 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0x7ba3ba520; bundleID='com.sahan.Nix', path='<DVTFilePath:0x7ba2d16e0:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba4c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7bc6f8480; name='Apple Development: Sahan Maiti (LXK7R8RV2M)', hash='179751DAB210C4E534091BEA8DB995685EFEB116', serialNumber='5147AC9A93C5C94352431E0124CD8DD0', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-08-02 16:01:09 +0000''>', entitlements='{
+}', teamID='X7MF3C43X6', identifier='com.sahan.Nix', executablePath='<DVTFilePath:0x7ba2d2ca0:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/MacOS/Nix'>', hardenedRuntime='1'>'>
+2026-08-02 16:27:19 +0000 [MT] Processing step: IDEDistributionInfoPlistStep
+2026-08-02 16:27:19 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-08-02 16:27:19 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-08-02 16:27:19 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-08-02 16:27:19 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-08-02 16:27:19 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-08-02 16:27:19 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-08-02 16:27:19 +0000 [MT] Processing step: IDEDistributionAppThinningPlistStep
+2026-08-02 16:27:19 +0000 [MT] Processing step: IDEDistributionSymbolsStep
+2026-08-02 16:27:19 +0000 [MT] Skipping step: IDEDistributionSymbolsStep because it said so
+2026-08-02 16:27:19 +0000 [MT] Processing step: IDEDistributionAppThinningStep
+2026-08-02 16:27:19 +0000 [MT] Skipping step: IDEDistributionAppThinningStep because it said so
+2026-08-02 16:27:19 +0000 [MT] Processing step: IDEDistributionArchThinningStep
+2026-08-02 16:27:19 +0000 [MT] Archs to thin for item /Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc are []
+2026-08-02 16:27:19 +0000 [MT] Archs to thin for item /Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc are []
+2026-08-02 16:27:19 +0000 [MT] Archs to thin for item /Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate are []
+2026-08-02 16:27:19 +0000 [MT] Archs to thin for item /Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app are []
+2026-08-02 16:27:19 +0000 [MT] Archs to thin for item /Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B are []
+2026-08-02 16:27:19 +0000 [MT] Archs to thin for item /Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app are []
+2026-08-02 16:27:19 +0000 [MT] Processing step: IDEDistributionODRStep
+2026-08-02 16:27:19 +0000 [MT] Processing step: IDEDistributionStripXattrsStep
+2026-08-02 16:27:19 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
+2026-08-02 16:27:19 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
+2026-08-02 16:27:19 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
+2026-08-02 16:27:19 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
+2026-08-02 16:27:19 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
+2026-08-02 16:27:19 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
+2026-08-02 16:27:19 +0000 [MT] Processing step: IDEDistributionCodesignStep
+2026-08-02 16:27:19 +0000 [MT] Entitlements for <IDEDistributionItem: 0x7ba3ba220; bundleID='org.sparkle-project.DownloaderService', path='<DVTFilePath:0x7ba3b8a80:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba1c0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.DownloaderService', executablePath='<DVTFilePath:0x7ba3b8ea0:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader'>', hardenedRuntime='1'>'>: {
+}
+2026-08-02 16:27:19 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-08-02 16:27:19 +0000 [MT] Entitlements for <IDEDistributionItem: 0x7ba3ba220; bundleID='org.sparkle-project.DownloaderService', path='<DVTFilePath:0x7ba3b8a80:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba1c0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.DownloaderService', executablePath='<DVTFilePath:0x7ba3b8ea0:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader'>', hardenedRuntime='1'>'> are: {
+}
+2026-08-02 16:27:19 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0x7ba3ba220; bundleID='org.sparkle-project.DownloaderService', path='<DVTFilePath:0x7ba3b8a80:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba1c0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.DownloaderService', executablePath='<DVTFilePath:0x7ba3b8ea0:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader'>', hardenedRuntime='1'>'> to: /var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/entitlements~~~ExCW7l
+2026-08-02 16:27:19 +0000 [MT] invoking codesign: <NSConcreteTask: 0x7b99ba710; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    6850DE32CB8567BB30A8CC81DB0773946BC74AEF,
+    "--entitlements",
+    "/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/entitlements~~~ExCW7l",
+    "--requirements",
+    "=designated => anchor apple generic  and identifier \"$self.identifier\" and ((cert leaf[field.1.2.840.113635.100.6.1.9] exists) or ( certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists  and certificate leaf[subject.OU] = \"X7MF3C43X6\" ))",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc"
+)'>
+2026-08-02 16:27:53 +0000 [MT] codesign output: /var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc: replacing existing signature
+/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc: signed bundle with Mach-O universal (x86_64 arm64) [org.sparkle-project.DownloaderService]
+2026-08-02 16:27:53 +0000 [MT] Entitlements for <IDEDistributionItem: 0x7ba3ba3a0; bundleID='org.sparkle-project.InstallerLauncher', path='<DVTFilePath:0x7ba3b9140:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba340; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.InstallerLauncher', executablePath='<DVTFilePath:0x7ba3b9560:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer'>', hardenedRuntime='1'>'>: {
+}
+2026-08-02 16:27:53 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-08-02 16:27:53 +0000 [MT] Entitlements for <IDEDistributionItem: 0x7ba3ba3a0; bundleID='org.sparkle-project.InstallerLauncher', path='<DVTFilePath:0x7ba3b9140:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba340; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.InstallerLauncher', executablePath='<DVTFilePath:0x7ba3b9560:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer'>', hardenedRuntime='1'>'> are: {
+}
+2026-08-02 16:27:53 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0x7ba3ba3a0; bundleID='org.sparkle-project.InstallerLauncher', path='<DVTFilePath:0x7ba3b9140:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba340; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.InstallerLauncher', executablePath='<DVTFilePath:0x7ba3b9560:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer'>', hardenedRuntime='1'>'> to: /var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/entitlements~~~kiy8BA
+2026-08-02 16:27:53 +0000 [MT] invoking codesign: <NSConcreteTask: 0x7b9c3aee0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    6850DE32CB8567BB30A8CC81DB0773946BC74AEF,
+    "--entitlements",
+    "/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/entitlements~~~kiy8BA",
+    "--requirements",
+    "=designated => anchor apple generic  and identifier \"$self.identifier\" and ((cert leaf[field.1.2.840.113635.100.6.1.9] exists) or ( certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists  and certificate leaf[subject.OU] = \"X7MF3C43X6\" ))",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc"
+)'>
+2026-08-02 16:28:00 +0000 [MT] codesign output: /var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc: replacing existing signature
+/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc: signed bundle with Mach-O universal (x86_64 arm64) [org.sparkle-project.InstallerLauncher]
+2026-08-02 16:28:00 +0000 [MT] Entitlements for <IDEDistributionItem: 0x7ba3ba2e0; bundleID='(null)', path='<DVTFilePath:0x7b9c07f60:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba280; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+    "com.apple.application-identifier" = "org.sparkle-project.Sparkle.Autoupdate";
+}', teamID='(null)', identifier='Autoupdate-555549442401fd215d503466a26c3d081e5a8443', executablePath='<DVTFilePath:0x7b9c07f60:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', hardenedRuntime='1'>'>: {
+    "com.apple.application-identifier" = "org.sparkle-project.Sparkle.Autoupdate";
+}
+2026-08-02 16:28:00 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-08-02 16:28:00 +0000 [MT] Entitlements for <IDEDistributionItem: 0x7ba3ba2e0; bundleID='(null)', path='<DVTFilePath:0x7b9c07f60:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba280; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+    "com.apple.application-identifier" = "org.sparkle-project.Sparkle.Autoupdate";
+}', teamID='(null)', identifier='Autoupdate-555549442401fd215d503466a26c3d081e5a8443', executablePath='<DVTFilePath:0x7b9c07f60:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', hardenedRuntime='1'>'> are: {
+    "com.apple.application-identifier" = "org.sparkle-project.Sparkle.Autoupdate";
+}
+2026-08-02 16:28:00 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0x7ba3ba2e0; bundleID='(null)', path='<DVTFilePath:0x7b9c07f60:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba280; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+    "com.apple.application-identifier" = "org.sparkle-project.Sparkle.Autoupdate";
+}', teamID='(null)', identifier='Autoupdate-555549442401fd215d503466a26c3d081e5a8443', executablePath='<DVTFilePath:0x7b9c07f60:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', hardenedRuntime='1'>'> to: /var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/entitlements~~~s0Wojt
+2026-08-02 16:28:00 +0000 [MT] invoking codesign: <NSConcreteTask: 0x7b9c3aee0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    6850DE32CB8567BB30A8CC81DB0773946BC74AEF,
+    "--entitlements",
+    "/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/entitlements~~~s0Wojt",
+    "--requirements",
+    "=designated => anchor apple generic  and identifier \"$self.identifier\" and ((cert leaf[field.1.2.840.113635.100.6.1.9] exists) or ( certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists  and certificate leaf[subject.OU] = \"X7MF3C43X6\" ))",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate"
+)'>
+2026-08-02 16:28:05 +0000 [MT] codesign output: /var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate: replacing existing signature
+/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate: signed Mach-O universal (x86_64 arm64) [Autoupdate-555549442401fd215d503466a26c3d081e5a8443]
+2026-08-02 16:28:05 +0000 [MT] Entitlements for <IDEDistributionItem: 0x7ba3ba160; bundleID='org.sparkle-project.Sparkle.Updater', path='<DVTFilePath:0x7ba3b8060:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba100; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.Sparkle.Updater', executablePath='<DVTFilePath:0x7ba3b8480:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater'>', hardenedRuntime='1'>'>: {
+}
+2026-08-02 16:28:05 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-08-02 16:28:05 +0000 [MT] Entitlements for <IDEDistributionItem: 0x7ba3ba160; bundleID='org.sparkle-project.Sparkle.Updater', path='<DVTFilePath:0x7ba3b8060:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba100; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.Sparkle.Updater', executablePath='<DVTFilePath:0x7ba3b8480:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater'>', hardenedRuntime='1'>'> are: {
+}
+2026-08-02 16:28:05 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0x7ba3ba160; bundleID='org.sparkle-project.Sparkle.Updater', path='<DVTFilePath:0x7ba3b8060:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba100; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.Sparkle.Updater', executablePath='<DVTFilePath:0x7ba3b8480:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater'>', hardenedRuntime='1'>'> to: /var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/entitlements~~~JW5ZyO
+2026-08-02 16:28:05 +0000 [MT] invoking codesign: <NSConcreteTask: 0x7b9c3aee0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    6850DE32CB8567BB30A8CC81DB0773946BC74AEF,
+    "--entitlements",
+    "/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/entitlements~~~JW5ZyO",
+    "--requirements",
+    "=designated => anchor apple generic  and identifier \"$self.identifier\" and ((cert leaf[field.1.2.840.113635.100.6.1.9] exists) or ( certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists  and certificate leaf[subject.OU] = \"X7MF3C43X6\" ))",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app"
+)'>
+2026-08-02 16:28:13 +0000 [MT] codesign output: /var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app: replacing existing signature
+/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app: signed app bundle with Mach-O universal (x86_64 arm64) [org.sparkle-project.Sparkle.Updater]
+2026-08-02 16:28:13 +0000 [MT] Entitlements for <IDEDistributionItem: 0x7ba3ba460; bundleID='org.sparkle-project.Sparkle', path='<DVTFilePath:0x7ba2d3480:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba400; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7bc6f8480; name='Apple Development: Sahan Maiti (LXK7R8RV2M)', hash='179751DAB210C4E534091BEA8DB995685EFEB116', serialNumber='5147AC9A93C5C94352431E0124CD8DD0', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-08-02 16:01:09 +0000''>', entitlements='(null)', teamID='X7MF3C43X6', identifier='org.sparkle-project.Sparkle', executablePath='<DVTFilePath:0x7ba3b9860:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle'>', hardenedRuntime='1'>'>: {
+}
+2026-08-02 16:28:13 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-08-02 16:28:13 +0000 [MT] Entitlements for <IDEDistributionItem: 0x7ba3ba460; bundleID='org.sparkle-project.Sparkle', path='<DVTFilePath:0x7ba2d3480:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba400; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7bc6f89c0; name='Apple Development: Sahan Maiti (LXK7R8RV2M)', hash='179751DAB210C4E534091BEA8DB995685EFEB116', serialNumber='5147AC9A93C5C94352431E0124CD8DD0', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-08-02 16:01:09 +0000''>', entitlements='(null)', teamID='X7MF3C43X6', identifier='org.sparkle-project.Sparkle', executablePath='<DVTFilePath:0x7ba3b9860:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle'>', hardenedRuntime='1'>'> are: {
+}
+2026-08-02 16:28:13 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0x7ba3ba460; bundleID='org.sparkle-project.Sparkle', path='<DVTFilePath:0x7ba2d3480:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba400; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7bc6f89c0; name='Apple Development: Sahan Maiti (LXK7R8RV2M)', hash='179751DAB210C4E534091BEA8DB995685EFEB116', serialNumber='5147AC9A93C5C94352431E0124CD8DD0', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-08-02 16:01:09 +0000''>', entitlements='(null)', teamID='X7MF3C43X6', identifier='org.sparkle-project.Sparkle', executablePath='<DVTFilePath:0x7ba3b9860:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle'>', hardenedRuntime='1'>'> to: /var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/entitlements~~~1A3GnJ
+2026-08-02 16:28:13 +0000 [MT] invoking codesign: <NSConcreteTask: 0x7b99ba710; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    6850DE32CB8567BB30A8CC81DB0773946BC74AEF,
+    "--entitlements",
+    "/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/entitlements~~~1A3GnJ",
+    "--requirements",
+    "=designated => anchor apple generic  and identifier \"$self.identifier\" and ((cert leaf[field.1.2.840.113635.100.6.1.9] exists) or ( certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists  and certificate leaf[subject.OU] = \"X7MF3C43X6\" ))",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B"
+)'>
+2026-08-02 16:28:14 +0000 [MT] codesign output: /var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B: replacing existing signature
+/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B: signed bundle with Mach-O universal (x86_64 arm64) [org.sparkle-project.Sparkle]
+2026-08-02 16:28:14 +0000 [MT] Entitlements for <IDEDistributionItem: 0x7ba3ba520; bundleID='com.sahan.Nix', path='<DVTFilePath:0x7ba2d16e0:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba4c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7bc6f8480; name='Apple Development: Sahan Maiti (LXK7R8RV2M)', hash='179751DAB210C4E534091BEA8DB995685EFEB116', serialNumber='5147AC9A93C5C94352431E0124CD8DD0', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-08-02 16:01:09 +0000''>', entitlements='{
+}', teamID='X7MF3C43X6', identifier='com.sahan.Nix', executablePath='<DVTFilePath:0x7ba2d2ca0:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/MacOS/Nix'>', hardenedRuntime='1'>'>: {
+}
+2026-08-02 16:28:14 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-08-02 16:28:14 +0000 [MT] Entitlements for <IDEDistributionItem: 0x7ba3ba520; bundleID='com.sahan.Nix', path='<DVTFilePath:0x7ba2d16e0:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba4c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7bc6f89c0; name='Apple Development: Sahan Maiti (LXK7R8RV2M)', hash='179751DAB210C4E534091BEA8DB995685EFEB116', serialNumber='5147AC9A93C5C94352431E0124CD8DD0', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-08-02 16:01:09 +0000''>', entitlements='{
+}', teamID='X7MF3C43X6', identifier='com.sahan.Nix', executablePath='<DVTFilePath:0x7ba2d2ca0:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/MacOS/Nix'>', hardenedRuntime='1'>'> are: {
+}
+2026-08-02 16:28:14 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0x7ba3ba520; bundleID='com.sahan.Nix', path='<DVTFilePath:0x7ba2d16e0:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7ba3ba4c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7bc6f89c0; name='Apple Development: Sahan Maiti (LXK7R8RV2M)', hash='179751DAB210C4E534091BEA8DB995685EFEB116', serialNumber='5147AC9A93C5C94352431E0124CD8DD0', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-08-02 16:01:09 +0000''>', entitlements='{
+}', teamID='X7MF3C43X6', identifier='com.sahan.Nix', executablePath='<DVTFilePath:0x7ba2d2ca0:'/Users/sahan/Personal/Projects/NixApp/Nix/build/Nix.xcarchive/Products/Applications/Nix.app/Contents/MacOS/Nix'>', hardenedRuntime='1'>'> to: /var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/entitlements~~~96Rvz3
+2026-08-02 16:28:14 +0000 [MT] invoking codesign: <NSConcreteTask: 0x7b9c3aee0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    6850DE32CB8567BB30A8CC81DB0773946BC74AEF,
+    "--entitlements",
+    "/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/entitlements~~~96Rvz3",
+    "--requirements",
+    "=designated => anchor apple generic  and identifier \"$self.identifier\" and ((cert leaf[field.1.2.840.113635.100.6.1.9] exists) or ( certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists  and certificate leaf[subject.OU] = \"X7MF3C43X6\" ))",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app"
+)'>
+2026-08-02 16:28:15 +0000 [MT] codesign output: /var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app: replacing existing signature
+/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app: signed app bundle with Mach-O universal (x86_64 arm64) [com.sahan.Nix]
+2026-08-02 16:28:15 +0000 [MT] Processing step: IDEDistributionZipODRItemStep
+2026-08-02 16:28:15 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-08-02 16:28:15 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-08-02 16:28:15 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-08-02 16:28:15 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-08-02 16:28:15 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-08-02 16:28:15 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-08-02 16:28:15 +0000 [MT] Processing step: IDEDistributionSkipPackagingStep
+2026-08-02 16:28:15 +0000 [MT] Processing step: IDEDistributionAppStoreInformationStep
+2026-08-02 16:28:15 +0000 [MT] Skipping step: IDEDistributionAppStoreInformationStep because it said so
+2026-08-02 16:28:15 +0000 [MT] Processing step: IDEDistributionGenerateProcessedDistributionItems
+2026-08-02 16:28:15 +0000 [MT] IDEDistributionItem init <DVTFilePath:0x7ba3bba20:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>
+2026-08-02 16:28:15 +0000 [MT] [OPTIONAL] Didn't find embedded provisioning profile for <DVTFilePath:0x7ba3bba20:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>: Error Domain=NSCocoaErrorDomain Code=4 "No file at <DVTFilePath:0x7be072060:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/embedded.provisionprofile'>" UserInfo={NSLocalizedDescription=No file at <DVTFilePath:0x7be072060:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/embedded.provisionprofile'>}
+2026-08-02 16:28:15 +0000 [MT] IDEDistributionItem init <DVTFilePath:0x7ba3bb9c0:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>
+2026-08-02 16:28:15 +0000 [MT] [OPTIONAL] Didn't find embedded provisioning profile for <DVTFilePath:0x7ba3bb9c0:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>: Error Domain=NSCocoaErrorDomain Code=4 "No file at <DVTFilePath:0x7be073170:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/embedded.provisionprofile'>" UserInfo={NSLocalizedDescription=No file at <DVTFilePath:0x7be073170:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/embedded.provisionprofile'>}
+2026-08-02 16:28:15 +0000 [MT] IDEDistributionItem init <DVTFilePath:0x7ba3bb780:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>
+2026-08-02 16:28:15 +0000 [MT] [OPTIONAL] Didn't find embedded provisioning profile for <DVTFilePath:0x7ba3bb780:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>: Error Domain=NSCocoaErrorDomain Code=4 "No file at <DVTFilePath:0x7be072290:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/embedded.provisionprofile'>" UserInfo={NSLocalizedDescription=No file at <DVTFilePath:0x7be072290:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/embedded.provisionprofile'>}
+2026-08-02 16:28:15 +0000 [MT] IDEDistributionItem init <DVTFilePath:0x7b99d0e40:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>
+2026-08-02 16:28:15 +0000 [MT] [OPTIONAL] Didn't find info dictionary for <DVTFilePath:0x7b99d0e40:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>: Error Domain=DVTFoundationNSBundleAdditionsErrorDomain Code=1 "Couldn't load Info dictionary for <DVTFilePath:0x7b99d0e40:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>" UserInfo={NSLocalizedDescription=Couldn't load Info dictionary for <DVTFilePath:0x7b99d0e40:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>}
+2026-08-02 16:28:15 +0000 [MT] [OPTIONAL] Can't have a profile, not a bundle at <DVTFilePath:0x7b99d0e40:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>
+2026-08-02 16:28:15 +0000 [MT] IDEDistributionItem init <DVTFilePath:0x7ba3bb5a0:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/Frameworks/Sparkle.framework/Versions/B'>
+2026-08-02 16:28:15 +0000 [MT] IDEDistributionItem init <DVTFilePath:0x7ba3bb660:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app'>
+2026-08-02 16:28:15 +0000 [MT] [OPTIONAL] Didn't find embedded provisioning profile for <DVTFilePath:0x7ba3bb660:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app'>: Error Domain=NSCocoaErrorDomain Code=4 "No file at <DVTFilePath:0x7be072ca0:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/embedded.provisionprofile'>" UserInfo={NSLocalizedDescription=No file at <DVTFilePath:0x7be072ca0:'/var/folders/95/xcykqjkd64z7r686jmkp2glr0000gn/T/XcodeDistPipeline.~~~JdjJd1/Root/Applications/Nix.app/Contents/embedded.provisionprofile'>}
+2026-08-02 16:28:15 +0000 [MT] Processing step: IDEDistributionCreateManifestStep
+2026-08-02 16:28:15 +0000 [MT] Skipping step: IDEDistributionCreateManifestStep because it said so
