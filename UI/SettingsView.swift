@@ -52,7 +52,7 @@ struct SettingsView: View {
             }
         }
         .navigationSplitViewStyle(.balanced)
-        .frame(minWidth: 600, idealWidth: 700, minHeight: 620, idealHeight: 680)
+        .frame(minWidth: 600, idealWidth: 700, minHeight: 720, idealHeight: 780)
     }
 
     @ViewBuilder

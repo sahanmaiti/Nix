@@ -120,7 +120,7 @@ updaterController = SPUStandardUpdaterController(
         settingsWindow = nil
         
         let window = NSWindow(
-            contentRect: NSRect(origin: .zero, size: NSSize(width: 700, height: 680)),
+            contentRect: NSRect(origin: .zero, size: NSSize(width: 700, height: 780)),
             styleMask: [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -129,7 +129,7 @@ updaterController = SPUStandardUpdaterController(
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.isReleasedWhenClosed = false
-        window.minSize = NSSize(width: 600, height: 620)
+        window.minSize = NSSize(width: 600, height: 720)
         window.toolbarStyle = .unified
 
         let toolbar = NSToolbar(identifier: "SettingsToolbar")
