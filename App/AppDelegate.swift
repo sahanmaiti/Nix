@@ -95,6 +95,9 @@ updaterController = SPUStandardUpdaterController(
                 if success {
                     self.paywallWindow?.close()
                     self.paywallWindow = nil
+                } else {
+                    self.logger.warning("URL-based activation failed — \(LicenseManager.shared.lastError ?? "unknown")")
+                    self.showPaywall()
                 }
             }
         }

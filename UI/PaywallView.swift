@@ -1,5 +1,4 @@
 import SwiftUI
-import WebKit
 import os.log
 
 private let paywallLogger = Logger(subsystem: "com.sahan.Nix", category: "PaywallView")
@@ -11,13 +10,11 @@ struct PaywallView: View {
     @StateObject private var trial   = TrialManager.shared
     @StateObject private var license = LicenseManager.shared
 
-    @State private var showManualEntry     = false
-    @State private var manualKey           = ""
+    @State private var manualKey       = ""
     @State private var manualEntryError: String?
-    @State private var isCheckoutLoading   = true 
 
     private let checkoutURL: URL = {
-        let urlString = "https://nixapp.lemonsqueezy.com/checkout/buy/c5b82404-dcd0-4bb8-b478-b36991c1e3b2"
+        let urlString = "https://nixapp.lemonsqueezy.com/checkout/buy/9bd06aa9-0c32-4c46-b4d6-64fa6323ec6a"
         #if !DEBUG
         precondition(
             !urlString.contains("YOURSTORE"),
@@ -32,35 +29,20 @@ struct PaywallView: View {
             header
             Divider().opacity(0.35)
 
-            ZStack {
-                // ── Checkout WebView ──────────────────────────────────────────
-                CheckoutWebView(
-                    url: checkoutURL,
-                    isLoading: $isCheckoutLoading,
-                    onLicenseKeyReceived: handleReceivedKey
-                )
-                .opacity(showManualEntry ? 0 : 1)
-                .allowsHitTesting(!showManualEntry)
-
-                // ── Loading spinner — shown until WebView reports didFinishNavigation ──
-                if isCheckoutLoading && !showManualEntry {
-                    checkoutLoadingView
-                        .transition(.opacity)
+            ScrollView {
+                VStack(spacing: 28) {
+                    checkoutSection
+                    orDivider
+                    manualEntrySection
                 }
-
-                // ── Manual key entry form ─────────────────────────────────────
-                if showManualEntry {
-                    manualEntryForm
-                        .transition(.opacity)
-                }
+                .padding(.horizontal, 28)
+                .padding(.vertical, 24)
             }
-            .animation(.easeInOut(duration: 0.15), value: showManualEntry)
-            .animation(.easeInOut(duration: 0.20), value: isCheckoutLoading)
 
             Divider().opacity(0.35)
             footer
         }
-        .frame(minWidth: 540, maxWidth: .infinity)
+        .frame(minWidth: 540, maxWidth: .infinity, minHeight: 560)
         .padding(.top, 28)
         .glassWindow(.sidebar)
     }
@@ -96,8 +78,7 @@ struct PaywallView: View {
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 9)
                     .padding(.vertical, 4)
-                    .background(Color.secondary.opacity(0.10),
-                                in: Capsule())
+                    .background(Color.secondary.opacity(0.10), in: Capsule())
             }
         }
         .padding(.horizontal, 20)
@@ -105,75 +86,90 @@ struct PaywallView: View {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // MARK: - Checkout Loading View
+    // MARK: - Checkout Section (opens system browser)
     // ─────────────────────────────────────────────────────────────────────────
 
-    private var checkoutLoadingView: some View {
-        VStack(spacing: 14) {
-            ProgressView()
-                .scaleEffect(1.3)
-                .progressViewStyle(.circular)
+    private var checkoutSection: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "cart.fill")
+                .font(.system(size: 30))
+                .foregroundStyle(Color.accentColor)
 
-            Text("Loading checkout…")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+            VStack(spacing: 6) {
+                Text("Purchase a License")
+                    .font(.system(size: 16, weight: .semibold))
+
+                Text("Opens in your browser. After checkout, your license key\nis emailed to you and shown on the confirmation page.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Button {
+                openCheckout()
+            } label: {
+                Label("Continue to Checkout", systemImage: "arrow.up.right.square")
+                    .frame(maxWidth: 260)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.windowBackgroundColor).opacity(0.85))
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+    }
+
+    private var orDivider: some View {
+        HStack(spacing: 10) {
+            Rectangle().fill(Color.secondary.opacity(0.2)).frame(height: 1)
+            Text("OR")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+            Rectangle().fill(Color.secondary.opacity(0.2)).frame(height: 1)
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // MARK: - Manual Entry Form
+    // MARK: - Manual Key Entry (primary in-app activation path)
     // ─────────────────────────────────────────────────────────────────────────
 
-    private var manualEntryForm: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            VStack(spacing: 24) {
-                VStack(spacing: 8) {
-                    Image(systemName: "key.fill")
-                        .font(.system(size: 28))
-                        .foregroundStyle(.secondary)
-
-                    Text("Enter your license key")
-                        .font(.system(size: 16, weight: .semibold))
-
-                    Text("Find it in your purchase confirmation email.")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    TextField("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX", text: $manualKey)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(size: 13, design: .monospaced))
-                        .disableAutocorrection(true)
-                        .frame(width: 380)
-
-                    if let error = manualEntryError {
-                        Text(error)
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                    }
-                }
-
-                Button(license.isValidating ? "Validating…" : "Activate License") {
-                    activateManualKey()
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .disabled(
-                    manualKey.trimmingCharacters(in: .whitespaces).isEmpty ||
-                    license.isValidating
-                )
+    private var manualEntrySection: some View {
+        VStack(spacing: 14) {
+            VStack(spacing: 4) {
+                Text("Already have a license key?")
+                    .font(.system(size: 14, weight: .semibold))
+                Text("Paste it below to activate Nix.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
-            Spacer()
+            VStack(alignment: .leading, spacing: 6) {
+                TextField("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX", text: $manualKey)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.system(size: 13, design: .monospaced))
+                    .disableAutocorrection(true)
+                    .frame(maxWidth: 400)
+
+                if let error = manualEntryError {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            }
+
+            Button(license.isValidating ? "Validating…" : "Activate License") {
+                activateManualKey()
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+            .disabled(
+                manualKey.trimmingCharacters(in: .whitespaces).isEmpty ||
+                license.isValidating
+            )
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.windowBackgroundColor).opacity(0.5))
+        .frame(maxWidth: .infinity)
+        .padding(18)
+        .glassCard(cornerRadius: 14)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -182,20 +178,12 @@ struct PaywallView: View {
 
     private var footer: some View {
         HStack {
-            Button(showManualEntry ? "← Back to Checkout" : "Already have a key?") {
-                withAnimation { showManualEntry.toggle() }
-                manualEntryError = nil
-            }
-            .buttonStyle(.link)
-            .font(.system(size: 12))
-
-            Spacer()
-
-            if !trial.isExpired && !showManualEntry {
+            if !trial.isExpired {
                 Text("\(trial.daysRemaining) day\(trial.daysRemaining == 1 ? "" : "s") remaining in trial")
                     .font(.system(size: 11))
                     .foregroundStyle(.tertiary)
             }
+            Spacer()
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
@@ -205,18 +193,9 @@ struct PaywallView: View {
     // MARK: - Actions
     // ─────────────────────────────────────────────────────────────────────────
 
-    private func handleReceivedKey(_ key: String) {
-        Task {
-            let success = await license.activate(licenseKey: key)
-            if success {
-                paywallLogger.info("Activation succeeded via checkout redirect")
-                onActivated()
-            } else {
-                paywallLogger.warning("Activation failed via redirect — \(license.lastError ?? "unknown")")
-                manualEntryError = license.lastError
-                withAnimation { showManualEntry = true }
-            }
-        }
+    private func openCheckout() {
+        paywallLogger.info("Opening checkout in system browser")
+        NSWorkspace.shared.open(checkoutURL)
     }
 
     private func activateManualKey() {
@@ -229,96 +208,6 @@ struct PaywallView: View {
             } else {
                 manualEntryError = license.lastError ?? "Activation failed — check the key and try again."
             }
-        }
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MARK: - CheckoutWebView
-// ─────────────────────────────────────────────────────────────────────────────
-
-private struct CheckoutWebView: NSViewRepresentable {
-
-    let url: URL
-    @Binding var isLoading: Bool
-    let onLicenseKeyReceived: (String) -> Void
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(parent: self)
-    }
-
-    func makeNSView(context: Context) -> WKWebView {
-        let config = WKWebViewConfiguration()
-        let webView = WKWebView(frame: .zero, configuration: config)
-        webView.navigationDelegate = context.coordinator
-        webView.load(URLRequest(url: url))
-        return webView
-    }
-
-    func updateNSView(_ nsView: WKWebView, context: Context) {
-        // Keep coordinator's parent reference current so binding writes land correctly.
-        context.coordinator.parent = self
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: - Coordinator
-    // ─────────────────────────────────────────────────────────────────────────
-
-    final class Coordinator: NSObject, WKNavigationDelegate {
-
-        var parent: CheckoutWebView
-
-        init(parent: CheckoutWebView) {
-            self.parent = parent
-        }
-
-        // ── Loading state callbacks ───────────────────────────────────────────
-
-        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-            parent.isLoading = true
-        }
-
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            parent.isLoading = false
-        }
-
-        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-            parent.isLoading = false
-            paywallLogger.warning("WebView navigation failed: \(error.localizedDescription)")
-        }
-
-        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-            parent.isLoading = false
-            paywallLogger.warning("WebView provisional navigation failed: \(error.localizedDescription)")
-        }
-
-        // ── URL scheme intercept for license key ──────────────────────────────
-
-        func webView(
-            _ webView: WKWebView,
-            decidePolicyFor navigationAction: WKNavigationAction,
-            decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
-        ) {
-            guard let url = navigationAction.request.url else {
-                decisionHandler(.allow)
-                return
-            }
-
-            if url.scheme == "nix", url.host == "activate" {
-                let key = URLComponents(url: url, resolvingAgainstBaseURL: false)?
-                    .queryItems?.first(where: { $0.name == "key" })?.value
-
-                if let key {
-                    paywallLogger.info("Intercepted license key from checkout redirect")
-                    parent.onLicenseKeyReceived(key)
-                } else {
-                    paywallLogger.warning("nix://activate redirect with no 'key' param")
-                }
-                decisionHandler(.cancel)
-                return
-            }
-
-            decisionHandler(.allow)
         }
     }
 }

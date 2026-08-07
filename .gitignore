@@ -21,3 +21,4 @@ xcuserdata/
 
 # App storage
 *.sqlite.geminiignore
+build/
