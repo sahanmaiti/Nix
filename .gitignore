@@ -22,3 +22,5 @@ xcuserdata/
 # App storage
 *.sqlite.geminiignore
 build/
+ExportOptions.plist
+.geminiignore
