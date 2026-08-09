@@ -13,8 +13,8 @@
       <pubDate>Sun, 02 Aug 2026 00:00:00 +0000</pubDate>
       <enclosure
         url="https://github.com/sahanmaiti/Nix/releases/download/v1.0/Nix.dmg"
-        sparkle:edSignature="eho9LSr74kj3HfkSwW2De+klNTI8R2yZqxcrHi/JvAmM/x1X50jP6APXDdVC4O3Wbm3qyHxsbAnfH3XQEEARDQ=="
-        length="2092832"
+        sparkle:edSignature="cksiQegoB1T3kCHcbqTGzCVNudQ9+QD8uI1FO5YxmB6Cz+sOqWMAnh0MRPSUNbVbUlWEH+fLojKwIoEyb5IQBw==" 
+        length="2092593"
         type="application/octet-stream" />
     </item>
   </channel>
