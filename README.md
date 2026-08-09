@@ -10,9 +10,9 @@ Nix is a lightweight macOS menu bar utility that automatically quits application
 
 ![macOS](https://img.shields.io/badge/macOS-14.6%2B-black?style=flat-square&logo=apple)
 ![Swift](https://img.shields.io/badge/Swift-6-F05138?style=flat-square&logo=swift)
-![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
-![Status](https://img.shields.io/badge/status-active%20development-green?style=flat-square)
-![Architecture](https://img.shields.io/badge/architecture-event--driven-purple?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT%20(source)-blue?style=flat-square)
+![Pricing](https://img.shields.io/badge/pricing-%249.99%20one--time-success?style=flat-square)
+![Distribution](https://img.shields.io/badge/distribution-Direct%20DMG-lightgrey?style=flat-square)
 
 <br>
 
@@ -32,6 +32,19 @@ Per-app rules mean Nix only does this where you want it to. Music keeps playing.
 
 ---
 
+## Get Nix
+
+Nix is a **one-time $9.99 purchase** with a **7-day free trial** — no subscription, no account required.
+
+- **Download:** direct signed DMG at [nix-mu.vercel.app](https://nix-mu.vercel.app)
+- **Trial:** full functionality for 7 days from first launch
+- **Purchase:** handled by [Lemon Squeezy](https://lemonsqueezy.com) (Merchant of Record) — license key delivered by email, or entered manually in-app
+- **Updates:** automatic, via [Sparkle](https://sparkle-project.org)
+
+> Not available on the Mac App Store — see [App Store Sandbox](#known-limitations) below for why.
+
+---
+
 ## Features
 
 **Core behavior**
@@ -41,178 +54,123 @@ Per-app rules mean Nix only does this where you want it to. Music keeps playing.
 - Default behavior applies globally; override per-app as needed
 
 **Smart detection**
-- Powered by macOS Accessibility API (`AXUIElement`) — event-driven, not polling
-- Correctly distinguishes closed windows from minimized, hidden, or sheet windows
-- Hidden apps (`Cmd+H`) are intentionally ignored — never quits what you've hidden
-- Handles multi-window apps: only acts when the *last* real window closes
+- Powered by the macOS Accessibility API (`AXObserver`/`AXUIElement`) — event-driven, not polling
+- Two-phase confirmation (150ms + 500ms) to correctly handle apps that hide instead of closing (Discord, Slack, Mimestream, Teams, Zoom, Skype) and apps with windows on background Spaces
+- Excludes sheets, dialogs, floating windows, and zero-size phantom AX windows from the count
+- Hidden apps (`Cmd+H`) are intentionally left alone — Nix never quits what you've hidden
 
 **Whitelist & rules**
-- Built-in permanent whitelist: Finder, Dock, system processes — never touched
+- Built-in permanent whitelist: Finder, Dock, system UI processes — never touched
 - User-managed whitelist: add any app you want Nix to ignore
 - Per-app rule editor in Settings with search, sorted app list, and instant changes
-- Rules persist across restarts via UserDefaults
+- Rules persist across restarts via `UserDefaults`
 
 **System integration**
-- Launch at login via `SMAppService` (macOS 13+ native API)
+- Launch at login via `SMAppService` (native, no helper app)
 - Optional system notifications when an app is quit
 - Menu bar icon reflects current state: active, paused, or disabled
-- Pause monitoring for 30 minutes, 2 hours, or until tomorrow
+- Pause monitoring for 30 minutes or 2 hours
+- Automatic updates via Sparkle, with EdDSA-signed appcast
 
 **Design**
-- Native SwiftUI + AppKit hybrid — no Electron, no web views, no third-party UI frameworks
-- Follows Apple's Human Interface Guidelines throughout
+- Native SwiftUI + AppKit hybrid — no Electron, no third-party UI frameworks
 - Menu bar popover with live app list and one-click controls
 - Tab-based Settings window: General, Apps, Whitelist
-
-**Performance**
-- Near-zero CPU usage at idle — AXObserver is event-driven
-- Minimal memory footprint
-- No background network requests, ever
-
----
-
-## Demo
-
-> *Screenshots and screen recordings coming in v1.0 release.*
-
-<!-- Menu bar popover -->
-<img src="docs/assets/menubar-popover.png" alt="Nix menu bar popover" width="280" />
-
-<!-- Settings window — General tab -->
-<img src="docs/assets/settings-general.png" alt="General settings tab" width="520" />
-
-<!-- Settings window — Apps tab -->
-<img src="docs/assets/settings-apps.png" alt="Per-app rules editor" width="520" />
-
-<!-- Onboarding flow -->
-<img src="docs/assets/onboarding.gif" alt="First-launch onboarding" width="480" />
-
----
-
-## Why Nix?
-
-Existing solutions in this space — RedQuits, Swift Quit — solve the basic problem. Nix is different in a few specific ways:
-
-| | Nix | RedQuits | Swift Quit |
-|---|:---:|:---:|:---:|
-| Per-app behavior rules | ✅ | ❌ | ❌ |
-| Grace period with cancellation | ✅ | ❌ | ❌ |
-| Hide instead of quit | ✅ | ❌ | ❌ |
-| Prompt mode | ✅ | ❌ | ❌ |
-| User-managed whitelist UI | ✅ | ❌ | ❌ |
-| Native SwiftUI settings window | ✅ | ❌ | ❌ |
-| SMAppService login items | ✅ | ❌ | ❌ |
-| Active development | ✅ | ⚠️ | ❌ |
-
-The rule engine is the key differentiator. Nix is built on the premise that a single global behavior is never the right answer — your Mac has dozens of different apps with different usage patterns, and a utility worth using should reflect that.
+- Guided first-launch onboarding, including Accessibility permission walkthrough
 
 ---
 
 ## Architecture
 
-Nix is structured as a layered service architecture. Each layer has a single, clearly defined responsibility. Nothing crosses boundaries unnecessarily.
-
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                       NixApp  (@main)                       │
-│                                                             │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │                 AppEnvironment  (shared)              │  │
-│  │                                                       │  │
-│  │  ┌──────────────┐        ┌─────────────────────────┐  │  │
-│  │  │  AppTracker  │        │  AccessibilityManager   │  │  │
-│  │  │              │        │                         │  │  │
-│  │  │  NSWorkspace │        │  AXIsProcessTrusted()   │  │  │
-│  │  │  Combine     │        │  permission polling     │  │  │
-│  │  └──────┬───────┘        └─────────────────────────┘  │  │
-│  │         │ startMonitoring(app:)                       │  │
-│  │         ▼                                             │  │
-│  │  ┌──────────────────────┐                             │  │
-│  │  │    WindowMonitor     │                             │  │
-│  │  │                      │                             │  │
-│  │  │  AXObserver (per app)│                             │  │
-│  │  │  C callback bridge   │                             │  │
-│  │  │  debounce + check    │                             │  │
-│  │  └──────────┬───────────┘                             │  │
-│  │             │ onZeroWindows(app:)                     │  │
-│  │             ▼                                         │  │
-│  │  ┌──────────────────────┐   ┌────────────────────┐    │  │
-│  │  │     QuitEngine       │◄──│     RuleStore      │    │  │
-│  │  │                      │   │                    │    │  │
-│  │  │  evaluate(app:)      │   │  UserDefaults/JSON │    │  │
-│  │  │  ├─ .quit            │   │  per-app rules     │    │  │
-│  │  │  ├─ .hide            │   │  whitelist         │    │  │
-│  │  │  ├─ .ignore          │   │  grace periods     │    │  │
-│  │  │  └─ .prompt          │   └────────────────────┘    │  │
-│  │  └──────────────────────┘                             │  │
-│  └───────────────────────────────────────────────────────┘  │
-│                                                             │
-│  ┌───────────────────┐   ┌──────────────────────────────┐   │
-│  │   MenuBarView     │   │        SettingsView          │   │
-│  │   (SwiftUI)       │   │  ├─ GeneralTab               │   │
-│  │                   │   │  ├─ AppsTab                  │   │
-│  │   @Environment    │   │  └─ WhitelistTab             │   │
-│  │   Object          │   │        (SwiftUI)             │   │
-│  └───────────────────┘   └──────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│                        NixApp  (@main)                             │
+│         AppDelegate — window management, Sparkle, license gate     │
+│                                                                    │
+│  ┌────────────────────────────────────────────────────────────┐    │
+│  │                 AppEnvironment  (singleton)                │    │
+│  │                                                            │    │
+│  │  ┌──────────────┐   ┌───────────────────┐  ┌────────────┐  │    │
+│  │  │  AppTracker  │   │ AccessibilityMgr  │  │LicenseMgr  │  │    │
+│  │  │  NSWorkspace │   │ AXIsProcessTrusted│  │TrialManager│  │    │
+│  │  └──────┬───────┘   └───────────────────┘  └────────────┘  │    │
+│  │         │ startMonitoring(app:)                            │    │
+│  │         ▼                                                  │    │
+│  │  ┌───────────────────────┐                                 │    │
+│  │  │    WindowMonitor      │  AXObserver per app, C callback │    │
+│  │  │  Phase1 (150ms debounce) → Phase2 (500ms cross-space)   │    │
+│  │  └──────────┬────────────┘                                 │    │
+│  │             │ onZeroWindows(app:)                          │    │
+│  │             ▼                                              │    │
+│  │  ┌───────────────────────┐   ┌─────────────────────┐       │    │
+│  │  │     QuitEngine        │◄──│     RuleStore       │       │    │
+│  │  │  quit / hide / ignore │   │  UserDefaults JSON  │       │    │
+│  │  │  / prompt, grace timer│   │  per-app rules      │       │    │
+│  │  └───────────────────────┘   └─────────────────────┘       │    │
+│  └────────────────────────────────────────────────────────────┘    │
+│                                                                    │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────────────┐   │
+│  │ MenuBarView   │  │ SettingsView  │  │ Onboarding / Paywall  │   │
+│  │  (SwiftUI)    │  │ General/Apps/ │  │  NSWindow-managed via │   │
+│  │               │  │ Whitelist tabs│  │  AppDelegate          │   │
+│  └───────────────┘  └───────────────┘  └───────────────────────┘   │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Service responsibilities
 
 | Service | Responsibility |
 |---|---|
-| `AppEnvironment` | Owns all services. Single dependency container. Injected as `@EnvironmentObject`. |
-| `AppTracker` | Watches `NSWorkspace` for app launches and terminations. Maintains the live tracked-app list. |
-| `WindowMonitor` | Creates and manages one `AXObserver` per tracked app. Fires when window count hits zero. |
+| `AppEnvironment` | Owns all services. Single dependency container, injected as `@EnvironmentObject`. |
+| `AppTracker` | Watches `NSWorkspace` for launch/terminate/hide/activate events. Maintains the tracked-app list. |
+| `WindowMonitor` | One `AXObserver` per tracked app. Two-phase debounce determines true zero-window state. |
 | `QuitEngine` | Decision layer. Consults `RuleStore`, applies grace periods, executes quit/hide/ignore/prompt. |
-| `RuleStore` | Persistence layer. Encodes per-app rules to UserDefaults as JSON. Source of truth for all behaviors. |
-| `AccessibilityManager` | Checks and requests Accessibility permission. Polls for grant status since macOS provides no callback. |
-| `GlobalSettings` | App-wide preferences via `@AppStorage`. Shared with engine via `didSet` sync. |
+| `RuleStore` | Persistence layer. Per-app rules and whitelist, encoded to `UserDefaults` as JSON. |
+| `AccessibilityManager` | Checks/requests Accessibility permission; polls since macOS gives no grant callback. |
+| `GlobalSettings` | App-wide preferences via `@AppStorage`. |
+| `LicenseManager` | Lemon Squeezy activation/validation, Keychain-backed license storage. |
+| `TrialManager` | 7-day trial clock, stored in Keychain to resist casual reset. |
+| `LoginItemService` | `SMAppService` login-item registration and system-state reconciliation. |
 
 ---
 
 ## How It Works
 
-The full event flow from window close to process termination:
-
 ```
 1.  User closes the last window of an app (e.g. Safari)
           │
           ▼
-2.  macOS fires kAXWindowClosedNotification to Nix's AXObserver
+2.  macOS fires AXWindowClosed / AXUIElementDestroyed to Nix's AXObserver
           │
           ▼
-3.  C-level callback reconstructs WindowMonitor via Unmanaged pointer
+3.  C callback bridges into WindowMonitor on the main run loop
           │
           ▼
-4.  150ms debounce fires on DispatchQueue.main
+4.  300ms debounce, then Phase 1: AX window count for that PID
           │
           ▼
-5.  visibleWindowCount(for: pid) queries kAXWindowsAttribute
-          │   filters: minimized=false, subrole≠AXSheet/AXDialog
-          ▼
-6.  Count == 0 AND app.isHidden == false
+5.  Count == 0 and app not hidden →
+       known "hider" app or weak signal? → Phase 2 (500ms, cross-space CGWindowList check)
+       otherwise                          → confirmed immediately
           │
           ▼
-7.  WindowMonitor.onZeroWindows?(app) fires
+6.  WindowMonitor.onZeroWindows fires
           │
           ▼
-8.  QuitEngine.evaluate(app:)
-          │   checks: isEnabled, isPaused, isTerminated, isHidden
-          │   looks up: RuleStore.behavior(for: bundleID)
-          │   applies: grace period via DispatchWorkItem (cancellable)
-          ▼
-9.  app.terminate()
-          │   sends Cmd+Q equivalent — app handles its own shutdown
-          ▼
-10. NSWorkspace fires didTerminateApplicationNotification
+7.  QuitEngine.evaluate(app:) — checks isEnabled/isPaused, looks up RuleStore
+    behavior, applies grace period (cancellable via DispatchWorkItem)
           │
           ▼
-11. AppTracker removes app from tracked list
-    WindowMonitor removes AXObserver from run loop
+8.  app.terminate() — sends Cmd+Q equivalent, app handles its own shutdown
+          │
+          ▼
+9.  NSWorkspace fires didTerminateApplicationNotification
+          │
+          ▼
+10. AppTracker removes the app; WindowMonitor tears down its AXObserver
 ```
 
-The entire pipeline is event-driven. No timers poll for window state. CPU usage at idle is effectively zero.
+Entirely event-driven — no polling timers for window state. CPU usage at idle is effectively zero.
 
 ---
 
@@ -220,256 +178,166 @@ The entire pipeline is event-driven. No timers poll for window state. CPU usage 
 
 | Technology | Used For |
 |---|---|
-| Swift 5.9+ | Primary language |
-| SwiftUI | All UI: menu bar, settings, onboarding |
-| AppKit | `NSRunningApplication`, `NSWorkspace`, `NSAlert` |
+| Swift 6 | Primary language (`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`) |
+| SwiftUI | Menu bar, settings, onboarding, paywall |
+| AppKit | `NSRunningApplication`, `NSWorkspace`, `NSWindow` management |
 | ApplicationServices | `AXUIElement`, `AXObserver`, window accessibility tree |
-| Combine | `NSWorkspace` notification publishers, reactive state |
+| Combine | `NSWorkspace` publishers, reactive state, `objectWillChange` forwarding |
 | UserDefaults + Codable | Per-app rule and settings persistence |
+| Keychain (Security) | License key and trial start-date storage |
 | ServiceManagement | `SMAppService` login item registration |
-| os.Logger | Structured logging, visible in Console.app |
-| Foundation | `DispatchWorkItem`, timers, JSON encoding |
+| Sparkle 2.9.3 | EdDSA-signed automatic updates |
+| os.Logger | Structured logging, subsystem `com.sahan.Nix` |
 
 ---
 
 ## Requirements
 
 - **macOS 14.6 Sonoma** or later
-- Xcode 15 or later (for building from source)
+- Xcode 16+ (for building from source)
 - Accessibility permission — required for window monitoring
 
 ### Accessibility Permission
 
-Nix requires Accessibility access to observe window events in other applications. This is the same permission used by screen readers, window managers, and automation tools.
+Nix requires Accessibility access to observe window events in other applications — the same permission class used by screen readers and window managers.
 
-To grant permission:
+1. Launch Nix and follow the onboarding prompt, **or**
+2. Open **System Settings → Privacy & Security → Accessibility**
+3. Enable the toggle next to **Nix**
 
-1. Launch Nix
-2. Click the menu bar icon → follow the permission prompt, **or**
-3. Open **System Settings → Privacy & Security → Accessibility**
-4. Enable the toggle next to **Nix**
-
-Nix uses this permission **only** to receive `kAXWindowClosedNotification` events. It does not read window content, document text, or any application data. See [Privacy](#privacy) for full details.
-
----
-
-## Installation
-
-### Download (recommended)
-
-> Release builds are distributed as a signed DMG.  
-> Download link will appear here when v1.0 ships.
-
-```
-1. Download Nix-1.0.dmg
-2. Open the DMG and drag Nix.app to /Applications
-3. Launch Nix from /Applications or Spotlight
-4. Follow the onboarding flow to grant Accessibility permission
-```
-
-### Homebrew Cask
-
-> Coming after v1.0 release.
-
-```bash
-brew install --cask nix-app
-```
+Nix uses this permission **only** to receive window created/closed/destroyed notifications. It does not read window content, document text, or any application data — the AX tree is queried in structural, read-only mode.
 
 ---
 
 ## Building from Source
 
-### Clone and open
-
 ```bash
-git clone https://github.com/yourusername/nix.git
-cd nix
+git clone https://github.com/sahanmaiti/Nix.git
+cd Nix
 open Nix.xcodeproj
 ```
 
-### Run
+1. Select the **Nix** scheme, choose **My Mac**, press **Cmd+R**
+2. The app launches without a Dock icon (`.accessory` activation policy) — look for the menu bar icon
+3. macOS will prompt for Accessibility permission on first run
+4. Console.app, filter by subsystem `com.sahan.Nix`, for logs
 
-1. Select the **Nix** scheme in Xcode
-2. Choose **My Mac** as the run destination
-3. Press **Cmd+R**
+Debug builds run an internal verification suite (`Core/CoreTests.swift`) ~1.5s after launch, logging pass/fail checks for every subsystem.
 
-The app launches without a Dock icon. Look for the icon in your menu bar.
+### Code signing & distribution
 
-### First run notes
-
-- macOS will prompt you to grant Accessibility permission the first time
-- The app won't appear in the Dock — this is intentional (`.accessory` activation policy)
-- To see logs, open **Console.app** and filter by subsystem: `com.sahan.Nix`
-
-### Code signing
-
-The project is configured for local development signing by default. For distribution builds:
-
-1. Open project settings → **Signing & Capabilities**
-2. Set your Apple Developer team
-3. For direct distribution: use a **Developer ID Application** certificate
-4. The app is intentionally **not sandboxed** — required for Accessibility API access
+- Team ID: `X7MF3C43X6`, bundle ID: `com.sahan.Nix`
+- Not sandboxed (`ENABLE_APP_SANDBOX = NO`) — required for Accessibility API access
+- Distribution build: Developer ID Application cert → `xcodebuild archive` → export → `hdiutil` DMG → `xcrun notarytool` notarize → staple
 
 ### Project structure
 
 ```
 Nix/
 ├── App/
-│   ├── NixApp.swift              # @main entry point, scene definitions
-│   └── AppDelegate.swift         # NSApplicationDelegate, onboarding trigger
+│   ├── NixApp.swift              # @main entry point, MenuBarExtra scene
+│   └── AppDelegate.swift         # NSWindow management, Sparkle, license/paywall gating
 ├── Core/
+│   ├── AppEnvironment.swift      # Dependency container, service wiring
 │   ├── AppTracker.swift          # NSWorkspace observers, tracked app list
-│   ├── WindowMonitor.swift       # AXObserver management, zero-window detection
+│   ├── WindowMonitor.swift       # AXObserver management, two-phase zero-window detection
 │   ├── QuitEngine.swift          # Decision engine: quit/hide/ignore/prompt
-│   ├── AXWindowReader.swift      # Pure functions: window counting, AX queries
-│   └── AccessibilityManager.swift
+│   ├── AccessibilityManager.swift
+│   └── CoreTests.swift           # #if DEBUG verification suite
 ├── RuleEngine/
 │   ├── RuleStore.swift           # UserDefaults persistence, per-app rules
 │   ├── AppRule.swift             # Rule data model
-│   ├── GlobalSettings.swift      # @AppStorage global preferences
-│   └── AppEnvironment.swift      # Dependency container, service wiring
-├── UI/
-│   ├── MenuBarView.swift
-│   ├── SettingsView.swift
-│   ├── GeneralTab.swift
-│   ├── AppsTab.swift
-│   ├── WhitelistTab.swift
-│   └── OnboardingView.swift
-└── Services/
-    ├── LoginItemService.swift    # SMAppService registration
-    └── NotificationService.swift
+│   └── GlobalSettings.swift      # @AppStorage global preferences
+├── Services/
+│   ├── LicenseManager.swift      # Lemon Squeezy activation/validation
+│   ├── TrialManager.swift        # 7-day trial clock (Keychain-backed)
+│   ├── KeychainHelper.swift
+│   ├── LoginItemService.swift    # SMAppService registration
+│   └── NotificationService.swift
+└── UI/
+    ├── MenuBarView.swift
+    ├── SettingsView.swift / GeneralTab.swift / AppsTab.swift / WhitelistTab.swift
+    ├── OnboardingView.swift
+    ├── PaywallView.swift
+    └── VisualEffectView.swift
 ```
-
----
-
-## Roadmap
-
-### v1.0 — MVP (current)
-- [ ] AXObserver-based window monitoring
-- [ ] NSWorkspace app lifecycle tracking
-- [ ] QuitEngine with grace periods
-- [ ] Per-app behavior rules
-- [ ] UserDefaults persistence
-- [ ] Settings window (General, Apps, Whitelist)
-- [ ] First-launch onboarding
-- [ ] SMAppService login item
-- [ ] Pause mode
-
-### v1.1 — Polish
-- [ ] Sparkle auto-update integration
-- [ ] Custom menu bar icon with template image support
-- [ ] Grace period counter visible in menu bar popover
-- [ ] "Recently quit" history in popover
-- [ ] Keyboard shortcuts for common actions
-
-### v1.2 — Intelligence
-- [ ] Smart recommendations ("You always reopen X — want to ignore it?")
-- [ ] Battery saver mode: more aggressive quitting on battery power
-- [ ] Audio detection: skip quit if app is playing audio
-- [ ] Per-app grace period overrides in Settings
-
-### v2.0 — Advanced
-- [ ] Time-based rules (e.g. "ignore VS Code after 6pm")
-- [ ] iCloud sync for rules across Macs
-- [ ] Automation hooks (Shortcuts app integration)
-- [ ] Memory freed statistics and analytics
-- [ ] Setapp distribution
 
 ---
 
 ## Privacy
 
-Nix contacts Lemon Squeezy only to activate/validate a license key, with no telemetry, analytics, or app-usage data ever transmitted.
-
 | Data | Collected? |
 |---|---|
-| App names / bundle IDs | No — only held in memory while running |
-| Window contents | No |
-| Document text | No |
+| App names / bundle IDs | No — held in memory only while running |
+| Window contents / document text | No |
 | Screen recording | No |
-| Usage analytics | No |
+| Usage analytics / telemetry | No |
 | Crash reports | No (manual reporting only) |
-| Internet access | Yes — license activation/validation only |
+| Network requests | Yes — license activation/validation against Lemon Squeezy, and Sparkle update checks against a static appcast |
 
-**Accessibility permission** is used exclusively to receive `kAXWindowClosedNotification` events from `AXObserver`. Nix never reads the content of any window, field, document, or screen. The Accessibility API is used in read-only, structural mode — it sees that a window *exists*, not what's *inside* it.
+Nix contacts the network only for **license activation/validation** (Lemon Squeezy) and **update checks** (Sparkle, static appcast — no telemetry payload). No app usage, window, or document data is ever transmitted.
 
-Per-app rules are stored locally in `UserDefaults` (`~/Library/Preferences/com.sahan.Nix.plist`). Nothing leaves your machine.
+**Accessibility permission** is used exclusively to receive AX window lifecycle notifications. Nix never reads the content of any window, field, or document — the Accessibility API is used in read-only, structural mode: it sees that a window *exists*, not what's *inside* it.
+
+Per-app rules and settings are stored locally in `UserDefaults` (`~/Library/Preferences/com.sahan.Nix.plist`). License and trial state are stored in the Keychain. Nothing else leaves your machine.
 
 ---
 
 ## Known Limitations
 
-**Apps that override window close**  
-Some apps (Discord, Spark, Mimestream) intercept the close button and hide themselves rather than closing the window. Nix handles this correctly — when an app hides, its `isHidden` flag is checked before any quit decision is made. These apps are effectively self-whitelisting.
+**Apps that override window close**
+Some apps (Discord, Slack, Mimestream, Teams, Zoom) intercept the close button and hide themselves rather than closing the window. Nix's Phase 2 check accounts for this — these apps are effectively self-whitelisting via their `isHidden` state.
 
-**Minimized windows are not "closed"**  
-A window minimized to the Dock still exists. Nix does not treat minimize as close by default. This is intentional — it matches macOS semantics. A future setting will allow opt-in "treat minimize as close" behavior per app.
+**Minimized windows are not "closed"**
+A window minimized to the Dock still exists and is excluded from the zero-window count. This matches macOS semantics.
 
-**App Store sandbox**  
-Nix cannot be distributed on the Mac App Store. The Accessibility API (`AXUIElement`) requires a non-sandboxed process. This is a known, intentional constraint — all system utilities in this category share it.
+**App Store sandbox**
+Nix cannot be distributed on the Mac App Store. The Accessibility API (`AXUIElement`) requires a non-sandboxed process — a known, intentional constraint shared by every system utility in this category. Nix ships as a direct, notarized DMG instead.
 
-**Electron app variance**  
-Electron apps expose accessibility trees inconsistently. Most work correctly. Some (particularly those with non-standard window management) may not have their window close events properly observed. Add them to your whitelist if behavior is unexpected.
-
-**Rapid window open/close**  
-If an app opens and immediately closes a window during startup, the debounce timer (150ms) handles most cases. Some edge cases may trigger an incorrect zero-window evaluation that resolves on its own when the app stabilizes.
+**Electron app variance**
+Electron apps expose accessibility trees inconsistently. Most work correctly; a few with non-standard window management may not report close events reliably. Add them to your whitelist if behavior is unexpected.
 
 ---
 
-## Built for macOS
+## Roadmap
 
-Nix is a native, first-class macOS application. No Catalyst. No Electron. No wrappers.
+### Shipped
+- [x] AXObserver-based window monitoring with two-phase confirmation
+- [x] NSWorkspace app lifecycle tracking
+- [x] QuitEngine with grace periods
+- [x] Per-app behavior rules + whitelist UI
+- [x] First-launch onboarding
+- [x] SMAppService login item
+- [x] Pause mode
+- [x] Sparkle auto-update integration
+- [x] 7-day trial + Lemon Squeezy licensing (paywall, manual key entry)
+- [x] Notarized DMG distribution pipeline
 
-The UI is entirely SwiftUI with targeted AppKit integration where the platform requires it. The monitoring layer uses `ApplicationServices` — Apple's own framework for accessibility tooling. The login item uses `SMAppService`, the correct modern API introduced in macOS 13. Logging uses `os.Logger` for Console.app integration. Every API choice reflects how Apple themselves recommends building this category of app.
+### Next
+- [ ] Grace period countdown visible in menu bar popover
+- [ ] "Recently quit" history in popover
+- [ ] Per-app grace period overrides in Settings UI
+- [ ] Homebrew Cask
 
-The result is an app that consumes negligible system resources, behaves predictably across macOS updates, and feels entirely at home in the environment it was built for.
-
----
-
-## Systems-Level Learning Project
-
-Nix is also a hands-on study in macOS systems engineering.
-
-Building this app required going considerably deeper than typical app development: understanding how macOS processes communicate, how the Accessibility framework exposes other apps' UI as traversable trees, how C-level callback patterns bridge into Swift, how run loops deliver asynchronous events, and how system permissions are designed from a security model perspective.
-
-The architecture is deliberately layered and explicit — `WindowMonitor` doesn't know about `RuleStore`, `QuitEngine` doesn't know about `AppTracker`, the UI knows nothing about AX APIs. This isn't over-engineering for a small utility; it's the practice of thinking in responsibilities, which is the skill that separates production code from prototype code.
-
-If you're a developer learning macOS internals, the source code is meant to be readable. Every non-obvious decision has a comment explaining the *why*, not just the *what*. The roadmap document in `docs/ROADMAP.md` covers the full engineering reasoning behind the approach.
+### Later
+- [ ] Smart recommendations ("You always reopen X — want to ignore it?")
+- [ ] Battery-aware quitting
+- [ ] Time-based rules
+- [ ] iCloud sync for rules across Macs
 
 ---
 
 ## Contributing
 
-Nix is in active development. Contributions are welcome, especially:
+Contributions are welcome, especially edge-case fixes for apps with unusual window behavior, macOS version testing, and documentation. Open an issue before a large PR.
 
-- Edge case fixes for specific apps with unusual window behavior
-- Testing on specific macOS versions
-- UI feedback and design suggestions
-- Documentation improvements
-
-Please open an issue before submitting a large PR — it's worth a quick conversation first.
-
-```bash
-# Fork the repo, then:
-git clone https://github.com/yourusername/nix.git
-cd nix
-git checkout -b feature/your-feature-name
-
-# Make changes, then:
-git commit -m "descriptive message"
-git push origin feature/your-feature-name
-# Open a pull request on GitHub
-```
-
-**Code style:** Swift standard formatting, `os.Logger` for all logging, no force-unwraps, `guard let` over `if let` for early exits, `[weak self]` in all stored closures.
+**Code style:** `os.Logger` for all logging, no force-unwraps, `guard let` for early exits, `[weak self]` in stored closures, full-file diffs preferred for multi-part changes.
 
 ---
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for full text.
-
-You're free to use, modify, and distribute this code. If you build something with it, a mention is appreciated but not required.
+Source is MIT-licensed — see [LICENSE](LICENSE). The compiled app is a paid product ($9.99, one-time); the license covers the source code, not a right to redistribute paid builds.
 
 ---
 
@@ -479,6 +347,6 @@ You're free to use, modify, and distribute this code. If you build something wit
 
 Built on a Mac, for Mac.
 
-*Nix — v0.9.0 — macOS 14.6+*
+*Nix — v1.0 — macOS 14.6+*
 
 </div>
