@@ -2,7 +2,7 @@
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
   <channel>
     <title>Nix Changelog</title>
-    <link>https://sahanmaiti.github.io/Nix/appcast.xml\</link\>
+    <link>https://sahanmaiti.github.io/Nix/appcast.xml</link>
     <description>Updates for Nix</description>
     <language>en</language>
     <item>
@@ -13,8 +13,8 @@
       <pubDate>Mon, 10 Aug 2026 00:00:00 +0000</pubDate>
       <enclosure
         url="https://github.com/sahanmaiti/Nix/releases/download/v1.0.1/Nix.dmg"
-        sparkle:edSignature="cksiQegoB1T3kCHcbqTGzCVNudQ9+QD8uI1FO5YxmB6Cz+sOqWMAnh0MRPSUNbVbUlWEH+fLojKwIoEyb5IQBw=="
-        length="2092593"
+        sparkle:edSignature="S/D85/bIVxcRYIrHa0aBfGIrkz2cGSvanQdVFUC2LX49hQu68A+3cwwpWlv5O+lNU9ykfqmXgUw9lJh686YSDg=="
+        length="2093315"
         type="application/octet-stream" />
     </item>
     <item>
