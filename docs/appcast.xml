@@ -6,9 +6,9 @@
     <description>Updates for Nix</description>
     <language>en</language>
     <item>
-      <title>Version 1.0</title>
+      <title>Version 1.0.1</title>
       <sparkle:version>1</sparkle:version>
-      <sparkle:shortVersionString>1.0</sparkle:shortVersionString>
+      <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>14.6</sparkle:minimumSystemVersion>
       <pubDate>Sun, 02 Aug 2026 00:00:00 +0000</pubDate>
       <enclosure
