@@ -6,6 +6,18 @@
     <description>Updates for Nix</description>
     <language>en</language>
     <item>
+      <title>Version 1.0.2</title>
+      <sparkle:version>3</sparkle:version>
+      <sparkle:shortVersionString>1.0.2</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.6</sparkle:minimumSystemVersion>
+      <pubDate>Mon, 14 Sep 2026 09:10:34 GMT</pubDate>
+      <enclosure
+        url="https://github.com/sahanmaiti/Nix/releases/download/v1.0.2/Nix.dmg"
+        sparkle:edSignature="mrGkegJtfDsDJxAg03PGYq1D5/bIKu7CBEGerK1mkwdbmO8I81ZlRzm7E0x1oV1nKO+jogseGsB/qLcVok2MAw=="
+        length="2085435"
+        type="application/octet-stream" />
+    </item>
+    <item>
       <title>Version 1.0.1</title>
       <sparkle:version>2</sparkle:version>
       <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
