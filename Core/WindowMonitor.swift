@@ -302,6 +302,23 @@ final class WindowMonitor {
             return
         }
 
+        // Cross-space verification: an AX-reported window count of zero must never by itself
+        // be sufficient evidence that an application has no windows (e.g. closing a fullscreen
+        // window while another window remains open on a different macOS Space).
+        guard let crossSpaceCount = crossSpaceWindowCount(for: pid) else {
+            logger.debug("Phase 1: inconclusive CGWindowList read for '\(app.localizedName ?? "?")' — deferring to Phase 2")
+            schedulePhaseTwoCheck(pid: pid)
+            return
+        }
+
+        if crossSpaceCount > 0 {
+            logger.info("Phase 1: '\(app.localizedName ?? "?")' AX reported 0, but \(crossSpaceCount) window(s) exist across Spaces — keeping app alive")
+            lastWindowCount[pid] = crossSpaceCount
+            pendingPhase2PIDs.remove(pid)
+            onWindowAppeared?(pid)
+            return
+        }
+
         let bundleID     = app.bundleIdentifier ?? ""
         let isKnownHider = knownHiders.contains(bundleID)
 
@@ -309,7 +326,7 @@ final class WindowMonitor {
             logger.debug("Phase 1: deferring to Phase 2 (weakSignal=\(isWeakSignal), knownHider=\(isKnownHider)) for '\(app.localizedName ?? "?")'")
             schedulePhaseTwoCheck(pid: pid)
         } else {
-            logger.info("🎯 Phase 1 confirmed: zero windows — firing onZeroWindows for '\(app.localizedName ?? "?")'")
+            logger.info("🎯 Phase 1 confirmed: zero windows (cross-space verified) — firing onZeroWindows for '\(app.localizedName ?? "?")'")
             onZeroWindows?(app)
         }
     }
