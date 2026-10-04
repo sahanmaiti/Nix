@@ -39,8 +39,15 @@ final class WindowMonitor {
     private var pendingPhase1Checks:   [pid_t: DispatchWorkItem] = [:]
     private var pendingPhase1IsStrong: [pid_t: Bool]             = [:]   // Finding 3 latch
     private var pendingPhase2PIDs:     Set<pid_t>                = []
+    private var lastStrongCloseSignal: [pid_t: Date]            = [:]   // last AXWindowClosed/AXUIElementDestroyed per pid
 
     private let debounceInterval: TimeInterval = 0.30
+
+    /// How long a strong AX close signal (AXWindowClosed / AXUIElementDestroyed) remains valid as
+    /// evidence that a real window actually closed. Comfortably covers the 0.30s debounce + 0.5s
+    /// Phase 2 delay (0.8s total) with margin, while being short enough that an unrelated close
+    /// far in the past cannot authorise a later termination.
+    private let strongCloseSignalWindow: TimeInterval = 2.5
 
     private let logger = Logger(subsystem: "com.sahan.Nix", category: "WindowMonitor")
 
@@ -90,6 +97,7 @@ final class WindowMonitor {
         pendingPhase1Checks.removeValue(forKey: pid)
         pendingPhase1IsStrong.removeValue(forKey: pid)   // Finding 3: clear latch on teardown
         pendingPhase2PIDs.remove(pid)
+        lastStrongCloseSignal.removeValue(forKey: pid)
         removeObserver(for: pid)
         lastWindowCount.removeValue(forKey: pid)
 
@@ -249,6 +257,13 @@ final class WindowMonitor {
 
         let isStrongCloseSignal = (notification == kAXWindowClosedStr || notification == kAXUIElementDestroyedStr)
 
+        // A strong AX close signal is the only reliable, Space-switch-proof evidence that a real
+        // window actually closed. Record its time so the termination path can require it as a
+        // precondition — application deactivation (e.g. a Space switch) emits no such signal.
+        if isStrongCloseSignal {
+            lastStrongCloseSignal[pid] = Date()
+        }
+
         // Finding 3: latch strong signals for this debounce window. A later weak signal
         // (e.g. AXMainWindowChanged firing right after AXWindowClosed) must NOT downgrade
         // a pending strong close — only strengthen, never weaken.
@@ -319,6 +334,15 @@ final class WindowMonitor {
             return
         }
 
+        // Termination requires positive evidence that a real window closed. A zero count reached via
+        // application deactivation (a Space switch) with no recent AXWindowClosed/AXUIElementDestroyed
+        // is NOT such evidence: macOS reports 0 windows for an app whose windows are on another Space.
+        guard hadRecentStrongClose(pid) else {
+            logger.info("Phase 1: '\(app.localizedName ?? "?")' reports 0 windows but no recent window-close signal — treating as Space/app switch, keeping app alive")
+            pendingPhase2PIDs.remove(pid)
+            return
+        }
+
         let bundleID     = app.bundleIdentifier ?? ""
         let isKnownHider = knownHiders.contains(bundleID)
 
@@ -376,8 +400,23 @@ final class WindowMonitor {
             return
         }
 
+        // Defence in depth: same precondition as Phase 1 — never terminate on a zero count that was
+        // not preceded by a genuine window-close signal.
+        guard hadRecentStrongClose(pid) else {
+            logger.info("Phase 2: '\(app.localizedName ?? "?")' reports 0 windows but no recent window-close signal — keeping app alive")
+            return
+        }
+
         logger.info("🎯 Phase 2 confirmed: zero windows (cross-space) — firing onZeroWindows for '\(app.localizedName ?? "?")'")
         onZeroWindows?(app)
+    }
+
+    /// A real window close is evidenced by a strong AX signal (AXWindowClosed / AXUIElementDestroyed).
+    /// Application deactivation — including a macOS Space switch — is NOT such evidence. We therefore
+    /// require a recent strong close signal before a zero-window reading may terminate an app.
+    private func hadRecentStrongClose(_ pid: pid_t) -> Bool {
+        guard let last = lastStrongCloseSignal[pid] else { return false }
+        return Date().timeIntervalSince(last) <= strongCloseSignalWindow
     }
 
 
@@ -417,20 +456,50 @@ final class WindowMonitor {
             return nil
         }
 
-        return infoList.filter { info in
-            guard let ownerPID = info[kCGWindowOwnerPID as String] as? Int, ownerPID == Int(pid) else {
-                return false
-            }
-            guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0 else {
-                return false   // normal app windows are layer 0; status items/helpers are not
-            }
-            guard let bounds = info[kCGWindowBounds as String] as? [String: CGFloat],
-                  let width  = bounds["Width"], let height = bounds["Height"],
-                  width >= 1, height >= 1 else {
-                return false
-            }
+        // A non-empty title is sufficient evidence of a real window. It is not required: without
+        // Screen Recording permission, real windows on other Spaces have an empty kCGWindowName.
+        // Untitled layer-0 windows still count when they are content-sized. The small and thin
+        // records that remain after a real window closes do not.
+        return infoList.filter { isCrossSpaceWindow($0, pid: pid) }.count
+    }
+
+    private func isCrossSpaceWindow(_ info: [String: AnyObject], pid: pid_t) -> Bool {
+        guard let ownerPID = info[kCGWindowOwnerPID as String] as? Int, ownerPID == Int(pid) else {
+            return false
+        }
+        guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0 else {
+            return false   // normal app windows are layer 0; status items/helpers are not
+        }
+        guard let bounds = info[kCGWindowBounds as String] as? [String: CGFloat],
+              let x = bounds["X"],
+              let width = bounds["Width"], let height = bounds["Height"],
+              width >= 1, height >= 1 else {
+            return false
+        }
+
+        if let name = info[kCGWindowName as String] as? String, !name.isEmpty {
             return true
-        }.count
+        }
+
+        return isContentSizedWindow(info, x: x, width: width, height: height)
+    }
+
+    /// Untitled windows count only when both sides are large enough to be a document window.
+    /// Measured leftovers that must not count: 64×64 placeholders, menu-bar and chrome strips
+    /// (height 16–52), Chrome's short 89/139-point records, and Opera's 4-point-wide strips.
+    /// The off-screen 500×500 record at x == 0 is the one leftover larger than this minimum;
+    /// it appears once per app and is never a real window.
+    private func isContentSizedWindow(
+        _ info: [String: AnyObject],
+        x: CGFloat,
+        width: CGFloat,
+        height: CGFloat
+    ) -> Bool {
+        let onscreen = info[kCGWindowIsOnscreen as String] as? Bool ?? false
+        if Int(width) == 500, Int(height) == 500, Int(x) == 0, !onscreen {
+            return false
+        }
+        return width >= 200 && height >= 200
     }
     
     
