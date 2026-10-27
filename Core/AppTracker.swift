@@ -93,7 +93,7 @@ final class AppTracker: ObservableObject {
         let tracked = TrackedApp(runningApp: app)
         trackedApps.append(tracked)
         windowMonitor.startMonitoring(app: app)
-        logger.info("📱 Tracking + monitoring: \(tracked.name) (PID: \(tracked.pid))")
+        logger.info("📱 Tracking + monitoring: \(tracked.name, privacy: .public) (PID: \(tracked.pid))")
     }
 
     private func appDidTerminate(_ app: NSRunningApplication) {
@@ -101,14 +101,14 @@ final class AppTracker: ObservableObject {
              trackedApps.removeAll { $0.pid == pid }
              windowMonitor.stopMonitoring(app: app)
              onAppDidTerminate?(pid)
-             logger.info("💀 Stopped tracking: \(app.localizedName ?? "unknown")")
+             logger.info("💀 Stopped tracking: \(app.localizedName ?? "unknown", privacy: .public)")
          }
 
     private func appDidHide(_ app: NSRunningApplication) {
         if let index = trackedApps.firstIndex(where: { $0.pid == app.processIdentifier }) {
             trackedApps[index].isHidden = true
         }
-        logger.debug("👁 App hidden: \(app.localizedName ?? "?")")
+        logger.debug("👁 App hidden: \(app.localizedName ?? "?", privacy: .public)")
     }
 
     private func appDidUnhide(_ app: NSRunningApplication) {
@@ -116,20 +116,20 @@ final class AppTracker: ObservableObject {
             trackedApps[index].isHidden = false
         }
         guard trackedApps.contains(where: { $0.pid == app.processIdentifier }) else { return }
-        logger.debug("👁 App unhidden: \(app.localizedName ?? "?") — cancelling any pending quit")
+        logger.debug("👁 App unhidden: \(app.localizedName ?? "?", privacy: .public) — cancelling any pending quit")
         onCancelPendingQuit?(app.processIdentifier)
     }
     
     private func appDidDeactivate(_ app: NSRunningApplication) {
         guard trackedApps.contains(where: { $0.pid == app.processIdentifier }) else { return }
-        logger.debug("👁 App deactivated: \(app.localizedName ?? "?") — fallback window check")
+        logger.debug("👁 App deactivated: \(app.localizedName ?? "?", privacy: .public) — fallback window check")
         windowMonitor.checkOnDeactivation(for: app.processIdentifier)
     }
 
     // MARK: - Activation handler
     private func appDidActivate(_ app: NSRunningApplication) {
         guard trackedApps.contains(where: { $0.pid == app.processIdentifier }) else { return }
-        logger.debug("▶️ App activated: \(app.localizedName ?? "?") — cancelling any pending quit")
+        logger.debug("▶️ App activated: \(app.localizedName ?? "?", privacy: .public) — cancelling any pending quit")
         onCancelPendingQuit?(app.processIdentifier)
 
         // Reliable, non-AX signal that always fires before a user could close this app's last

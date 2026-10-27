@@ -84,10 +84,14 @@ final class AppEnvironment: ObservableObject {
             quitEngine?.cancelPendingQuit(for: pid)
         }
         appTracker.onAppDidTerminate = { [weak quitEngine] pid in
+            quitEngine?.clearPendingGrace(for: pid)
             quitEngine?.confirmedTermination(pid: pid)
         }
         
         // 4. Forward child changes so SwiftUI views that observe AppEnvironment
+        quitEngine.objectWillChange
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
         appTracker.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)

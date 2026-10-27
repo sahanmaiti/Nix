@@ -18,11 +18,8 @@ struct MenuBarView: View {
             }
 
             header
-
-            if !env.appTracker.trackedApps.isEmpty {
-                Divider().opacity(0.4)
-                appList
-            }
+            quittingSoonSection
+            appListSection
 
             Divider().opacity(0.4)
             controlRows
@@ -109,11 +106,109 @@ struct MenuBarView: View {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Quitting Soon
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// Apps Nix is about to quit, excluding ones hidden during the wait.
+    /// A hidden app is not cancelled here — unhide still goes through
+    /// `cancelPendingQuit` — but the row would be a false "quitting" claim.
+    private func visibleGracePeriods(at now: Date) -> [PendingGrace] {
+        let hiddenPIDs = Set(env.appTracker.trackedApps.filter(\.isHidden).map(\.pid))
+        return env.quitEngine.pendingGracePeriods
+            .filter { grace in
+                !hiddenPIDs.contains(grace.pid)
+                    && remainingSeconds(until: grace.deadline, now: now) > 0
+            }
+            .sorted { $0.deadline < $1.deadline }
+    }
+
+    private func remainingSeconds(until deadline: Date, now: Date) -> Int {
+        max(0, Int(deadline.timeIntervalSince(now).rounded(.up)))
+    }
+
+    @ViewBuilder
+    private var quittingSoonSection: some View {
+        if !env.quitEngine.pendingGracePeriods.isEmpty {
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                let rows = visibleGracePeriods(at: context.date)
+                if !rows.isEmpty {
+                    Divider().opacity(0.4)
+                    VStack(spacing: 0) {
+                        Text("Quitting soon")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 14)
+                            .padding(.top, 8)
+                            .padding(.bottom, 2)
+
+                        ForEach(rows) { grace in
+                            graceRow(grace, now: context.date)
+                        }
+                    }
+                    .padding(.bottom, 5)
+                }
+            }
+        }
+    }
+
+    private func graceRow(_ grace: PendingGrace, now: Date) -> some View {
+        HStack(spacing: 9) {
+            Group {
+                if let icon = env.appTracker.trackedApps.first(where: { $0.pid == grace.pid })?.icon {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .interpolation(.high)
+                        .frame(width: 16, height: 16)
+                } else {
+                    Image(systemName: "app.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 16, height: 16)
+                }
+            }
+
+            Text(grace.appName)
+                .font(.system(size: 13, weight: .medium))
+                .lineLimit(1)
+                .truncationMode(.tail)
+
+            Spacer()
+
+            Text("\(remainingSeconds(until: grace.deadline, now: now))s")
+                .font(.system(size: 12, weight: .medium))
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 5)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // MARK: - App List
     // ─────────────────────────────────────────────────────────────────────────
 
-    private var appList: some View {
-        buildAppList(env.appTracker.trackedApps.sorted { $0.name < $1.name })
+    @ViewBuilder
+    private var appListSection: some View {
+        let apps = regularTrackedApps
+        if !apps.isEmpty {
+            Divider().opacity(0.4)
+            buildAppList(apps)
+        }
+    }
+
+    /// Tracked apps that are not already shown in the grace-period section.
+    /// Hidden apps stay here: the quitting row is suppressed, and the timer is left alone.
+    private var regularTrackedApps: [TrackedApp] {
+        let hiddenPIDs = Set(env.appTracker.trackedApps.filter(\.isHidden).map(\.pid))
+        let shownAsQuitting = Set(
+            env.quitEngine.pendingGracePeriods
+                .filter { !hiddenPIDs.contains($0.pid) }
+                .map(\.pid)
+        )
+        return env.appTracker.trackedApps
+            .filter { !shownAsQuitting.contains($0.pid) }
+            .sorted { $0.name < $1.name }
     }
 
     private func buildAppList(_ apps: [TrackedApp]) -> some View {

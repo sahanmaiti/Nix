@@ -88,7 +88,7 @@ Nix is a **one-time $9.99 purchase** with a **7-day free trial** — no subscrip
 
 **Design**
 - Native SwiftUI + AppKit hybrid — no Electron, no third-party UI frameworks
-- Menu bar popover with live app list and one-click controls
+- Menu bar popover with live app list and one-click controls. Apps waiting out a grace period show a countdown there.
 - Tab-based Settings window: General, Apps, Whitelist
 - Guided first-launch onboarding, including Accessibility permission walkthrough
 
@@ -335,9 +335,9 @@ Electron apps expose accessibility trees inconsistently. Most work correctly; a 
 - [x] Sparkle auto-update integration
 - [x] 7-day trial + Lemon Squeezy licensing (paywall, manual key entry)
 - [x] Notarized DMG distribution pipeline
+- [x] Grace period countdown visible in menu bar popover
 
 ### Next
-- [ ] Grace period countdown visible in menu bar popover
 - [ ] "Recently quit" history in popover
 - [ ] Per-app grace period overrides in Settings UI
 - [ ] Homebrew Cask

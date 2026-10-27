@@ -79,11 +79,11 @@ final class WindowMonitor {
         let pid = app.processIdentifier
 
         guard observers[pid] == nil else {
-            logger.debug("Already monitoring '\(app.localizedName ?? "?")' — skipping")
+            logger.debug("Already monitoring '\(app.localizedName ?? "?", privacy: .public)' — skipping")
             return
         }
         guard AXIsProcessTrusted() else {
-            logger.warning("No AX permission — cannot monitor '\(app.localizedName ?? "?")'")
+            logger.warning("No AX permission — cannot monitor '\(app.localizedName ?? "?", privacy: .public)'")
             return
         }
 
@@ -101,7 +101,7 @@ final class WindowMonitor {
         removeObserver(for: pid)
         lastWindowCount.removeValue(forKey: pid)
 
-        logger.info("Stopped monitoring '\(app.localizedName ?? "?")'")
+        logger.info("Stopped monitoring '\(app.localizedName ?? "?", privacy: .public)'")
     }
 
         func checkOnDeactivation(for pid: pid_t) {
@@ -130,7 +130,7 @@ final class WindowMonitor {
         let createErr = AXObserverCreate(pid, axWindowEventCallback, &axObserver)
 
         guard createErr == .success, let observer = axObserver else {
-            logger.error("AXObserverCreate failed for '\(name)': \(createErr.rawValue)")
+            logger.error("AXObserverCreate failed for '\(name, privacy: .public)': \(createErr.rawValue)")
             return
         }
 
@@ -152,7 +152,7 @@ final class WindowMonitor {
 
         scheduleRegistrationRetries(for: pid)
 
-        logger.info("✅ Monitoring '\(name)' (PID \(pid)) — \(self.lastWindowCount[pid] ?? 0) window(s)")
+        logger.info("✅ Monitoring '\(name, privacy: .public)' (PID \(pid)) — \(self.lastWindowCount[pid] ?? 0) window(s)")
         }
 
         private func scheduleRegistrationRetries(for pid: pid_t, attempt: Int = 0) {
@@ -190,7 +190,7 @@ final class WindowMonitor {
 
         guard AXUIElementCopyAttributeValue(appElement, kAXWindowsAttribute as CFString, &windowsRef) == .success,
               let windows = windowsRef as? [AXUIElement], !windows.isEmpty else {
-            logger.debug("'\(appName)': no windows yet — will register on first kAXWindowCreated")
+            logger.debug("'\(appName, privacy: .public)': no windows yet — will register on first kAXWindowCreated")
             return
         }
 
@@ -201,12 +201,12 @@ final class WindowMonitor {
             case .success:                       registered += 1
             case .notificationAlreadyRegistered: registered += 1
             default:
-                logger.warning("AXWindowClosed window-registration failed for '\(appName)': \(result.rawValue)")
+                logger.warning("AXWindowClosed window-registration failed for '\(appName, privacy: .public)': \(result.rawValue)")
             }
             AXObserverAddNotification(observer, window, kAXUIElementDestroyedStr as CFString, context)
         }
 
-        logger.debug("AXWindowClosed registered on \(registered)/\(windows.count) window element(s) for '\(appName)'")
+        logger.debug("AXWindowClosed registered on \(registered)/\(windows.count) window element(s) for '\(appName, privacy: .public)'")
     }
 
     @discardableResult
@@ -220,12 +220,12 @@ final class WindowMonitor {
         let result = AXObserverAddNotification(observer, element, notification as CFString, context)
         switch result {
         case .success:
-            logger.debug("Registered '\(notification)' on app element for '\(appName)'")
+            logger.debug("Registered '\(notification)' on app element for '\(appName, privacy: .public)'")
             return true
         case .notificationAlreadyRegistered:
             return true
         default:
-            logger.warning("Failed to register '\(notification)' for '\(appName)': \(result.rawValue)")
+            logger.warning("Failed to register '\(notification)' for '\(appName, privacy: .public)': \(result.rawValue)")
             return false
         }
     }
@@ -296,12 +296,12 @@ final class WindowMonitor {
         }
 
         guard !app.isHidden else {
-            logger.debug("Phase 1: '\(app.localizedName ?? "?")' is hidden — skipping")
+            logger.debug("Phase 1: '\(app.localizedName ?? "?", privacy: .public)' is hidden — skipping")
             return
         }
 
         guard let count = currentWindowCount(for: pid) else {
-            logger.debug("Phase 1: inconclusive AX read for '\(app.localizedName ?? "?")' — deferring to Phase 2")
+            logger.debug("Phase 1: inconclusive AX read for '\(app.localizedName ?? "?", privacy: .public)' — deferring to Phase 2")
             schedulePhaseTwoCheck(pid: pid)
             return
         }
@@ -309,7 +309,7 @@ final class WindowMonitor {
         let previous = lastWindowCount[pid] ?? 0
         lastWindowCount[pid] = count
 
-        logger.info("'\(app.localizedName ?? "?")': \(count) visible window(s) (was \(previous))")
+        logger.info("'\(app.localizedName ?? "?", privacy: .public)': \(count) visible window(s) (was \(previous))")
 
         if count > 0 {
             pendingPhase2PIDs.remove(pid)
@@ -321,13 +321,13 @@ final class WindowMonitor {
         // be sufficient evidence that an application has no windows (e.g. closing a fullscreen
         // window while another window remains open on a different macOS Space).
         guard let crossSpaceCount = crossSpaceWindowCount(for: pid) else {
-            logger.debug("Phase 1: inconclusive CGWindowList read for '\(app.localizedName ?? "?")' — deferring to Phase 2")
+            logger.debug("Phase 1: inconclusive CGWindowList read for '\(app.localizedName ?? "?", privacy: .public)' — deferring to Phase 2")
             schedulePhaseTwoCheck(pid: pid)
             return
         }
 
         if crossSpaceCount > 0 {
-            logger.info("Phase 1: '\(app.localizedName ?? "?")' AX reported 0, but \(crossSpaceCount) window(s) exist across Spaces — keeping app alive")
+            logger.info("Phase 1: '\(app.localizedName ?? "?", privacy: .public)' AX reported 0, but \(crossSpaceCount) window(s) exist across Spaces — keeping app alive")
             lastWindowCount[pid] = crossSpaceCount
             pendingPhase2PIDs.remove(pid)
             onWindowAppeared?(pid)
@@ -338,7 +338,7 @@ final class WindowMonitor {
         // application deactivation (a Space switch) with no recent AXWindowClosed/AXUIElementDestroyed
         // is NOT such evidence: macOS reports 0 windows for an app whose windows are on another Space.
         guard hadRecentStrongClose(pid) else {
-            logger.info("Phase 1: '\(app.localizedName ?? "?")' reports 0 windows but no recent window-close signal — treating as Space/app switch, keeping app alive")
+            logger.info("Phase 1: '\(app.localizedName ?? "?", privacy: .public)' reports 0 windows but no recent window-close signal — treating as Space/app switch, keeping app alive")
             pendingPhase2PIDs.remove(pid)
             return
         }
@@ -347,10 +347,10 @@ final class WindowMonitor {
         let isKnownHider = knownHiders.contains(bundleID)
 
         if isKnownHider || isWeakSignal {
-            logger.debug("Phase 1: deferring to Phase 2 (weakSignal=\(isWeakSignal), knownHider=\(isKnownHider)) for '\(app.localizedName ?? "?")'")
+            logger.debug("Phase 1: deferring to Phase 2 (weakSignal=\(isWeakSignal), knownHider=\(isKnownHider)) for '\(app.localizedName ?? "?", privacy: .public)'")
             schedulePhaseTwoCheck(pid: pid)
         } else {
-            logger.info("🎯 Phase 1 confirmed: zero windows (cross-space verified) — firing onZeroWindows for '\(app.localizedName ?? "?")'")
+            logger.info("🎯 Phase 1 confirmed: zero windows (cross-space verified) — firing onZeroWindows for '\(app.localizedName ?? "?", privacy: .public)'")
             onZeroWindows?(app)
         }
     }
@@ -384,30 +384,30 @@ final class WindowMonitor {
         }
 
         guard !app.isHidden else {
-            logger.debug("Phase 2: '\(app.localizedName ?? "?")' is hidden — hide-on-close confirmed, not quitting")
+            logger.debug("Phase 2: '\(app.localizedName ?? "?", privacy: .public)' is hidden — hide-on-close confirmed, not quitting")
             return
         }
 
         guard let count = crossSpaceWindowCount(for: pid) else {
-            logger.debug("Phase 2: inconclusive CGWindowList read for '\(app.localizedName ?? "?")' — skipping quit")
+            logger.debug("Phase 2: inconclusive CGWindowList read for '\(app.localizedName ?? "?", privacy: .public)' — skipping quit")
             return
         }
 
-        logger.info("'\(app.localizedName ?? "?")': \(count) window(s) at Phase 2 [cross-space] (800ms total from event)")
+        logger.info("'\(app.localizedName ?? "?", privacy: .public)': \(count) window(s) at Phase 2 [cross-space] (800ms total from event)")
 
         guard count == 0 else {
-            logger.debug("Phase 2: '\(app.localizedName ?? "?")' has window(s) on another Space — skipping quit")
+            logger.debug("Phase 2: '\(app.localizedName ?? "?", privacy: .public)' has window(s) on another Space — skipping quit")
             return
         }
 
         // Defence in depth: same precondition as Phase 1 — never terminate on a zero count that was
         // not preceded by a genuine window-close signal.
         guard hadRecentStrongClose(pid) else {
-            logger.info("Phase 2: '\(app.localizedName ?? "?")' reports 0 windows but no recent window-close signal — keeping app alive")
+            logger.info("Phase 2: '\(app.localizedName ?? "?", privacy: .public)' reports 0 windows but no recent window-close signal — keeping app alive")
             return
         }
 
-        logger.info("🎯 Phase 2 confirmed: zero windows (cross-space) — firing onZeroWindows for '\(app.localizedName ?? "?")'")
+        logger.info("🎯 Phase 2 confirmed: zero windows (cross-space) — firing onZeroWindows for '\(app.localizedName ?? "?", privacy: .public)'")
         onZeroWindows?(app)
     }
 
@@ -477,6 +477,12 @@ final class WindowMonitor {
             return false
         }
 
+        // Closed windows can leave full-size, titled records that belong to no Space.
+        if let windowID = info[kCGWindowNumber as String] as? Int,
+           WindowSpaces.belongsToAnySpace(windowID) == false {
+            return false
+        }
+
         if let name = info[kCGWindowName as String] as? String, !name.isEmpty {
             return true
         }
@@ -518,6 +524,40 @@ final class WindowMonitor {
         ]
 
         return nonPrimarySubroles.contains(subrole)
+    }
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARK: - Window Spaces (SkyLight)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Window-server Space membership, via private SkyLight API. Lookups return nil when the symbols
+/// are missing or the call fails, so callers keep the bounds-based rules as the fallback.
+private enum WindowSpaces {
+    private typealias MainConnectionFn = @convention(c) () -> Int32
+    private typealias CopySpacesFn = @convention(c) (Int32, Int32, CFArray) -> Unmanaged<CFArray>?
+
+    /// Current, other, and user Spaces.
+    private static let allSpacesMask: Int32 = 0x7
+
+    private static let api: (connection: Int32, copySpaces: CopySpacesFn)? = {
+        guard let handle = dlopen("/System/Library/PrivateFrameworks/SkyLight.framework/SkyLight", RTLD_LAZY),
+              let connectionSymbol = dlsym(handle, "SLSMainConnectionID"),
+              let copySpacesSymbol = dlsym(handle, "SLSCopySpacesForWindows") else {
+            return nil
+        }
+        let connection = unsafeBitCast(connectionSymbol, to: MainConnectionFn.self)()
+        return (connection, unsafeBitCast(copySpacesSymbol, to: CopySpacesFn.self))
+    }()
+
+    static func belongsToAnySpace(_ windowID: Int) -> Bool? {
+        guard let api,
+              let spaces = api.copySpaces(api.connection, allSpacesMask, [windowID] as CFArray)?
+                .takeRetainedValue() as? [Int] else {
+            return nil
+        }
+        return !spaces.isEmpty
     }
 }
 
