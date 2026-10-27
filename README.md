@@ -50,6 +50,8 @@ Nix is a **one-time $9.99 purchase** with a **7-day free trial** — no subscrip
 **1.0.3**
 - Switching Spaces no longer quits an app. Leaving a Space deactivates the app, and macOS then reports zero Accessibility windows for anything still open on another Space. Nix now quits only after a real window-close notification (`AXWindowClosed` or `AXUIElementDestroyed`, within 2.5 seconds). Deactivation alone is ignored.
 - Cross-Space checks no longer need Screen Recording permission. Without that permission, windows on other Spaces have empty titles. Nix still counts content-sized untitled windows, and it ignores leftover chrome strips and placeholder records.
+- Closed windows can leave full-size, titled records that belong to no Space. Those leftovers no longer keep the app alive. Nix asks the window server which Space a record belongs to and ignores records that belong to none. If that lookup is unavailable, Nix falls back to the title and size rules.
+- The menu bar popover shows a countdown while an app is in its grace period. Reopening a window, or activating the app, cancels the quit and removes the countdown.
 
 **1.0.2**
 - Closing a fullscreen window no longer quits the app when another window is still open on a different Space. An Accessibility count of zero is always confirmed with a cross-Space window-list check before Nix quits.
@@ -69,7 +71,7 @@ Nix is a **one-time $9.99 purchase** with a **7-day free trial** — no subscrip
 - 300ms debounce, then a 500ms Phase 2 when the signal is weak or the app is a known hider (Discord, Slack, Mimestream, Teams, Zoom, Skype)
 - An Accessibility window count of zero is never enough to quit. Nix confirms with `CGWindowList` so a window on another Space — including one left open after closing a fullscreen window — keeps the app alive
 - Switching Spaces does not quit an app. Termination requires a recent `AXWindowClosed` or `AXUIElementDestroyed`; app deactivation alone is ignored
-- Cross-Space counting works without Screen Recording. Titled windows always count; untitled windows count only when they are large enough to be a real document window
+- Cross-Space counting works without Screen Recording. A record that belongs to no Space is ignored — closed windows leave these behind, sometimes full-size and titled. Titled windows that belong to a Space always count. Untitled windows count only when both sides are at least 200 points. If Space membership cannot be read, Nix falls back to those title and size rules
 - Excludes sheets, dialogs, floating windows, and zero-size phantom AX windows from the count
 - Hidden apps (`Cmd+H`) are intentionally left alone — Nix never quits what you've hidden
 
@@ -137,8 +139,8 @@ Nix is a **one-time $9.99 purchase** with a **7-day free trial** — no subscrip
 |---|---|
 | `AppEnvironment` | Owns all services. Single dependency container, injected as `@EnvironmentObject`. |
 | `AppTracker` | Watches `NSWorkspace` for launch/terminate/hide/activate events. Maintains the tracked-app list. |
-| `WindowMonitor` | One `AXObserver` per tracked app. Confirms a real close (recent `AXWindowClosed` / `AXUIElementDestroyed`), then a cross-Space `CGWindowList` check, before reporting zero windows. |
-| `QuitEngine` | Decision layer. Consults `RuleStore`, applies grace periods, executes quit/hide/ignore/prompt. |
+| `WindowMonitor` | One `AXObserver` per tracked app. Confirms a real close (recent `AXWindowClosed` / `AXUIElementDestroyed`), then a cross-Space `CGWindowList` check that ignores records belonging to no Space, before reporting zero windows. |
+| `QuitEngine` | Decision layer. Consults `RuleStore`, applies grace periods, publishes the deadline for the menu bar countdown, executes quit/hide/ignore/prompt. |
 | `RuleStore` | Persistence layer. Per-app rules and whitelist, encoded to `UserDefaults` as JSON. |
 | `AccessibilityManager` | Checks/requests Accessibility permission; polls since macOS gives no grant callback. |
 | `GlobalSettings` | App-wide preferences via `@AppStorage`. |
@@ -164,7 +166,7 @@ Nix is a **one-time $9.99 purchase** with a **7-day free trial** — no subscrip
           │
           ▼
 5.  Count == 0 and app not hidden →
-       window still open on another Space (CGWindowList)? → keep alive
+       window on another Space (no-Space records ignored)? → keep alive
        no recent window-close notification (Space switch)? → keep alive
        known "hider" app or weak signal?                   → Phase 2 (500ms, same checks)
        otherwise                                           → confirmed
@@ -174,7 +176,8 @@ Nix is a **one-time $9.99 purchase** with a **7-day free trial** — no subscrip
           │
           ▼
 7.  QuitEngine.evaluate(app:) — checks isEnabled/isPaused, looks up RuleStore
-    behavior, applies grace period (cancellable via DispatchWorkItem)
+    behavior, applies grace period. The menu bar popover counts down until the
+    quit fires. Reopening a window cancels it.
           │
           ▼
 8.  app.terminate() — sends Cmd+Q equivalent, app handles its own shutdown
@@ -223,7 +226,7 @@ Nix requires Accessibility access to observe window events in other applications
 
 Nix uses this permission **only** to receive window created/closed/destroyed notifications. It does not read window content, document text, or any application data — the AX tree is queried in structural, read-only mode.
 
-Cross-Space checks use `CGWindowListCopyWindowInfo` for owner, layer, and bounds only. Nix does not request Screen Recording, and it does not capture pixels. Without that permission, windows on other Spaces have empty titles; Nix still treats content-sized untitled windows as real.
+Cross-Space checks use `CGWindowListCopyWindowInfo` for owner, layer, and bounds, plus a window-server lookup (`SLSCopySpacesForWindows` in the private SkyLight framework) for which Space a window belongs to. A record that belongs to no Space is ignored. If that lookup is missing or fails, Nix falls back to the title and size rules. Nix does not request Screen Recording, and it does not capture pixels. Without that permission, windows on other Spaces have empty titles; Nix still treats content-sized untitled windows as real.
 
 ---
 
@@ -238,7 +241,7 @@ open Nix.xcodeproj
 1. Select the **Nix** scheme, choose **My Mac**, press **Cmd+R**
 2. The app launches without a Dock icon (`.accessory` activation policy) — look for the menu bar icon
 3. macOS will prompt for Accessibility permission on first run
-4. Console.app, filter by subsystem `com.sahan.Nix`, for logs
+4. Console.app, filter by subsystem `com.sahan.Nix`, for logs. App names are logged with `privacy: .public`, so Console shows them instead of `<private>`
 
 Debug builds run an internal verification suite (`Core/CoreTests.swift`) ~1.5s after launch, logging pass/fail checks for every subsystem.
 
@@ -295,7 +298,7 @@ Nix/
 
 Nix contacts the network only for **license activation/validation** (Lemon Squeezy) and **update checks** (Sparkle, static appcast — no telemetry payload). No app usage, window, or document data is ever transmitted.
 
-**Accessibility permission** is used exclusively to receive AX window lifecycle notifications. Nix never reads the content of any window, field, or document — the Accessibility API is used in read-only, structural mode: it sees that a window *exists*, not what's *inside* it.
+**Accessibility permission** is used exclusively to receive AX window lifecycle notifications. Nix never reads the content of any window, field, or document — the Accessibility API is used in read-only, structural mode: it sees that a window *exists*, not what's *inside* it. The cross-Space check also asks the window server which Space a window belongs to. That lookup stays on the machine.
 
 Per-app rules and settings are stored locally in `UserDefaults` (`~/Library/Preferences/com.sahan.Nix.plist`). License and trial state are stored in the Keychain. Nothing else leaves your machine.
 
@@ -310,7 +313,10 @@ Some apps (Discord, Slack, Mimestream, Teams, Zoom) intercept the close button a
 A window minimized to the Dock still exists and is excluded from the zero-window count. This matches macOS semantics.
 
 **Very small windows on another Space**
-Without Screen Recording, macOS omits titles for windows on other Spaces. Untitled windows count only when both sides are at least 200 points, so a very small untitled window on another Space may not, by itself, keep the app alive. Titled windows always count.
+Without Screen Recording, macOS omits titles for windows on other Spaces. Untitled windows count only when both sides are at least 200 points, so a very small untitled window on another Space may not, by itself, keep the app alive. Titled windows that belong to a Space always count.
+
+**Closed-window leftovers**
+Some apps leave full-size, titled window records after the window is gone. Nix ignores a record when the window server says it belongs to no Space. If that lookup fails, a titled or content-sized leftover can still keep the app alive.
 
 **App Store sandbox**
 Nix cannot be distributed on the Mac App Store. The Accessibility API (`AXUIElement`) requires a non-sandboxed process — a known, intentional constraint shared by every system utility in this category. Nix ships as a direct, notarized DMG instead.
@@ -336,6 +342,7 @@ Electron apps expose accessibility trees inconsistently. Most work correctly; a 
 - [x] 7-day trial + Lemon Squeezy licensing (paywall, manual key entry)
 - [x] Notarized DMG distribution pipeline
 - [x] Grace period countdown visible in menu bar popover
+- [x] Closed-window leftovers that belong to no Space no longer block a quit
 
 ### Next
 - [ ] "Recently quit" history in popover
@@ -354,7 +361,7 @@ Electron apps expose accessibility trees inconsistently. Most work correctly; a 
 
 Contributions are welcome, especially edge-case fixes for apps with unusual window behavior, macOS version testing, and documentation. Open an issue before a large PR.
 
-**Code style:** `os.Logger` for all logging, no force-unwraps, `guard let` for early exits, `[weak self]` in stored closures, full-file diffs preferred for multi-part changes.
+**Code style:** `os.Logger` for all logging, with `privacy: .public` on app names so Console shows them. No force-unwraps, `guard let` for early exits, `[weak self]` in stored closures, full-file diffs preferred for multi-part changes.
 
 ---
 
